@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  frontend:
+    name: Frontend · lint · typecheck · unit · build
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: frontend } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm, cache-dependency-path: frontend/package-lock.json }
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test -- --coverage
+      - run: npm run build
+        env:
+          BACKEND_INTERNAL_URL: http://127.0.0.1:8000
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+  backend:
+    name: Backend + AI · lint · typecheck · tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env: { POSTGRES_USER: jewelora, POSTGRES_PASSWORD: jewelora_dev_password, POSTGRES_DB: jewelora_test }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U jewelora -d jewelora_test" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql+asyncpg://jewelora:jewelora_dev_password@127.0.0.1:5432/jewelora_test
+      TEST_DATABASE_URL: postgresql+asyncpg://jewelora:jewelora_dev_password@127.0.0.1:5432/jewelora_test
+      AI_MODELS_DIR: ${{ github.workspace }}/ai/models
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with: { enable-cache: true }
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0
+      - name: Install
+        working-directory: backend
+        run: uv venv -p 3.12 .venv && uv pip install -p .venv/bin/python -e ".[dev]" -e "../ai[dev]"
+      - name: Cache models
+        uses: actions/cache@v4
+        with: { path: ai/models, key: mediapipe-models-v1 }
+      - run: ./scripts/download_models.sh
+      - name: Lint
+        working-directory: backend
+        run: .venv/bin/ruff check . ../ai && .venv/bin/ruff format --check . ../ai
+      - name: Type check
+        working-directory: backend
+        run: .venv/bin/mypy app ../ai/jewelora_ai
+      - name: Create extensions
+        run: PGPASSWORD=jewelora_dev_password psql -h 127.0.0.1 -U jewelora -d jewelora_test -f database/init/01_extensions.sql
+      - name: Migrations apply cleanly
+        working-directory: backend
+        run: .venv/bin/alembic upgrade head && .venv/bin/alembic check
+      - name: AI tests
+        working-directory: backend
+        run: .venv/bin/pytest -q ../ai/tests
+      - name: Backend tests
+        working-directory: backend
+        run: .venv/bin/pytest -q --cov=app --cov-report=term-missing
+
+  e2e:
+    name: End-to-end (Playwright)
+    runs-on: ubuntu-latest
+    needs: [frontend, backend]
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env: { POSTGRES_USER: jewelora, POSTGRES_PASSWORD: jewelora_dev_password, POSTGRES_DB: jewelora }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U jewelora -d jewelora" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://jewelora:jewelora_dev_password@127.0.0.1:5432/jewelora
+      BACKEND_PORT: "8000"
+      BACKEND_INTERNAL_URL: http://127.0.0.1:8000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      AI_MODELS_DIR: ${{ github.workspace }}/ai/models
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - uses: astral-sh/setup-uv@v5
+        with: { enable-cache: true }
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0
+      - run: npm ci --no-audit --no-fund && npm --prefix frontend ci --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - working-directory: backend
+        run: uv venv -p 3.12 .venv && uv pip install -p .venv/bin/python -e . -e ../ai
+      - uses: actions/cache@v4
+        with: { path: ai/models, key: mediapipe-models-v1 }
+      - run: ./scripts/download_models.sh && mkdir -p frontend/public/models && cp ai/models/*.task ai/models/*.tflite frontend/public/models/
+      - run: PGPASSWORD=jewelora_dev_password psql -h 127.0.0.1 -U jewelora -d jewelora -f database/init/01_extensions.sql
+      - working-directory: backend
+        run: .venv/bin/alembic upgrade head && .venv/bin/python -m app.cli seed
+      - run: npm --prefix frontend run build
+      - run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with: { name: playwright-report, path: tests/e2e/playwright-report, retention-days: 7 }

@@ -1,0 +1,54 @@
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Node
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+.eslintcache
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+htmlcov/
+.coverage
+
+# AI model weights (downloaded by scripts/download_models.sh)
+ai/models/*.task
+ai/models/*.tflite
+ai/models/*.onnx
+
+# Local object storage & generated media
+storage/
+backend/storage/
+*.sqlite
+
+# Playwright
+tests/e2e/test-results/
+tests/e2e/playwright-report/
+tests/e2e/blob-report/
+tests/e2e/.auth/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.log
+frontend/public/models/*
+!frontend/public/models/.gitkeep
