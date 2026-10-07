@@ -324,7 +324,7 @@ def render_ring(
     md.ellipse((cx + half - thick * 0.5, cy - thick * 0.5, cx + half + thick * 0.5, cy + thick * 0.5), fill=255)
     band_y = cy + arc_h
     if style == "solitaire":
-        head_r = w * S * 0.085
+        head_r = w * S * 0.125
         md.ellipse((cx - head_r, band_y - head_r, cx + head_r, band_y + head_r), fill=255)
         for k in range(4):
             a = math.pi / 4 + k * math.pi / 2
@@ -337,7 +337,7 @@ def render_ring(
         overlays.append((g, (int(cx - g.width / 2), int(band_y - g.height / 2))))
         top = band_y - head_r * 1.15
     elif style == "halo":
-        head_r = w * S * 0.12
+        head_r = w * S * 0.16
         md.ellipse((cx - head_r, band_y - head_r, cx + head_r, band_y + head_r), fill=255)
         g = gem(int(head_r * 1.2), gem_kind)
         overlays.append((g, (int(cx - g.width / 2), int(band_y - g.height / 2))))
