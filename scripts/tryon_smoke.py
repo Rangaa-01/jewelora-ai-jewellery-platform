@@ -26,13 +26,29 @@ FIX = ROOT / "ai" / "tests" / "fixtures"
 
 CASES: dict[str, list[tuple[str, str, str | None, str | None, str | None]]] = {
     # fixture: [(jewellery_type, style, gem, metal, slot)]
-    "portrait_front.jpg": [("necklace", "necklace", "ruby", "gold", None), ("earrings", "jhumka", "ruby", "gold", None), ("maang_tikka", None, "kundan", "gold", None), ("nose_ring", None, "diamond", "gold", None)],
-    "portrait_ears.jpg": [("earrings", "drop", "emerald", "gold", None), ("choker", "choker", "pearl", "gold", None), ("maang_tikka", None, "kundan", "gold", None)],
-    "hands_flowers.jpg": [("ring", "solitaire", "diamond", "white_gold", "right_ring"), ("bangle", "bangle", "none", "gold", "right_wrist")],
+    "portrait_front.jpg": [
+        ("necklace", "necklace", "ruby", "gold", None),
+        ("earrings", "jhumka", "ruby", "gold", None),
+        ("maang_tikka", None, "kundan", "gold", None),
+        ("nose_ring", None, "diamond", "gold", None),
+    ],
+    "portrait_ears.jpg": [
+        ("earrings", "drop", "emerald", "gold", None),
+        ("choker", "choker", "pearl", "gold", None),
+        ("maang_tikka", None, "kundan", "gold", None),
+    ],
+    "hands_flowers.jpg": [
+        ("ring", "solitaire", "diamond", "white_gold", "right_ring"),
+        ("bangle", "bangle", "none", "gold", "right_wrist"),
+    ],
     "hand_single.jpg": [("ring", "halo", "ruby", "gold", None), ("bracelet", "bracelet", "diamond", "rose_gold", None)],
     "fullbody.jpg": [("waist_chain", None, "ruby", "gold", None), ("anklet", None, "none", "silver", None)],
 }
-CROPS = {"portrait_front.jpg": (330, 60, 650, 420), "portrait_ears.jpg": (150, 100, 900, 900), "hands_flowers.jpg": (420, 120, 900, 599)}
+CROPS = {
+    "portrait_front.jpg": (330, 60, 650, 420),
+    "portrait_ears.jpg": (150, 100, 900, 900),
+    "hands_flowers.jpg": (420, 120, 900, 599),
+}
 
 
 def load_asset(jtype: str, style: str | None, gem: str, metal: str):  # type: ignore[no-untyped-def]
@@ -45,18 +61,35 @@ def load_asset(jtype: str, style: str | None, gem: str, metal: str):  # type: ig
         result = renderer(metal, gem, style=style) if style else renderer(metal, gem)
         GEN.mkdir(parents=True, exist_ok=True)
         result.image.save(png)
-        meta_path.write_text(json.dumps({"anchors": result.anchors, "real_width_mm": result.real_width_mm, "real_height_mm": result.real_height_mm}))
+        meta_path.write_text(
+            json.dumps(
+                {
+                    "anchors": result.anchors,
+                    "real_width_mm": result.real_width_mm,
+                    "real_height_mm": result.real_height_mm,
+                }
+            )
+        )
     meta = json.loads(meta_path.read_text())
     import numpy as np
 
     image = np.asarray(Image.open(png).convert("RGBA"))
-    return AssetSpec(image=image, anchors={k: Point(*v) for k, v in meta["anchors"].items()}, jewellery_type=JewelleryType(jtype), real_width_mm=meta["real_width_mm"], real_height_mm=meta["real_height_mm"], asset_id=key)
+    return AssetSpec(
+        image=image,
+        anchors={k: Point(*v) for k, v in meta["anchors"].items()},
+        jewellery_type=JewelleryType(jtype),
+        real_width_mm=meta["real_width_mm"],
+        real_height_mm=meta["real_height_mm"],
+        asset_id=key,
+    )
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", default="/tmp/tryon-smoke")
-    parser.add_argument("--fixture-landmarks", action="store_true", help="replay cached landmarks instead of running MediaPipe")
+    parser.add_argument(
+        "--fixture-landmarks", action="store_true", help="replay cached landmarks instead of running MediaPipe"
+    )
     args = parser.parse_args()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
@@ -77,7 +110,11 @@ def main() -> None:
         else:
             lm = engine.detect(pre.rgb)
             lm_path.write_text(json.dumps(landmarks_to_json(lm)))
-        request = TryOnRequest(image=pre.rgb, items=[TryOnItem(asset=load_asset(j, s, g, m), slot=slot) for j, s, g, m, slot in items], landmarks=lm)
+        request = TryOnRequest(
+            image=pre.rgb,
+            items=[TryOnItem(asset=load_asset(j, s, g, m), slot=slot) for j, s, g, m, slot in items],
+            landmarks=lm,
+        )
         started = time.perf_counter()
         try:
             result = engine.run(request)
