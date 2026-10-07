@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Manrope } from "next/font/google";
 import "./globals.css";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
+import { ServiceWorkerRegistration } from "@/components/pwa/service-worker-registration";
 import { Providers } from "@/components/providers";
 import { SITE, SITE_URL } from "@/lib/site";
 
@@ -63,6 +64,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           Skip to content
         </a>
+        <ServiceWorkerRegistration />
         <Providers>
           <Header />
           <main id="main" className="flex flex-1 flex-col overflow-x-clip">
