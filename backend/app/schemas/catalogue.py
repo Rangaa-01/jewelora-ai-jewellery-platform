@@ -30,6 +30,7 @@ class CollectionOut(APIModel):
     tagline: str | None
     description: str | None
     hero_image_url: str | None = None
+    preview_image_urls: list[str] = Field(default_factory=list)  # product photos when no hero image
     is_bridal: bool
     is_featured: bool
     sort_order: int

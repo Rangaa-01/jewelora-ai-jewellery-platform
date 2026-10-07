@@ -19,10 +19,12 @@ async def list_collections(
     featured: bool | None = Query(default=None),
     bridal: bool | None = Query(default=None),
 ) -> list[CollectionOut]:
-    rows = await CatalogueService(db).list_collections(
+    service = CatalogueService(db)
+    rows = await service.list_collections(
         featured=featured, bridal=bridal, include_inactive=is_staff(user)
     )
-    return [collection_out(c, storage, n) for c, n in rows]
+    previews = await service.collection_previews([c.id for c, _ in rows])
+    return [collection_out(c, storage, n, previews.get(c.id)) for c, n in rows]
 
 
 @router.get("/{slug}", response_model=CollectionOut)
@@ -32,7 +34,10 @@ async def get_collection(
     service = CatalogueService(db)
     collection = await service.get_collection_by_slug(slug, include_inactive=is_staff(user))
     counts = {c.id: n for c, n in await service.list_collections(include_inactive=True)}
-    return collection_out(collection, storage, counts.get(collection.id, 0))
+    previews = await service.collection_previews([collection.id])
+    return collection_out(
+        collection, storage, counts.get(collection.id, 0), previews.get(collection.id)
+    )
 
 
 @router.get("/{slug}/products", response_model=Page[ProductSummaryOut])

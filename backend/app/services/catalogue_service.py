@@ -261,6 +261,34 @@ class CatalogueService:
         rows = (await self.db.execute(stmt)).unique().all()
         return [(row[0], int(row[1])) for row in rows]
 
+    async def collection_previews(
+        self, collection_ids: list[uuid.UUID], per: int = 4
+    ) -> dict[uuid.UUID, list[str]]:
+        """Primary product image storage keys per collection (for cards without a hero image)."""
+        if not collection_ids:
+            return {}
+        stmt = (
+            select(ProductCollection.collection_id, ProductImage.storage_key)
+            .join(Product, Product.id == ProductCollection.product_id)
+            .join(ProductImage, ProductImage.product_id == Product.id)
+            .where(
+                ProductCollection.collection_id.in_(collection_ids),
+                Product.is_active.is_(True),
+                ProductImage.is_primary.is_(True),
+            )
+            .order_by(
+                ProductCollection.collection_id,
+                ProductCollection.sort_order,
+                Product.created_at.desc(),
+            )
+        )
+        out: dict[uuid.UUID, list[str]] = {}
+        for collection_id, key in (await self.db.execute(stmt)).all():
+            bucket = out.setdefault(collection_id, [])
+            if len(bucket) < per:
+                bucket.append(key)
+        return out
+
     async def get_collection_by_slug(
         self, slug: str, *, include_inactive: bool = False
     ) -> Collection:

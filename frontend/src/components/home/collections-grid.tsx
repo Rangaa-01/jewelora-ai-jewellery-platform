@@ -35,6 +35,33 @@ export function CollectionCard({
           sizes="(max-width: 768px) 100vw, 50vw"
           className="object-cover opacity-80 transition-transform duration-700 ease-[var(--ease-luxe)] group-hover:scale-105"
         />
+      ) : collection.preview_image_urls.length > 0 ? (
+        <div
+          aria-hidden
+          className={cn(
+            "absolute inset-0 grid gap-0.5 bg-[#efe9df]",
+            collection.preview_image_urls.length >= 4
+              ? "grid-cols-2 grid-rows-2"
+              : collection.preview_image_urls.length >= 2
+                ? "grid-cols-2"
+                : "grid-cols-1",
+          )}
+        >
+          {collection.preview_image_urls.slice(0, 4).map((url, index) => (
+            <div key={url} className="relative overflow-hidden">
+              <Image
+                src={url}
+                alt=""
+                fill
+                sizes="(max-width: 768px) 50vw, 25vw"
+                className={cn(
+                  "object-cover transition-transform duration-700 ease-[var(--ease-luxe)] group-hover:scale-105",
+                  index > 0 && "opacity-95",
+                )}
+              />
+            </div>
+          ))}
+        </div>
       ) : (
         <div
           aria-hidden

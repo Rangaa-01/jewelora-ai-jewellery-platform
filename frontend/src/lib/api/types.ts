@@ -58,6 +58,8 @@ export interface Collection {
   tagline: string | null;
   description: string | null;
   hero_image_url: string | null;
+  /** Primary photos of up to four products, used when there is no hero image. */
+  preview_image_urls: string[];
   is_bridal: boolean;
   is_featured: boolean;
   sort_order: number;

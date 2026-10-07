@@ -5,6 +5,7 @@ Commands
 seed              Load development seed data (refuses to run when APP_ENV=production).
 create-admin      Create an admin user (pass --email and --password).
 index-embeddings  Compute visual-search embeddings for every product image.
+import-products   Bulk-create/update products from a CSV plus a folder of photos (auto cut-outs).
 cleanup           Purge expired customer photos, stale tokens and abandoned guest carts.
 """
 
@@ -234,7 +235,9 @@ async def _seed_products(
             continue
 
         if data.get("photos"):
-            await _seed_real_photos(service, storage, settings, product, data["photos"], data["jewellery_type"])
+            await _seed_real_photos(
+                service, storage, settings, product, data["photos"], data["jewellery_type"]
+            )
             log.info("seed_product_created", sku=product.sku, name=product.name, source="photo")
             continue
         gem = render.get("gem", "none")
@@ -344,11 +347,17 @@ async def _seed_real_photos(
     photo_dir = REPO_DIR / "database" / "seeds" / "photos"
     for index, name in enumerate(photos):
         path = photo_dir / name
-        await _upload_image(service, storage, settings, product, path, None, primary=index == 0, sort=index)
+        await _upload_image(
+            service, storage, settings, product, path, None, primary=index == 0, sort=index
+        )
         if index == 0 and jewellery_type != "set":
             cut = make_tryon_asset(path.read_bytes(), jewellery_type, settings)
             processed = process_image(
-                cut.png, settings, max_bytes=settings.product_asset_max_bytes, keep_alpha=True, quality=95
+                cut.png,
+                settings,
+                max_bytes=settings.product_asset_max_bytes,
+                keep_alpha=True,
+                quality=95,
             )
             key = product_tryon_asset_key(str(product.id), processed.extension)
             await storage.put(key, processed.data, processed.content_type)
@@ -401,7 +410,30 @@ async def _upload_image(
     )
 
 
-async def seed(*, with_assets: bool = True) -> None:
+async def _prune_products(db: AsyncSession, keep_skus: set[str]) -> int:
+    """Development only: remove products that are no longer in the seed file."""
+    from sqlalchemy import delete as sa_delete
+
+    from app.models.commerce import CartItem
+
+    storage = get_storage()
+    stale = [
+        p for p in (await db.execute(select(Product))).scalars().unique() if p.sku not in keep_skus
+    ]
+    for product in stale:
+        await db.execute(sa_delete(CartItem).where(CartItem.product_id == product.id))
+        for key in (
+            [i.storage_key for i in product.images]
+            + [a.storage_key for a in product.tryon_assets]
+            + [m.storage_key for m in product.model_3d_assets]
+        ):
+            await storage.delete(key)
+        await db.delete(product)
+    await db.flush()
+    return len(stale)
+
+
+async def seed(*, with_assets: bool = True, prune: bool = False) -> None:
     settings = get_settings()
     if settings.is_production:
         raise SystemExit("Refusing to seed development data into a production environment.")
@@ -414,6 +446,9 @@ async def seed(*, with_assets: bool = True) -> None:
         collections = await _seed_collections(db, data["collections"])
         await db.commit()
     async with factory() as db:
+        if prune:
+            removed = await _prune_products(db, {p["sku"] for p in data["products"]})
+            print(f"Pruned {removed} products not in the seed file.")
         categories = {c.slug: c for c in (await db.execute(select(ProductCategory))).scalars()}
         collections = {c.slug: c for c in (await db.execute(select(Collection))).scalars()}
         await _seed_products(db, data["products"], categories, collections, with_assets=with_assets)
@@ -441,6 +476,129 @@ async def create_admin(email: str, password: str, full_name: str) -> None:
         )
         await db.commit()
         print(f"Admin created: {user.email}")
+
+
+def _split_list(value: str | None) -> list[str]:
+    return [v.strip() for v in (value or "").split("|") if v.strip()]
+
+
+async def import_products(csv_path: Path, photos_dir: Path, *, with_cutouts: bool = True) -> None:
+    """Bulk import for the shop: one CSV row per product, photos by file name.
+
+    Columns: sku,name,category_slug,jewellery_type,metal_type,purity,stone_type,base_price,
+    stock_quantity,gross_weight_g,net_weight_g,making_charges,occasions,tags,style,gender,
+    photo,real_width_mm,collections,short_description  (occasions/tags/collections use '|').
+    Existing SKUs are updated; new ones created. The photo becomes the primary image and,
+    when the type supports try-on, an automatic cut-out.
+    """
+    import csv
+
+    from app.schemas.catalogue import ProductUpdate
+    from app.services.cutout_service import make_tryon_asset
+    from app.services.upload_service import process_image
+
+    settings = get_settings()
+    storage = get_storage()
+    factory = get_session_factory()
+    created = updated = 0
+    with csv_path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    async with factory() as db:
+        service = CatalogueService(db)
+        categories = {c.slug: c for c in (await db.execute(select(ProductCategory))).scalars()}
+        collections = {c.slug: c for c in (await db.execute(select(Collection))).scalars()}
+        for row in rows:
+            sku = row["sku"].strip()
+            if not sku:
+                continue
+            category = categories.get(row["category_slug"].strip())
+            if category is None:
+                print(f"SKIP {sku}: unknown category '{row['category_slug']}'")
+                continue
+            payload: dict[str, Any] = {
+                "sku": sku,
+                "name": row["name"].strip(),
+                "category_id": category.id,
+                "jewellery_type": row["jewellery_type"].strip(),
+                "metal_type": row["metal_type"].strip(),
+                "purity": (row.get("purity") or "").strip() or None,
+                "stone_type": (row.get("stone_type") or "none").strip(),
+                "base_price": row["base_price"].strip(),
+                "stock_quantity": int(row.get("stock_quantity") or 0),
+                "gross_weight_g": (row.get("gross_weight_g") or "").strip() or None,
+                "net_weight_g": (row.get("net_weight_g") or "").strip() or None,
+                "making_charges": (row.get("making_charges") or "0").strip(),
+                "occasions": _split_list(row.get("occasions")),
+                "tags": _split_list(row.get("tags")),
+                "style": (row.get("style") or "").strip() or None,
+                "gender": (row.get("gender") or "women").strip(),
+                "short_description": (row.get("short_description") or "").strip() or None,
+                "collection_ids": [
+                    collections[c].id
+                    for c in _split_list(row.get("collections"))
+                    if c in collections
+                ],
+                "tryon_enabled": row["jewellery_type"].strip() != "set",
+            }
+            existing = (
+                await db.execute(select(Product).where(Product.sku == sku))
+            ).scalar_one_or_none()
+            if existing is None:
+                product = await service.create_product(ProductIn.model_validate(payload))
+                created += 1
+            else:
+                product = await service.update_product(
+                    existing.id, ProductUpdate.model_validate(payload)
+                )
+                updated += 1
+            photo_name = (row.get("photo") or "").strip()
+            if photo_name:
+                path = photos_dir / photo_name
+                if not path.is_file():
+                    print(f"WARN {sku}: photo '{photo_name}' not found")
+                else:
+                    data = path.read_bytes()
+                    processed = process_image(data, settings, max_dimension=1600)
+                    key = product_image_key(str(product.id), processed.extension)
+                    await storage.put(key, processed.data, processed.content_type)
+                    await service.add_image(
+                        product,
+                        storage_key=key,
+                        width=processed.width,
+                        height=processed.height,
+                        meta={"is_primary": True, "alt_text": product.name, "view": "front"},
+                    )
+                    if with_cutouts and product.jewellery_type != "set":
+                        cut = make_tryon_asset(data, product.jewellery_type, settings)
+                        real_w = (row.get("real_width_mm") or "").strip()
+                        cut_png = process_image(
+                            cut.png,
+                            settings,
+                            max_bytes=settings.product_asset_max_bytes,
+                            keep_alpha=True,
+                            quality=95,
+                        )
+                        asset_key = product_tryon_asset_key(str(product.id), cut_png.extension)
+                        await storage.put(asset_key, cut_png.data, cut_png.content_type)
+                        width_mm = Decimal(real_w) if real_w else Decimal(str(cut.real_width_mm))
+                        await service.add_tryon_asset(
+                            product,
+                            storage_key=asset_key,
+                            width=cut_png.width,
+                            height=cut_png.height,
+                            meta={
+                                "view": "front",
+                                "variant_id": None,
+                                "anchors": cut.anchors,
+                                "real_width_mm": width_mm,
+                                "real_height_mm": (
+                                    width_mm * cut_png.height / cut_png.width
+                                ).quantize(Decimal("0.01")),
+                            },
+                        )
+            print(f"OK {sku} {product.name}")
+        await db.commit()
+    print(f"Import complete: {created} created, {updated} updated.")
 
 
 async def index_embeddings() -> None:
@@ -474,20 +632,33 @@ def main(argv: list[str] | None = None) -> None:
     seed_cmd.add_argument(
         "--no-assets", action="store_true", help="skip image/3D asset generation (faster, for CI)"
     )
+    seed_cmd.add_argument(
+        "--prune", action="store_true", help="remove products that are no longer in the seed file"
+    )
     admin_cmd = sub.add_parser("create-admin", help="create an admin user")
     admin_cmd.add_argument("--email", required=True)
     admin_cmd.add_argument("--password", required=True)
     admin_cmd.add_argument("--name", default="Administrator")
     sub.add_parser("index-embeddings", help="compute visual search embeddings for product images")
+    import_cmd = sub.add_parser(
+        "import-products", help="bulk import products from CSV + photo folder"
+    )
+    import_cmd.add_argument("--csv", required=True, type=Path)
+    import_cmd.add_argument("--photos", required=True, type=Path)
+    import_cmd.add_argument(
+        "--no-cutouts", action="store_true", help="skip automatic try-on cut-outs"
+    )
     sub.add_parser("cleanup", help="purge expired photos, stale tokens and abandoned guest carts")
     args = parser.parse_args(argv)
     configure_logging(get_settings())
     if args.command == "seed":
-        asyncio.run(seed(with_assets=not args.no_assets))
+        asyncio.run(seed(with_assets=not args.no_assets, prune=args.prune))
     elif args.command == "create-admin":
         asyncio.run(create_admin(args.email, args.password, args.name))
     elif args.command == "index-embeddings":
         asyncio.run(index_embeddings())
+    elif args.command == "import-products":
+        asyncio.run(import_products(args.csv, args.photos, with_cutouts=not args.no_cutouts))
     elif args.command == "cleanup":
         asyncio.run(cleanup())
 

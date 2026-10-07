@@ -101,6 +101,7 @@ scripts/    developer scripts                         docker/    Dockerfiles, ng
 ## Documentation
 
 - [Architecture](ARCHITECTURE.md) · [Roadmap](docs/roadmap.md)
+- [Shop guide: adding your jewellery](docs/shop-guide.md)
 - [Setup](docs/setup.md) · [Deployment](docs/deployment.md) · [Troubleshooting](docs/troubleshooting.md)
 - [Database](docs/database.md) · [API](docs/api.md) · [AI try-on](docs/ai-tryon.md)
 - [Testing](docs/testing.md) · [Security](docs/security.md)

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const PRODUCT_SLUG = "classic-gold-jhumka"; // no sizes, in stock, try-on enabled
-const RING_SLUG = "aurora-solitaire-ring"; // sized product
+const PRODUCT_SLUG = "gold-crescent-drop-earrings"; // no sizes, in stock, try-on enabled
+const RING_SLUG = "rose-cut-diamond-cluster-ring"; // sized product
 
 function uniqueEmail(): string {
   return `shopper-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
@@ -54,7 +54,7 @@ test.describe("shop", () => {
       page.getByRole("heading", { level: 1, name: "Shopping bag" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Classic Gold Jhumka" }).first(),
+      page.getByRole("link", { name: "Gold Crescent Drop Earrings" }).first(),
     ).toBeVisible();
     await expect(page.getByText("GST (3%)")).toBeVisible();
 
@@ -72,10 +72,10 @@ test.describe("shop", () => {
       page.getByRole("heading", { level: 1, name: "Saved jewellery" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Classic Gold Jhumka" }).first(),
+      page.getByRole("link", { name: "Gold Crescent Drop Earrings" }).first(),
     ).toBeVisible();
     await page
-      .getByRole("button", { name: /Remove Classic Gold Jhumka/ })
+      .getByRole("button", { name: /Remove Gold Crescent Drop Earrings/ })
       .click();
     await expect(page.getByText("Nothing saved yet")).toBeVisible();
 

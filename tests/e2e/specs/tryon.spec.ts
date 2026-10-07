@@ -31,7 +31,7 @@ test.describe("photo try-on", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       /See it on you/,
     );
-    await pickProduct(page, "Lakshmi Temple Necklace");
+    await pickProduct(page, "Garnet Cluster Festoon Necklace");
 
     await page
       .getByLabel(/Upload your photo/)
@@ -70,7 +70,7 @@ test.describe("photo try-on", () => {
     page,
   }) => {
     await page.goto("/try-on");
-    await pickProduct(page, "Lakshmi Temple Necklace");
+    await pickProduct(page, "Garnet Cluster Festoon Necklace");
     await page
       .getByLabel(/Upload your photo/)
       .setInputFiles(resolve(FIXTURES, "hand_single.jpg"));

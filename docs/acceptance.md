@@ -51,7 +51,7 @@ and the backend/AI suites before a release.
 - [x] README, setup, deployment, architecture, AI, API, database, security, testing, troubleshooting, frontend.
 
 ## Known limitations (stated, not hidden)
-- Generated seed jewellery assets are stylised stand-ins; real photography/cut-outs come from the shop.
+- Demo catalogue photos are real CC0 museum pieces; the shop replaces them with its own photography via the admin or CSV import (`docs/shop-guide.md`). No demo product carries a 3D model, so the viewer shows once the shop uploads `.glb` files.
 - OTP, online payment, SMTP and LLM re-ranking activate only when configured.
 - Ring-size estimation is an estimate (calibration constant documented).
 - Docker images are written and reviewed but could not be built on the development machine (no Docker installed); CI/deployment hosts should run `docker compose build` first.

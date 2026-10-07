@@ -54,9 +54,13 @@ def category_out(
 
 
 def collection_out(
-    collection: Collection, storage: ObjectStorage, product_count: int = 0
+    collection: Collection,
+    storage: ObjectStorage,
+    product_count: int = 0,
+    preview_keys: list[str] | None = None,
 ) -> CollectionOut:
     return CollectionOut(
+        preview_image_urls=[storage.public_url(k) for k in (preview_keys or [])],
         id=collection.id,
         name=collection.name,
         slug=collection.slug,
