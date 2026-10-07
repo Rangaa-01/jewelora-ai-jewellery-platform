@@ -94,6 +94,7 @@ test.describe("admin dashboard", () => {
     });
     expect(created.ok()).toBeTruthy();
     await login(page, email, "Secure#2024");
-    await expect(page.getByRole("alert").filter({ hasText: /staff/i })).toContainText(/customer account/i);
+    // The Next route announcer also has role="alert"; match on the message text itself.
+    await expect(page.getByRole("alert").filter({ hasText: /customer account/i })).toBeVisible();
   });
 });
