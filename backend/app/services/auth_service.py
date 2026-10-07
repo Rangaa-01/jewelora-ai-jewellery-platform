@@ -123,11 +123,9 @@ class AuthService:
             password_hash=hash_password(data.password),
         )
         user.roles.append(await self._role(Role.CUSTOMER))
+        user.customer = Customer(marketing_opt_in=data.marketing_opt_in)
         self.db.add(user)
         await self.db.flush()
-        self.db.add(Customer(user_id=user.id, marketing_opt_in=data.marketing_opt_in))
-        await self.db.flush()
-        await self.db.refresh(user)
         log.info("customer_registered", user_id=str(user.id))
         return user
 
@@ -331,9 +329,9 @@ class AuthService:
                 full_name=full_name,
             )
             user.roles.append(await self._role(Role.CUSTOMER))
+            user.customer = Customer()
             self.db.add(user)
             await self.db.flush()
-            self.db.add(Customer(user_id=user.id))
         if "@" in identifier:
             user.email_verified_at = user.email_verified_at or now
         else:

@@ -467,7 +467,7 @@ class AppointmentService:
         )
         appointment = Appointment(
             customer_id=customer.id if customer else None,
-            store_id=store.id,
+            store=store,  # assigned through the relationship so serialisation needs no lazy load
             reference=reference("AP"),
             guest_name=data.guest_name,
             guest_phone=data.guest_phone,
@@ -504,6 +504,7 @@ class AppointmentService:
     async def list_mine(self, customer: Customer) -> list[Appointment]:
         stmt = (
             select(Appointment)
+            .options(selectinload(Appointment.store))
             .where(Appointment.customer_id == customer.id)
             .order_by(Appointment.starts_at.desc())
         )

@@ -106,22 +106,24 @@ async def test_appointment_booking_slots_and_cancel(client: AsyncClient, db: Asy
         and slots.json()[0]["available"] is True
     )
 
+    store_id, product_slug = str(store.id), product.slug
+    db.expire_all()  # cold identity map, as in production: relationships must be loaded explicitly
     guest = await client.post(
         "/api/v1/appointments",
         json={
-            "store_id": str(store.id),
+            "store_id": store_id,
             "starts_at": tomorrow.isoformat(),
             "guest_name": "Meera",
             "guest_phone": "9876543210",
             "party_size": 2,
             "purpose": "bridal",
-            "product_slugs": [product.slug],
+            "product_slugs": [product_slug],
         },
     )
     assert guest.status_code == 201, guest.text
     body = guest.json()
     assert body["reference"].startswith("AP") and body["store"]["name"] == store.name
-    assert body["products"][0]["slug"] == product.slug and body["guest_phone"] == "+919876543210"
+    assert body["products"][0]["slug"] == product_slug and body["guest_phone"] == "+919876543210"
 
     too_soon = await client.post(
         "/api/v1/appointments",
