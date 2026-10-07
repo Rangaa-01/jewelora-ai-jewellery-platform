@@ -28,7 +28,10 @@ if (typeof window !== "undefined") {
       rootMargin = "";
       thresholds = [];
     }
-    Object.defineProperty(window, "IntersectionObserver", { writable: true, value: MockIntersectionObserver });
+    Object.defineProperty(window, "IntersectionObserver", {
+      writable: true,
+      value: MockIntersectionObserver,
+    });
   }
   if (!("ResizeObserver" in window)) {
     class MockResizeObserver {
