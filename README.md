@@ -13,6 +13,27 @@ a full admin dashboard for the shop team.
 | Tests | Vitest + React Testing Library · pytest · Playwright |
 | Ops | Docker Compose (postgres, backend, frontend, nginx) · GitHub Actions CI |
 
+## What's included
+
+- **Virtual try-on** — photo mode (server-side MediaPipe landmarks, geometric fitting, lighting-matched compositing, hair occlusion, manual adjustments, ring-size estimate) and live camera mode (on-device detection, same fitting maths ported to TypeScript with parity tests). Necklaces, chains, pendants, harams, chokers, earrings, rings, bangles, bracelets, nose rings, maang tikka, waist chains, anklets, bridal sets.
+- **Catalogue & 3D** — products with variants (metal/stone), sizes, images, transparent try-on assets with anchors, GLB models; interactive 3D viewer with material switching, presets, fullscreen.
+- **AI stylist** — understands budget, occasion, type, metal, stone and style; recommends only catalogue products; optional Claude re-ranking that cannot invent products.
+- **Visual search** — image embeddings per product image, exact and similar matches.
+- **Mix & match / bridal mode**, saved looks, sharing (WhatsApp, link, image), wishlist with compare, enquiries, store appointments with slot availability, cart and checkout (pay at store, bank transfer, Razorpay-ready).
+- **Accounts & roles** — email/phone + password, OTP-ready, refresh-token rotation; admin, manager, sales staff, customer enforced server-side.
+- **Admin dashboard** — products/assets (incl. anchor editor), categories, collections, stores, customers, orders, enquiries, appointments, looks, staff, analytics (most tried/viewed/wishlisted/shared/enquired/purchased).
+- **Production concerns** — structured logging, rate limiting, hardened uploads, signed private media, PWA shell, Docker, CI, 150+ automated tests.
+
+### Integration boundaries (explicitly not faked)
+
+| Capability | Status | Where to connect |
+|------------|--------|------------------|
+| OTP delivery (SMS/email) | modelled, disabled until a provider is configured (`OTP_ENABLED`) | `backend/app/integrations/otp_provider.py` |
+| Online payments | Razorpay orders + signature/webhook verification implemented; inactive until keys are set | `backend/app/integrations/payments.py` |
+| LLM stylist re-ranking | works without a key (deterministic); Claude used when `LLM_PROVIDER=anthropic` | `backend/app/services/stylist_service.py` |
+| Generative photoreal refinement | not included; renderer contract documented | `ai/jewelora_ai/rendering/README.md` |
+| Email notifications | SMTP when `SMTP_URL` set; otherwise structured log + admin dashboard | `backend/app/integrations/notifications.py` |
+
 Read [`ARCHITECTURE.md`](ARCHITECTURE.md) first. Detailed guides live in [`docs/`](docs/).
 
 ## Quick start (local development)
