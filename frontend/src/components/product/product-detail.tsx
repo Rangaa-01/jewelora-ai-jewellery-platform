@@ -222,7 +222,11 @@ export function ProductDetail({ slug }: { slug: string }) {
             </ol>
           </nav>
           <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
-            <ProductViewerSlot product={product} variantId={variantId} />
+            <ProductViewerSlot
+              product={product}
+              variantId={variantId}
+              onSelectVariant={setVariantId}
+            />
             <div className="flex flex-col gap-7">
               <div>
                 <div className="mb-3 flex flex-wrap gap-2">
