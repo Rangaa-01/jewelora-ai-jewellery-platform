@@ -10,7 +10,8 @@ import type { Hand, Landmarks, Point } from "../fitting/types";
 type Vision = typeof import("@mediapipe/tasks-vision");
 
 export const MEDIAPIPE_VERSION = "1.1.0";
-export const WASM_BASE = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MEDIAPIPE_VERSION}/wasm`;
+// Served same-origin from public/mediapipe/wasm (copied by scripts/copy-mediapipe-wasm.mjs).
+export const WASM_BASE = "/mediapipe/wasm";
 export const MODELS_BASE = "/models";
 
 export interface DetectorNeeds {

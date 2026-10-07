@@ -18,7 +18,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' blob: data: https://storage.googleapis.com https://cdn.jsdelivr.net https://api.razorpay.com https://lumberjack.razorpay.com",
+      "connect-src 'self' blob: data: https://storage.googleapis.com https://api.razorpay.com https://lumberjack.razorpay.com",
       "worker-src 'self' blob:",
       "media-src 'self' blob:",
       "frame-src https://api.razorpay.com https://checkout.razorpay.com",
