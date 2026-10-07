@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Container, Section } from "@/components/ui/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
-import { useLogout, useSession } from "@/lib/api/hooks";
+import { useCart, useLogout, useLogoutAll, useSession, useWishlist } from "@/lib/api/hooks";
 
 const SECTIONS = [
   { href: "/wishlist", icon: Heart, title: "Wishlist", text: "Pieces and looks you've saved." },
@@ -34,8 +34,8 @@ const SECTIONS = [
   {
     href: "/account/profile",
     icon: UserRound,
-    title: "Profile & photos",
-    text: "Contact details, preferences and uploaded photos.",
+    title: "Profile & security",
+    text: "Contact details, preferences, password and sessions.",
   },
 ] as const;
 
@@ -43,6 +43,9 @@ export function AccountOverview() {
   const router = useRouter();
   const session = useSession();
   const logout = useLogout();
+  const logoutAll = useLogoutAll();
+  const cart = useCart();
+  const wishlist = useWishlist();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -86,7 +89,11 @@ export function AccountOverview() {
           <div>
             <p className="eyebrow mb-2">My account</p>
             <h1 className="text-4xl md:text-5xl">Hello, {user.full_name.split(" ")[0]}</h1>
-            <p className="text-fg-muted mt-2 text-sm">{user.email ?? user.phone}</p>
+            <p className="text-fg-muted mt-2 text-sm">
+              {user.email ?? user.phone}
+              {cart.data ? ` · ${cart.data.item_count} in bag` : ""}
+              {wishlist.data ? ` · ${wishlist.data.items.length} saved` : ""}
+            </p>
           </div>
           <div className="flex gap-2">
             <Button
@@ -107,6 +114,24 @@ export function AccountOverview() {
               }}
             >
               Sign out
+            </Button>
+            <Button
+              variant="outline"
+              loading={logoutAll.isPending}
+              onClick={async () => {
+                try {
+                  await logoutAll.mutateAsync();
+                  router.push("/");
+                } catch {
+                  toast({
+                    title: "Couldn't sign out",
+                    description: "Please try again.",
+                    tone: "error",
+                  });
+                }
+              }}
+            >
+              Sign out everywhere
             </Button>
           </div>
         </div>

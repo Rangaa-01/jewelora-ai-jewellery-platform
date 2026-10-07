@@ -6,10 +6,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Price } from "@/components/ui/price";
-import { useToast } from "@/components/ui/toast";
 import type { ProductSummary } from "@/lib/api/types";
 import { METAL_LABELS } from "@/lib/labels";
-import { useShopperStore } from "@/lib/stores/shopper-store";
+import { useWishlistToggle } from "@/lib/shop/use-wishlist-toggle";
 import { cn } from "@/lib/utils";
 
 export function ProductImagePlaceholder({ className }: { className?: string }) {
@@ -33,29 +32,11 @@ export function ProductCard({
   product: ProductSummary;
   priority?: boolean;
 }) {
-  const { toast } = useToast();
-  const toggleWishlist = useShopperStore((s) => s.toggleWishlist);
-  const wishlisted = useShopperStore((s) => s.wishlist.some((w) => w.productId === product.id));
+  const { wishlisted, toggle, pending } = useWishlistToggle(product);
   const [hover, setHover] = useState(false);
   const image = product.primary_image;
   const hoverImage = product.hover_image;
   const href = `/products/${product.slug}` as const;
-
-  const onWishlist = () => {
-    const added = toggleWishlist({
-      productId: product.id,
-      slug: product.slug,
-      name: product.name,
-      price: product.price,
-      imageUrl: image?.url ?? null,
-    });
-    toast({
-      title: added ? "Saved to wishlist" : "Removed from wishlist",
-      description: product.name,
-      tone: "success",
-      durationMs: 2500,
-    });
-  };
 
   return (
     <article
@@ -121,7 +102,8 @@ export function ProductCard({
       </Link>
       <button
         type="button"
-        onClick={onWishlist}
+        onClick={() => toggle()}
+        disabled={pending}
         aria-pressed={wishlisted}
         aria-label={
           wishlisted ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`

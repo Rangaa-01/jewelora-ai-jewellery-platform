@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ProductViewerSlot } from "./product-viewer-slot";
 import { SizeSelector, VariantSelector, variantLabel } from "./variant-selectors";
 import { ProductGrid } from "@/components/catalogue/product-grid";
+import { EnquiryDialog } from "@/components/enquiry/enquiry-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Container, Section } from "@/components/ui/layout";
@@ -15,11 +16,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/states";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast";
-import { isApiError } from "@/lib/api/client";
-import { useProduct, useProducts } from "@/lib/api/hooks";
+import { errorMessage, isApiError } from "@/lib/api/client";
+import { useAddToCart, useProduct, useProducts } from "@/lib/api/hooks";
 import type { ProductDetail as ProductDetailType } from "@/lib/api/types";
 import { formatWeight } from "@/lib/format";
 import { JEWELLERY_TYPE_LABELS, METAL_LABELS, STONE_LABELS } from "@/lib/labels";
+import { useWishlistToggle } from "@/lib/shop/use-wishlist-toggle";
 import { useShopperStore } from "@/lib/stores/shopper-store";
 
 function Specs({ product }: { product: ProductDetailType }) {
@@ -64,12 +66,15 @@ export function ProductDetail({ slug }: { slug: string }) {
   const query = useProduct(slug);
   const product = query.data;
   const { toast } = useToast();
-  const addToCart = useShopperStore((s) => s.addToCart);
-  const toggleWishlist = useShopperStore((s) => s.toggleWishlist);
+  const addToCart = useAddToCart();
   const markViewed = useShopperStore((s) => s.markViewed);
-  const wishlisted = useShopperStore((s) =>
-    product ? s.wishlist.some((w) => w.productId === product.id) : false,
-  );
+  const {
+    wishlisted,
+    toggle: toggleWishlist,
+    pending: wishlistPending,
+  } = useWishlistToggle(product ?? null);
+  const [enquiryOpen, setEnquiryOpen] = useState(false);
+  const [cartError, setCartError] = useState<string | null>(null);
 
   const [variantChoice, setVariantChoice] = useState<string | null>(null);
   const [sizeChoice, setSizeChoice] = useState<string | null>(null);
@@ -161,38 +166,28 @@ export function ProductDetail({ slug }: { slug: string }) {
   const tryOnHref =
     `/try-on?product=${product.slug}${variantId ? `&variant=${variantId}` : ""}` as const;
 
-  const onAddToCart = () => {
-    addToCart({
-      productId: product.id,
-      slug: product.slug,
-      name: product.name,
-      price,
-      imageUrl: product.primary_image?.url ?? null,
-      variantId,
-      variantLabel: variant ? variantLabel(variant) : null,
-      sizeId,
-      sizeLabel: size?.label ?? null,
-    });
-    toast({
-      title: "Added to your bag",
-      description: product.name,
-      tone: "success",
-      action: { label: "View bag", onClick: () => router.push("/cart") },
-    });
-  };
-  const onWishlist = () => {
-    const added = toggleWishlist({
-      productId: product.id,
-      slug: product.slug,
-      name: product.name,
-      price: product.price,
-      imageUrl: product.primary_image?.url ?? null,
-    });
-    toast({
-      title: added ? "Saved to wishlist" : "Removed from wishlist",
-      tone: "success",
-      durationMs: 2500,
-    });
+  const onAddToCart = async () => {
+    if (product.sizes.length > 0 && !sizeId) {
+      setCartError("Please choose a size before adding this piece to your bag.");
+      return;
+    }
+    setCartError(null);
+    try {
+      await addToCart.mutateAsync({
+        product_id: product.id,
+        variant_id: variantId,
+        size_id: sizeId,
+        quantity: 1,
+      });
+      toast({
+        title: "Added to your bag",
+        description: `${product.name}${variant ? ` · ${variantLabel(variant)}` : ""}${size ? ` · ${size.label}` : ""}`,
+        tone: "success",
+        action: { label: "View bag", onClick: () => router.push("/cart") },
+      });
+    } catch (error) {
+      setCartError(errorMessage(error));
+    }
   };
 
   return (
@@ -291,11 +286,17 @@ export function ProductDetail({ slug }: { slug: string }) {
                   size="lg"
                   variant={product.tryon_enabled ? "outline" : "primary"}
                   leftIcon={<ShoppingBag className="size-5" aria-hidden />}
-                  onClick={onAddToCart}
+                  onClick={() => void onAddToCart()}
                   disabled={!available}
+                  loading={addToCart.isPending}
                 >
                   {available ? "Add to Bag" : "Sold out"}
                 </Button>
+                {cartError && (
+                  <p role="alert" className="text-danger text-sm sm:col-span-2">
+                    {cartError}
+                  </p>
+                )}
                 <Button
                   size="md"
                   variant="ghost"
@@ -305,8 +306,9 @@ export function ProductDetail({ slug }: { slug: string }) {
                       aria-hidden
                     />
                   }
-                  onClick={onWishlist}
+                  onClick={() => toggleWishlist(variantId)}
                   aria-pressed={wishlisted}
+                  loading={wishlistPending}
                 >
                   {wishlisted ? "In your wishlist" : "Add to Wishlist"}
                 </Button>
@@ -319,14 +321,19 @@ export function ProductDetail({ slug }: { slug: string }) {
                   Book Appointment
                 </ButtonLink>
               </div>
-              <ButtonLink
-                href={`/enquire?product=${product.slug}`}
+              <Button
                 variant="link"
                 leftIcon={<MessageCircle className="size-4" aria-hidden />}
                 className="self-start"
+                onClick={() => setEnquiryOpen(true)}
               >
                 Ask About This Jewellery
-              </ButtonLink>
+              </Button>
+              <EnquiryDialog
+                product={product}
+                open={enquiryOpen}
+                onClose={() => setEnquiryOpen(false)}
+              />
 
               <Tabs defaultValue="details">
                 <TabList label="Product information">

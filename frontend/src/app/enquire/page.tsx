@@ -9,5 +9,9 @@ export default async function EnquirePage(props: PageProps<"/enquire">) {
     typeof search.product === "string" && /^[a-z0-9-]+$/.test(search.product)
       ? search.product
       : undefined;
-  return <EnquiryForm productSlug={productSlug} />;
+  const lookToken =
+    typeof search.look === "string" && /^[A-Za-z0-9_-]{6,64}$/.test(search.look)
+      ? search.look
+      : undefined;
+  return <EnquiryForm productSlug={productSlug} lookToken={lookToken} />;
 }

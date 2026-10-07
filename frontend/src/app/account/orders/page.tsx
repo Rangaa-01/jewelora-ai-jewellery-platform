@@ -1,18 +1,12 @@
 "use client";
 
 import { Package } from "lucide-react";
+import Link from "next/link";
 import { AccountListPage } from "@/components/account/account-list-page";
+import { ORDER_STATUS_LABELS, orderTone } from "@/components/orders/order-status";
 import { Badge } from "@/components/ui/badge";
+import type { Order } from "@/lib/api/types";
 import { formatDate, formatPrice } from "@/lib/format";
-
-interface Order {
-  id: string;
-  order_number: string;
-  status: string;
-  grand_total: string;
-  placed_at: string;
-  items: Array<{ name: string; quantity: number }>;
-}
 
 export default function OrdersPage() {
   return (
@@ -28,27 +22,27 @@ export default function OrdersPage() {
       renderItem={(o) => (
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="font-semibold">Order {o.order_number}</p>
+            <Link
+              href={`/account/orders/${o.id}`}
+              className="hover:text-accent-text font-semibold underline-offset-4 hover:underline"
+            >
+              Order {o.order_number}
+            </Link>
             <p className="text-fg-muted text-sm">
               {o.items
                 .map((i) => `${i.name}${i.quantity > 1 ? ` × ${i.quantity}` : ""}`)
                 .join(", ")}
             </p>
-            <p className="text-fg-muted mt-1 text-xs">{formatDate(o.placed_at)}</p>
+            <p className="text-fg-muted mt-1 text-xs">
+              {formatDate(o.placed_at)} ·{" "}
+              {o.fulfilment_method === "store_pickup"
+                ? `Collect at ${o.store_name ?? "store"}`
+                : "Home delivery"}
+            </p>
           </div>
           <div className="text-right">
             <p className="font-semibold tabular-nums">{formatPrice(o.grand_total)}</p>
-            <Badge
-              tone={
-                o.status === "delivered" || o.status === "paid"
-                  ? "emerald"
-                  : o.status === "cancelled"
-                    ? "danger"
-                    : "gold"
-              }
-            >
-              {o.status.replace(/_/g, " ")}
-            </Badge>
+            <Badge tone={orderTone(o.status)}>{ORDER_STATUS_LABELS[o.status]}</Badge>
           </div>
         </div>
       )}

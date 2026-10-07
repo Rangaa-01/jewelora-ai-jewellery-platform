@@ -8,9 +8,8 @@ import { useEffect, useState } from "react";
 import { Logo } from "./logo";
 import { MobileNav } from "./mobile-nav";
 import { SearchDialog } from "./search-dialog";
-import { useSession } from "@/lib/api/hooks";
-import { useHydrated } from "@/lib/hooks/use-hydrated";
-import { selectCartCount, selectWishlistCount, useShopperStore } from "@/lib/stores/shopper-store";
+import { SignInPromptHost } from "@/components/account/sign-in-prompt";
+import { useCart, useSession, useWishlist } from "@/lib/api/hooks";
 import { useUiStore } from "@/lib/stores/ui-store";
 import { NAV_LINKS } from "@/lib/site";
 import { cn } from "@/lib/utils";
@@ -48,12 +47,13 @@ function IconLink({
 export function Header() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
-  const cartCount = useShopperStore(selectCartCount);
-  const wishlistCount = useShopperStore(selectWishlistCount);
   const setMobileNavOpen = useUiStore((s) => s.setMobileNavOpen);
   const setSearchOpen = useUiStore((s) => s.setSearchOpen);
   const { data: session } = useSession();
-  const hydrated = useHydrated();
+  const cart = useCart();
+  const wishlist = useWishlist();
+  const cartCount = cart.data?.item_count ?? 0;
+  const wishlistCount = session ? (wishlist.data?.items.length ?? 0) : 0;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -127,7 +127,7 @@ export function Header() {
           >
             <Search className="size-5" aria-hidden />
           </button>
-          <IconLink href="/wishlist" label="Wishlist" count={hydrated ? wishlistCount : 0}>
+          <IconLink href="/wishlist" label="Wishlist" count={wishlistCount}>
             <Heart className="size-5" aria-hidden />
           </IconLink>
           <IconLink
@@ -136,13 +136,14 @@ export function Header() {
           >
             <UserRound className="size-5" aria-hidden />
           </IconLink>
-          <IconLink href="/cart" label="Bag" count={hydrated ? cartCount : 0}>
+          <IconLink href="/cart" label="Bag" count={cartCount}>
             <ShoppingBag className="size-5" aria-hidden />
           </IconLink>
         </div>
       </div>
       <MobileNav />
       <SearchDialog />
+      <SignInPromptHost />
     </header>
   );
 }

@@ -3,16 +3,32 @@
 import { Calendar } from "lucide-react";
 import { AccountListPage } from "@/components/account/account-list-page";
 import { Badge } from "@/components/ui/badge";
-import { ButtonLink } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
+import { errorMessage } from "@/lib/api/client";
+import { useCancelAppointment } from "@/lib/api/hooks";
+import type { Appointment } from "@/lib/api/types";
 import { formatDate } from "@/lib/format";
 
-interface Appointment {
-  id: string;
-  reference: string;
-  starts_at: string;
-  status: string;
-  store: { name: string };
-  party_size: number;
+function CancelButton({ appointment }: { appointment: Appointment }) {
+  const cancel = useCancelAppointment();
+  const { toast } = useToast();
+  if (appointment.status !== "requested" && appointment.status !== "confirmed") return null;
+  return (
+    <Button
+      size="sm"
+      variant="ghost"
+      loading={cancel.isPending}
+      onClick={() =>
+        cancel.mutate(appointment.id, {
+          onError: (e) =>
+            toast({ title: "Couldn't cancel", description: errorMessage(e), tone: "error" }),
+        })
+      }
+    >
+      Cancel
+    </Button>
+  );
 }
 
 export default function AppointmentsPage() {
@@ -37,14 +53,22 @@ export default function AppointmentsPage() {
               {a.store.name} · {a.party_size} {a.party_size === 1 ? "guest" : "guests"} · Ref{" "}
               {a.reference}
             </p>
+            {a.products.length > 0 && (
+              <p className="text-fg-muted mt-1 text-xs">
+                Pieces: {a.products.map((p) => p.name).join(", ")}
+              </p>
+            )}
           </div>
-          <Badge
-            tone={
-              a.status === "confirmed" ? "emerald" : a.status === "cancelled" ? "danger" : "gold"
-            }
-          >
-            {a.status.replace(/_/g, " ")}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge
+              tone={
+                a.status === "confirmed" ? "emerald" : a.status === "cancelled" ? "danger" : "gold"
+              }
+            >
+              {a.status.replace(/_/g, " ")}
+            </Badge>
+            <CancelButton appointment={a} />
+          </div>
         </div>
       )}
     />

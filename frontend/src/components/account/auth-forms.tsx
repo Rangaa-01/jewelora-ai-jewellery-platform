@@ -36,7 +36,13 @@ function PasswordInput(props: Omit<React.ComponentProps<typeof Input>, "type">) 
   );
 }
 
-export function LoginForm({ next = "/account" }: { next?: string }) {
+export function LoginForm({
+  next = "/account",
+  onSuccess,
+}: {
+  next?: string;
+  onSuccess?: () => void;
+}) {
   const router = useRouter();
   const login = useLogin();
   const {
@@ -49,7 +55,8 @@ export function LoginForm({ next = "/account" }: { next?: string }) {
   const onSubmit = handleSubmit(async (values) => {
     try {
       await login.mutateAsync(values);
-      router.push(next as never);
+      if (onSuccess) onSuccess();
+      else router.push(next as never);
     } catch (error) {
       applyApiFieldErrors(error, setError, ["identifier", "password"]);
     }
@@ -110,7 +117,13 @@ const registerSchema = z
   });
 type RegisterValues = z.infer<typeof registerSchema>;
 
-export function RegisterForm({ next = "/account" }: { next?: string }) {
+export function RegisterForm({
+  next = "/account",
+  onSuccess,
+}: {
+  next?: string;
+  onSuccess?: () => void;
+}) {
   const router = useRouter();
   const signup = useRegister();
   const {
@@ -132,7 +145,8 @@ export function RegisterForm({ next = "/account" }: { next?: string }) {
         password: values.password,
         marketing_opt_in: values.marketing_opt_in,
       });
-      router.push(next as never);
+      if (onSuccess) onSuccess();
+      else router.push(next as never);
     } catch (error) {
       applyApiFieldErrors(error, setError, ["full_name", "email", "phone", "password"]);
     }

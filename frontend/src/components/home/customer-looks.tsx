@@ -41,9 +41,9 @@ export function CustomerLooks() {
         ) : (
           <ul className="grid grid-cols-2 gap-4 md:grid-cols-3">
             {looks.map((look) => (
-              <li key={look.id}>
+              <li key={look.token}>
                 <Link
-                  href={`/looks/${look.share_token}`}
+                  href={`/looks/${look.token}`}
                   className="group bg-bg-muted block overflow-hidden rounded-md"
                 >
                   <div className="relative aspect-[4/5]">
@@ -61,7 +61,12 @@ export function CustomerLooks() {
                       </div>
                     )}
                   </div>
-                  <p className="p-3 text-sm font-medium">{look.title}</p>
+                  <p className="p-3 text-sm font-medium">
+                    {look.title}
+                    <span className="text-fg-muted block text-xs font-normal">
+                      {look.items.length} {look.items.length === 1 ? "piece" : "pieces"}
+                    </span>
+                  </p>
                 </Link>
               </li>
             ))}

@@ -10,7 +10,7 @@ import { Container, Section } from "@/components/ui/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { api, isApiError } from "@/lib/api/client";
-import { useSession } from "@/lib/api/hooks";
+import { useOwnerKey, useSession } from "@/lib/api/hooks";
 import type { Page } from "@/lib/api/types";
 
 interface AccountListPageProps<T> {
@@ -48,8 +48,9 @@ export function AccountListPage<T>({
       );
   }, [session.data, router]);
 
+  const { owner } = useOwnerKey();
   const query = useQuery({
-    queryKey: ["account", queryKey],
+    queryKey: [queryKey, owner],
     queryFn: async ({ signal }) => {
       const data = await api.get<Page<T> | T[]>(endpoint, { signal });
       return Array.isArray(data) ? data : data.items;

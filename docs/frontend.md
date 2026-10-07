@@ -172,3 +172,73 @@ in the browser:
 fine-tuning sliders debounced into `POST /tryon/results/{id}/adjust`, "Try other pieces on
 this photo" via `POST /tryon/photos/{id}/run`) and `useTryOnSession` (mutations; the
 previous image stays visible while a new result loads).
+
+## Admin
+
+The staff dashboard lives under `/admin` and reuses the design system but has its own
+chrome (`src/components/admin/admin-shell.tsx`: sidebar on desktop, drawer on mobile,
+top bar with the signed-in staff member and sign-out). The shop header/footer are hidden
+by a scoped `<style>` in `src/app/admin/layout.tsx`.
+
+**Access.** `src/proxy.ts` redirects visitors without a session cookie from `/admin/*`
+to `/account/login?next=…&reason=staff`. The shell then calls `GET /api/v1/auth/me`;
+non-staff accounts see a "staff sign-in required" message. `src/lib/admin/nav.ts`
+defines which roles see which sections (`SECTION_ROLES`) and `SectionGuard` renders an
+access message for roles that reach a section by URL. All of this is UX only — every
+`/api/v1/admin/*` endpoint enforces roles server-side.
+
+**Structure.**
+
+| Path | Purpose |
+|------|---------|
+| `src/lib/admin/hooks.ts` | TanStack Query hooks for `/api/v1/admin/*` (`adminKeys` for cache keys; mutations invalidate the affected admin and shop queries) |
+| `src/lib/admin/anchors.ts` | Required/optional try-on anchors per jewellery type and the canvas ↔ normalised coordinate maths used by the anchor editor |
+| `src/lib/admin/status.ts` | Status labels, badge tones and suggested transitions for orders, enquiries and appointments |
+| `src/components/admin/primitives.tsx` | `PageHeader`, `Card`, `StatTile`, `DataTable`, `Pagination`, `SearchInput` (debounced, URL-synced), `ConfirmDialog`, `QueryState` (loading/error/content), `AccessDenied` |
+| `src/components/admin/charts.tsx` | Dependency-free SVG bar/line charts with `<title>`/`<desc>` for screen readers |
+| `src/components/admin/dashboard.tsx` | KPI tiles, charts and "most …" product lists from `GET /admin/analytics/overview` |
+| `src/components/admin/products.tsx`, `product-form.tsx`, `product-assets.tsx`, `anchor-editor.tsx` | Catalogue table, full product form (variants/sizes editors, collections, set components), asset manager tabs (images, try-on cut-outs with click-to-place anchors, GLB models) |
+| `src/components/admin/catalogue-managers.tsx` | Categories, collections (hero image, product assignment) and stores in dialogs |
+| `src/components/admin/orders.tsx`, `queues.tsx`, `customers.tsx`, `looks-staff.tsx` | Orders list/detail, enquiry and appointment queues (sheet detail with status + notes), customers, saved looks gallery, staff creation (admin only) |
+
+**Conventions.** List filters live in the URL (`?q=&status=&page=`) so links are
+shareable and the back button works; `Suspense` wraps pages that read `useSearchParams`.
+Forms use Zod + react-hook-form, map backend `details[{field,message}]` with
+`applyApiFieldErrors`, and show `FormError` for everything else. Numbers are registered
+with `valueAsNumber`; decimals are sent as strings (the API's Decimal fields). Destructive
+actions always go through `ConfirmDialog`. Try-on cut-out uploads are blocked until every
+required anchor is placed (`missingAnchors`). Sets cannot receive try-on assets (their
+components do).
+
+## Commerce & engagement
+
+Everything a shopper saves or buys lives on the server; the browser only caches it with
+TanStack Query (`src/lib/api/hooks.ts`, `// --- Shop ---` block). Query keys are scoped by
+`useOwnerKey()` (the signed-in user id or `"guest"`), so signing in or out automatically
+refetches the cart, wishlist, looks, orders, appointments and enquiries.
+
+| Feature | Hooks | UI |
+|---------|-------|----|
+| Bag (guests + customers; merged on sign-in by the backend) | `useCart`, `useAddToCart`, `useUpdateCartItem`, `useRemoveCartItem` | `components/account/cart-view.tsx`, product page "Add to Bag" (size required → inline error) |
+| Wishlist (sign-in required) | `useWishlist`, `useAddWishlistItem`, `useRemoveWishlistItem`, `useShareWishlist`, `useSharedWishlist` | `lib/shop/use-wishlist-toggle.ts` (prompts guests to sign in, then completes the action), `components/account/wishlist-view.tsx` (compare up to 4, share link), `/wishlist/shared/[token]` |
+| Saved looks | `useLooks`, `useCreateLook`, `useUpdateLook`, `useShareLook`, `useDeleteLook`, `useSharedLook` | `lib/looks/use-save-look.ts` + `components/looks/save-look-dialog.tsx` (for the try-on studio), `/looks` (mine: WhatsApp / copy / download / public toggle), `/looks/[token]` (public, no customer identity, OG image via `opengraph-image.tsx`) |
+| Appointments | `useAppointmentSlots`, `useBookAppointment`, `useAppointments`, `useCancelAppointment` | `/appointments/new` (store → date → live slot grid from the backend, product chips from `?product=`/`?products=`, `?look=` token), `/account/appointments` |
+| Enquiries | `useCreateEnquiry`, `useEnquiries` | `components/enquiry/enquiry-form.tsx` (`EnquiryFormCard` is reused by `EnquiryDialog` on the product page), `/enquire?product=…|look=…`, `/account/enquiries` |
+| Checkout & orders | `usePlaceOrder`, `useConfirmPayment`, `useOrders`, `useOrder`, `useCancelOrder` | `components/account/checkout-form.tsx` (contact → collection → payment → review; validation in `lib/shop/checkout.ts`), `/account/orders`, `/account/orders/[id]` (status timeline, cancel while reserved) |
+| Stylist / visual search | `useStylist`, `useVisualSearch` | `/stylist` (auto-runs from `?q=`, budget/occasion helpers, "AI-ranked" badge only when `llm_used`), `/visual-search` (similarity %, exact-match callout, honest "not indexed yet" state) |
+| Profile | `useProfile`, `useUpdateProfile`, `useChangePassword`, `useLogoutAll` | `/account/profile` |
+
+**Sign-in prompt.** `useUiStore.getState().requestSignIn({ message, onSuccess })` opens the
+global dialog rendered by `SignInPromptHost` (mounted in the header). After login or
+registration the pending action runs, so "save to wishlist" or "save look" never loses the
+customer's intent.
+
+**Online payment.** `components/account/razorpay.ts` lazily loads Razorpay Checkout.js only
+when an order response carries `payment.checkout`; the signed result is posted to
+`/orders/{id}/confirm-payment`. When the backend reports `payment_method_unavailable` the
+checkout falls back to pay-at-store with an honest message. Enabling it in production needs
+`script-src https://checkout.razorpay.com` and `frame-src https://api.razorpay.com
+https://checkout.razorpay.com` in the CSP (`next.config.ts`).
+
+**Share links.** `lib/shop/share.ts` builds look/wishlist URLs and WhatsApp share links,
+copies to the clipboard and downloads preview images through a blob.

@@ -1,7 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { Calendar, Camera, Images } from "lucide-react";
+import { Calendar, Camera, Images, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
@@ -9,24 +8,12 @@ import { Container, Section } from "@/components/ui/layout";
 import { Price } from "@/components/ui/price";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/states";
-import { api, isApiError } from "@/lib/api/client";
-import type { ProductSummary } from "@/lib/api/types";
-
-interface SharedLook {
-  id: string;
-  title: string;
-  kind: string;
-  preview_url: string | null;
-  created_at: string;
-  items: Array<{ slot: string; product: ProductSummary }>;
-}
+import { isApiError } from "@/lib/api/client";
+import { useSharedLook } from "@/lib/api/hooks";
+import { formatPrice } from "@/lib/format";
 
 export function SharedLookView({ token }: { token: string }) {
-  const query = useQuery({
-    queryKey: ["looks", "shared", token],
-    queryFn: () => api.get<SharedLook>(`/looks/shared/${encodeURIComponent(token)}`),
-    retry: false,
-  });
+  const query = useSharedLook(token);
 
   if (query.isPending) {
     return (
@@ -61,6 +48,7 @@ export function SharedLookView({ token }: { token: string }) {
     );
   }
   const look = query.data;
+  const slugs = look.items.map((i) => i.product.slug).join(",");
   return (
     <Section padding="sm" className="pt-10 md:pt-16">
       <Container className="grid gap-10 lg:grid-cols-2">
@@ -75,8 +63,9 @@ export function SharedLookView({ token }: { token: string }) {
               preload
             />
           ) : (
-            <div className="text-gold/60 flex size-full items-center justify-center">
+            <div className="text-gold/60 flex size-full flex-col items-center justify-center gap-3">
               <Images className="size-10" aria-hidden />
+              <span className="text-fg-muted text-sm">This look was saved without a photo</span>
             </div>
           )}
         </div>
@@ -85,10 +74,14 @@ export function SharedLookView({ token }: { token: string }) {
             {look.kind === "bridal" ? "Shared bridal look" : "Shared look"}
           </p>
           <h1 className="text-4xl md:text-5xl">{look.title}</h1>
+          <p className="text-fg-muted mt-2 text-sm">
+            {look.items.length} {look.items.length === 1 ? "piece" : "pieces"} ·{" "}
+            {formatPrice(look.total_price)} together
+          </p>
           <ul className="mt-8 flex flex-col gap-3">
             {look.items.map((it) => (
               <li
-                key={it.product.id}
+                key={it.id}
                 className="border-border bg-bg-elevated flex items-center gap-4 rounded-lg border p-3"
               >
                 <div className="bg-bg-muted relative size-16 shrink-0 overflow-hidden rounded-md">
@@ -116,13 +109,20 @@ export function SharedLookView({ token }: { token: string }) {
           </ul>
           <div className="mt-8 flex flex-wrap gap-3">
             <ButtonLink
-              href={`/try-on?products=${look.items.map((i) => i.product.slug).join(",")}`}
+              href={`/try-on?products=${slugs}`}
               leftIcon={<Camera className="size-4" aria-hidden />}
             >
               Try this look on me
             </ButtonLink>
             <ButtonLink
-              href={`/appointments/new?look=${token}`}
+              href={`/enquire?look=${token}`}
+              variant="outline"
+              leftIcon={<MessageCircle className="size-4" aria-hidden />}
+            >
+              Enquire
+            </ButtonLink>
+            <ButtonLink
+              href={`/appointments/new?look=${token}&products=${slugs}`}
               variant="outline"
               leftIcon={<Calendar className="size-4" aria-hidden />}
             >
