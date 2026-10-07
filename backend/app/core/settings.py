@@ -93,7 +93,7 @@ class Settings(BaseSettings):
     tryon_max_dimension: int = 1600
     llm_provider: Literal["none", "anthropic"] = "none"
     anthropic_api_key: str | None = None
-    anthropic_model: str = "claude-sonnet-5-5"
+    anthropic_model: str = "claude-opus-5-5"
 
     # --- Payments / notifications ----------------------------------------------
     payment_provider: Literal["none", "razorpay"] = "none"

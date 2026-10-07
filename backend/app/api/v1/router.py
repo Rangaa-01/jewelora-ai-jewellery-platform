@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.api.v1 import (
+    ai,
     appointments,
     auth,
     cart,
@@ -37,4 +38,5 @@ api_router.include_router(appointments.router)
 api_router.include_router(enquiries.router)
 api_router.include_router(cart.router)
 api_router.include_router(orders.router)
+api_router.include_router(ai.router)
 api_router.include_router(admin_router)
