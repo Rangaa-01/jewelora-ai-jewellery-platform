@@ -15,6 +15,7 @@ from app.core.errors import PayloadTooLargeError, ValidationAppError
 from app.core.logging import get_logger
 from app.core.rate_limit import UPLOAD_LIMIT, limiter
 from app.core.settings import Settings
+from app.models.catalogue import Product
 from app.models.enums import Role
 from app.schemas.catalogue import (
     CategoryIn,
