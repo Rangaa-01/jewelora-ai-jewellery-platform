@@ -13,13 +13,15 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} blob:`,
+      // checkout.razorpay.com is only loaded when online payment is configured.
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} blob: https://checkout.razorpay.com`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' blob: data: https://storage.googleapis.com https://cdn.jsdelivr.net",
+      "connect-src 'self' blob: data: https://storage.googleapis.com https://cdn.jsdelivr.net https://api.razorpay.com https://lumberjack.razorpay.com",
       "worker-src 'self' blob:",
       "media-src 'self' blob:",
+      "frame-src https://api.razorpay.com https://checkout.razorpay.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
@@ -49,7 +51,12 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [
       { protocol: "https", hostname: "**" },
-      ...(isDev ? [{ protocol: "http" as const, hostname: "127.0.0.1" }, { protocol: "http" as const, hostname: "localhost" }] : []),
+      ...(isDev
+        ? [
+            { protocol: "http" as const, hostname: "127.0.0.1" },
+            { protocol: "http" as const, hostname: "localhost" },
+          ]
+        : []),
     ],
     dangerouslyAllowLocalIP: isDev,
   },

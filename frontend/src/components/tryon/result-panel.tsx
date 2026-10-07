@@ -8,13 +8,16 @@ import { RingSizeCard } from "./ring-size-card";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import type { Adjustments } from "@/lib/tryon/fitting/types";
-import type { LookItem, TryOnResult } from "@/lib/tryon/session";
-import { useShopperStore } from "@/lib/stores/shopper-store";
+import type { LookItem, TryOnMode, TryOnResult } from "@/lib/tryon/session";
+import { SaveLookDialog } from "@/components/looks/save-look-dialog";
+import { useAddWishlistItem, useOwnerKey, useWishlist } from "@/lib/api/hooks";
+import { useUiStore } from "@/lib/stores/ui-store";
 
 interface ResultPanelProps {
   result: TryOnResult;
   originalUrl: string | null;
   items: LookItem[];
+  mode?: TryOnMode;
   busy: boolean;
   onAdjust: (productId: string, adjustments: Adjustments) => void;
   onChangePhoto: () => void;
@@ -26,6 +29,7 @@ export function ResultPanel({
   result,
   originalUrl,
   items,
+  mode = "look",
   busy,
   onAdjust,
   onChangePhoto,
@@ -33,8 +37,47 @@ export function ResultPanel({
 }: ResultPanelProps) {
   const [showOriginal, setShowOriginal] = useState(false);
   const [showAdjust, setShowAdjust] = useState(false);
+  const [saveOpen, setSaveOpen] = useState(false);
   const { toast } = useToast();
-  const toggleWishlist = useShopperStore((s) => s.toggleWishlist);
+  const { signedIn } = useOwnerKey();
+  const wishlist = useWishlist();
+  const addWishlistItem = useAddWishlistItem();
+  const requestSignIn = useUiStore((s) => s.requestSignIn);
+  const lookItems = items.map((item) => ({
+    product_id: item.product.id,
+    variant_id: item.variantId,
+    slot: item.slot ?? item.product.jewellery_type,
+    adjustments: item.adjustments,
+  }));
+
+  const addAllToWishlist = async () => {
+    const existing = new Set(wishlist.data?.items.map((i) => i.product?.id) ?? []);
+    const missing = items.filter((i) => !existing.has(i.product.id));
+    try {
+      for (const item of missing) {
+        await addWishlistItem.mutateAsync({
+          product_id: item.product.id,
+          variant_id: item.variantId,
+        });
+      }
+      toast({
+        title: missing.length ? "Added to your wishlist" : "Already in your wishlist",
+        description: `${items.length} ${items.length === 1 ? "piece" : "pieces"} from this look`,
+        tone: "success",
+      });
+    } catch {
+      toast({
+        title: "Couldn't update your wishlist",
+        description: "Please try again.",
+        tone: "error",
+      });
+    }
+  };
+
+  const requireSignIn = (message: string, next: () => void) => {
+    if (signedIn) next();
+    else requestSignIn({ message, onSuccess: next });
+  };
   const placedIds = new Set(result.placements.map((p) => p.product_id));
   const adjustable = items.filter((i) => placedIds.has(i.product.id));
   const values = Object.fromEntries(
@@ -144,15 +187,20 @@ export function ResultPanel({
         <Button
           leftIcon={<Save className="size-4" aria-hidden />}
           onClick={() =>
-            toast({
-              title: "Sign in to save looks",
-              description: "Saved looks sync to your account.",
-              tone: "info",
-            })
+            requireSignIn("Sign in to save this look to your account.", () => setSaveOpen(true))
           }
         >
           Save Look
         </Button>
+        <SaveLookDialog
+          open={saveOpen}
+          onClose={() => setSaveOpen(false)}
+          tryonResultId={result.id}
+          items={lookItems}
+          kind={mode}
+          defaultTitle={mode === "bridal" ? "My bridal look" : "My look"}
+          onSaved={() => setSaveOpen(false)}
+        />
         <Button
           variant="outline"
           leftIcon={<Share2 className="size-4" aria-hidden />}
@@ -172,19 +220,12 @@ export function ResultPanel({
         <Button
           variant="ghost"
           leftIcon={<Heart className="size-4" aria-hidden />}
-          onClick={() => {
-            items.forEach(({ product }) => {
-              if (!useShopperStore.getState().isWishlisted(product.id))
-                toggleWishlist({
-                  productId: product.id,
-                  slug: product.slug,
-                  name: product.name,
-                  price: product.price,
-                  imageUrl: product.primary_image?.url ?? null,
-                });
-            });
-            toast({ title: "Added all to wishlist", tone: "success" });
-          }}
+          loading={addWishlistItem.isPending}
+          onClick={() =>
+            requireSignIn("Sign in to keep these pieces in your wishlist.", () => {
+              void addAllToWishlist();
+            })
+          }
         >
           Add All to Wishlist
         </Button>

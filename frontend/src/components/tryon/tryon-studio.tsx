@@ -244,6 +244,7 @@ export function TryOnStudio({ initialSlugs, initialVariantId, mode }: TryOnStudi
                 result={session.result}
                 originalUrl={session.originalUrl}
                 items={resolvedItems}
+                mode={mode}
                 busy={session.adjust.isPending || session.rerun.isPending}
                 onAdjust={onAdjust}
                 onChangePhoto={() => {
