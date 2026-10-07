@@ -197,7 +197,7 @@ export function TryOnStudio({ initialSlugs, initialVariantId, mode }: TryOnStudi
             </p>
           </div>
           <p className="text-fg-muted text-xs">
-            Photos are private, encrypted and deleted after 30 days.
+            Photos are private, never shared and deleted after 30 days.
           </p>
         </div>
 

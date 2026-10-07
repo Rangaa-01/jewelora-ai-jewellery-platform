@@ -15,7 +15,7 @@ const ITEMS = [
   {
     icon: Lock,
     title: "Your photos are private",
-    text: "Try-on photos are encrypted, never shared, and deleted on request.",
+    text: "Try-on photos are private, never shared, and deleted on request.",
   },
   {
     icon: Store,

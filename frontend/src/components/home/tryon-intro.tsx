@@ -22,7 +22,7 @@ const POINTS = [
   {
     icon: Lock,
     title: "Private by design",
-    text: "Photos are stored encrypted, visible only to you, and deleted on request or automatically after 30 days.",
+    text: "Photos are private, visible only to you, and deleted on request or automatically after 30 days.",
   },
 ];
 
