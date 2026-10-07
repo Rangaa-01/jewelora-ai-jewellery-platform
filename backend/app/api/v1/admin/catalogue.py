@@ -8,11 +8,13 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile, status
 from pydantic import BaseModel, ValidationError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import DBDep, ManagerUserDep, SettingsDep, StorageDep, require_roles
 from app.core.errors import PayloadTooLargeError, ValidationAppError
 from app.core.logging import get_logger
 from app.core.rate_limit import UPLOAD_LIMIT, limiter
+from app.core.settings import Settings
 from app.models.enums import Role
 from app.schemas.catalogue import (
     CategoryIn,
@@ -43,6 +45,7 @@ from app.services.serializers import (
     tryon_asset_out,
 )
 from app.services.upload_service import process_image, validate_glb
+from app.storage import ObjectStorage
 from app.storage.base import (
     collection_image_key,
     product_image_key,
@@ -170,17 +173,35 @@ async def admin_upload_image(
         height=processed.height,
         meta=parsed.model_dump(),
     )
+    await _reindex_quietly(db, storage, settings, product)
     return image_out(image, storage)
+
+
+async def _reindex_quietly(
+    db: AsyncSession, storage: ObjectStorage, settings: Settings, product: Product
+) -> None:
+    """Refresh visual-search embeddings after an image change; never fails the request."""
+    from app.services.visual_search_service import VisualSearchService
+
+    try:
+        await VisualSearchService(db, storage, settings).index_product(product)
+    except Exception:
+        log.warning("embedding_reindex_skipped", product_id=str(product.id))
 
 
 @router.delete("/products/{product_id}/images/{image_id}", response_model=Message)
 async def admin_delete_image(
-    product_id: uuid.UUID, image_id: uuid.UUID, db: DBDep, storage: StorageDep
+    product_id: uuid.UUID,
+    image_id: uuid.UUID,
+    db: DBDep,
+    storage: StorageDep,
+    settings: SettingsDep,
 ) -> Message:
     service = CatalogueService(db)
     product = await service.get_product(product_id)
     image = await service.remove_image(product, image_id)
     await storage.delete(image.storage_key)
+    await _reindex_quietly(db, storage, settings, product)
     return Message(message="Image removed.")
 
 

@@ -3,7 +3,9 @@
 Commands
 --------
 seed              Load development seed data (refuses to run when APP_ENV=production).
-create-admin      Create an admin user (interactive-safe: pass --email and --password).
+create-admin      Create an admin user (pass --email and --password).
+index-embeddings  Compute visual-search embeddings for every product image.
+cleanup           Purge expired customer photos, stale tokens and abandoned guest carts.
 """
 
 from __future__ import annotations
@@ -399,6 +401,28 @@ async def create_admin(email: str, password: str, full_name: str) -> None:
         print(f"Admin created: {user.email}")
 
 
+async def index_embeddings() -> None:
+    from app.services.visual_search_service import VisualSearchService
+
+    settings = get_settings()
+    factory = get_session_factory()
+    async with factory() as db:
+        count = await VisualSearchService(db, get_storage(), settings).index_all()
+        await db.commit()
+    print(f"Indexed {count} product images for visual search.")
+
+
+async def cleanup() -> None:
+    from app.tasks.maintenance import run_cleanup
+
+    settings = get_settings()
+    factory = get_session_factory()
+    async with factory() as db:
+        result = await run_cleanup(db, get_storage(), settings)
+        await db.commit()
+    print(f"Cleanup complete: {result}")
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         prog="jewelora", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -412,12 +436,18 @@ def main(argv: list[str] | None = None) -> None:
     admin_cmd.add_argument("--email", required=True)
     admin_cmd.add_argument("--password", required=True)
     admin_cmd.add_argument("--name", default="Administrator")
+    sub.add_parser("index-embeddings", help="compute visual search embeddings for product images")
+    sub.add_parser("cleanup", help="purge expired photos, stale tokens and abandoned guest carts")
     args = parser.parse_args(argv)
     configure_logging(get_settings())
     if args.command == "seed":
         asyncio.run(seed(with_assets=not args.no_assets))
     elif args.command == "create-admin":
         asyncio.run(create_admin(args.email, args.password, args.name))
+    elif args.command == "index-embeddings":
+        asyncio.run(index_embeddings())
+    elif args.command == "cleanup":
+        asyncio.run(cleanup())
 
 
 if __name__ == "__main__":
