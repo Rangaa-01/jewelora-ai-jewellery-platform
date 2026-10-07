@@ -67,16 +67,19 @@ overlay), `@mediapipe/tasks-vision` (in-browser face/hand/pose landmarks), Zusta
 (client state: try-on session, mix & match), TanStack Query (server state), Zod +
 React Hook Form (forms), Vitest + React Testing Library (unit), Playwright (E2E).
 
-**Route groups** (`frontend/src/app`):
+**Routes** (`frontend/src/app`, App Router; no route groups):
 
-| Group            | Purpose                                                     |
-|------------------|-------------------------------------------------------------|
-| `(marketing)`    | Home, how it works, collections landing, bridal, stylist    |
-| `(shop)`         | Catalogue, product detail, search, visual search, cart, checkout |
-| `(tryon)`        | Try-on studio (photo + live), mix & match, bridal mode, shared look pages |
-| `(account)`      | Login/register, profile, wishlist, saved looks, orders, appointments, enquiries |
-| `admin`          | Role-gated dashboard: products, categories, collections, customers, orders, enquiries, appointments, analytics |
-| `api/`           | Only Next-side route handlers that must run on the Next server (OG image for shared looks). Business APIs live in FastAPI. |
+| Route | Purpose |
+|-------|---------|
+| `/` | Home: hero (procedural 3D ring), try-on intro, featured, collections, 3D experience, how it works, bridal, stylist, visual search, customer looks, appointment, testimonials, trust, CTA |
+| `/collections`, `/collections/[slug]`, `/products`, `/products/[slug]` | Catalogue with filters/sort/pagination, product detail with gallery, 3D viewer, variants/sizes, try-on/wishlist/enquiry/appointment CTAs |
+| `/try-on`, `/bridal` | Try-on studio: photo mode (server render, adjustments, ring size) and live camera mode (on-device MediaPipe); bridal slot set |
+| `/stylist`, `/visual-search` | AI stylist and image search |
+| `/wishlist`, `/wishlist/shared/[token]`, `/looks`, `/looks/[token]`, `/cart`, `/checkout` | Engagement and commerce |
+| `/appointments/new`, `/enquire` | Store visit booking and enquiries (guest or signed-in) |
+| `/account/*` | Login/register, profile, orders, appointments, enquiries, looks |
+| `/admin/*` | Staff dashboard (role-aware navigation; backend enforces) |
+| `/offline` | PWA offline fallback |
 
 **Talking to the backend.** The browser only ever calls `/api/*` on its own origin.
 `next.config.ts` rewrites `/api/:path*` to the backend (`BACKEND_INTERNAL_URL`). This
