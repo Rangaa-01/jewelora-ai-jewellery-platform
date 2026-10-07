@@ -191,7 +191,7 @@ def neck_anchors(lm: Landmarks, jewellery_type: JewelleryType) -> BodyAnchors:
     along = Point(math.cos(rad), math.sin(rad))
     left_end = Point(neck_base.x - along.x * half_w, neck_base.y - along.y * half_w)
     right_end = Point(neck_base.x + along.x * half_w, neck_base.y + along.y * half_w)
-    occl = {"hair": 0.8}
+    occl = {"hair": 0.55}
     return BodyAnchors(
         region="neck",
         points={"left_end": left_end, "right_end": right_end, "center": neck_base},

@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import uuid
+from decimal import Decimal
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile, status
@@ -220,12 +222,29 @@ async def admin_upload_tryon_asset(
     settings: SettingsDep,
     file: UploadFile = File(...),
     meta: str | None = Form(default=None),
+    auto_cutout: bool = Form(default=False),
 ) -> TryOnAssetOut:
+    """Upload a try-on cut-out.
+
+    With ``auto_cutout=true`` an ordinary product photo is accepted: the background is
+    removed automatically and anchors are estimated from the jewellery's outline (any
+    anchors supplied in ``meta`` override the estimates).
+    """
     service = CatalogueService(db)
     product = await service.get_product(product_id)
     parsed = _parse_meta(TryOnAssetMetaIn, meta)
     data = await _read_upload(file, settings.product_asset_max_bytes)
-    processed = process_image(
+    meta_dict = parsed.model_dump()
+    if auto_cutout:
+        from app.services.cutout_service import make_tryon_asset
+
+        cut = await asyncio.to_thread(make_tryon_asset, data, product.jewellery_type, settings)
+        data = cut.png
+        meta_dict["anchors"] = {**cut.anchors, **(parsed.anchors or {})}
+        meta_dict["real_width_mm"] = parsed.real_width_mm or Decimal(str(cut.real_width_mm))
+        meta_dict["real_height_mm"] = parsed.real_height_mm or Decimal(str(cut.real_height_mm))
+    processed = await asyncio.to_thread(
+        process_image,
         data,
         settings,
         max_bytes=settings.product_asset_max_bytes,
@@ -235,18 +254,14 @@ async def admin_upload_tryon_asset(
     )
     if not processed.has_alpha:
         raise ValidationAppError(
-            "Try-on assets must be transparent PNG or WebP images "
-            "(jewellery cut out from its background).",
+            "Try-on assets must be transparent PNG or WebP images (jewellery cut out from "
+            "its background). Tick 'auto cut-out' to use a normal photo.",
             code="asset_not_transparent",
         )
     key = product_tryon_asset_key(str(product.id), processed.extension)
     await storage.put(key, processed.data, processed.content_type)
     asset = await service.add_tryon_asset(
-        product,
-        storage_key=key,
-        width=processed.width,
-        height=processed.height,
-        meta=parsed.model_dump(),
+        product, storage_key=key, width=processed.width, height=processed.height, meta=meta_dict
     )
     if not product.tryon_enabled:
         product.tryon_enabled = True

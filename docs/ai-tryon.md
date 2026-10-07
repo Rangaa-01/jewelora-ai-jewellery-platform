@@ -65,6 +65,18 @@ A transparent PNG/WebP cut-out of the piece, front view, plus anchors in normali
 `real_width_mm` / `real_height_mm` improve scale. Variant assets: upload one asset per
 metal variant; otherwise `tint_hex` on the variant recolours the metal (gems untouched).
 
+### Automatic cut-outs from ordinary product photos
+
+Staff do not need to prepare transparent PNGs. In the admin asset manager, tick
+**Auto cut-out from a normal product photo** (API: `auto_cutout=true` on
+`POST /admin/products/{id}/tryon-assets`). The server removes the background with U²-Net
+(`rembg`, model `ai/models/u2net.onnx`), keeps the main piece (a single earring from a pair),
+trims the image and estimates the anchors from the outline
+(`backend/app/services/cutout_service.py`). Anchors placed by staff override the estimates;
+the physical size defaults per type and should be corrected to the real measurement.
+Best input: front view, plain background, even light, no props. The seven real-photo demo
+products in `database/seeds/photos/` were produced this way.
+
 ### Manual adjustments
 
 `POST /api/v1/tryon/results/{id}/adjust` with `{ "<product_id>": { offset_x, offset_y, scale, rotation_deg } }`

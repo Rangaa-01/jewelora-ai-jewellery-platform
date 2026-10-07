@@ -16,7 +16,7 @@ a full admin dashboard for the shop team.
 ## What's included
 
 - **Virtual try-on** — photo mode (server-side MediaPipe landmarks, geometric fitting, lighting-matched compositing, hair occlusion, manual adjustments, ring-size estimate) and live camera mode (on-device detection, same fitting maths ported to TypeScript with parity tests). Necklaces, chains, pendants, harams, chokers, earrings, rings, bangles, bracelets, nose rings, maang tikka, waist chains, anklets, bridal sets.
-- **Catalogue & 3D** — products with variants (metal/stone), sizes, images, transparent try-on assets with anchors, GLB models; interactive 3D viewer with material switching, presets, fullscreen.
+- **Catalogue & 3D** — products with variants (metal/stone), sizes, images, transparent try-on assets with anchors (or automatic cut-outs from ordinary product photos), GLB models; interactive 3D viewer with material switching, presets, fullscreen.
 - **AI stylist** — understands budget, occasion, type, metal, stone and style; recommends only catalogue products; optional Claude re-ranking that cannot invent products.
 - **Visual search** — image embeddings per product image, exact and similar matches.
 - **Mix & match / bridal mode**, saved looks, sharing (WhatsApp, link, image), wishlist with compare, enquiries, store appointments with slot availability, cart and checkout (pay at store, bank transfer, Razorpay-ready).

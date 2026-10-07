@@ -233,6 +233,10 @@ async def _seed_products(
         if assets is None:
             continue
 
+        if data.get("photos"):
+            await _seed_real_photos(service, storage, settings, product, data["photos"], data["jewellery_type"])
+            log.info("seed_product_created", sku=product.sku, name=product.name, source="photo")
+            continue
         gem = render.get("gem", "none")
         style = render.get("style")
         jtype = data["jewellery_type"] if data["jewellery_type"] != "set" else "necklace"
@@ -323,6 +327,44 @@ async def _seed_products(
             if not any(i.component_product_id == component.id for i in product.set_items):
                 db.add(ProductSetItem(set_product_id=product.id, component_product_id=component.id))
     await db.flush()
+
+
+async def _seed_real_photos(
+    service: CatalogueService,
+    storage: Any,
+    settings: Any,
+    product: Product,
+    photos: list[str],
+    jewellery_type: str,
+) -> None:
+    """Real product photographs: upload as images and derive the try-on cut-out automatically."""
+    from app.services.cutout_service import make_tryon_asset
+    from app.services.upload_service import process_image
+
+    photo_dir = REPO_DIR / "database" / "seeds" / "photos"
+    for index, name in enumerate(photos):
+        path = photo_dir / name
+        await _upload_image(service, storage, settings, product, path, None, primary=index == 0, sort=index)
+        if index == 0 and jewellery_type != "set":
+            cut = make_tryon_asset(path.read_bytes(), jewellery_type, settings)
+            processed = process_image(
+                cut.png, settings, max_bytes=settings.product_asset_max_bytes, keep_alpha=True, quality=95
+            )
+            key = product_tryon_asset_key(str(product.id), processed.extension)
+            await storage.put(key, processed.data, processed.content_type)
+            await service.add_tryon_asset(
+                product,
+                storage_key=key,
+                width=processed.width,
+                height=processed.height,
+                meta={
+                    "view": "front",
+                    "variant_id": None,
+                    "anchors": cut.anchors,
+                    "real_width_mm": Decimal(str(cut.real_width_mm)),
+                    "real_height_mm": Decimal(str(cut.real_height_mm)),
+                },
+            )
 
 
 async def _upload_image(

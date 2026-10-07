@@ -40,7 +40,8 @@ export const adminKeys = {
   orders: (filters: Record<string, QueryValue>) => ["admin", "orders", filters] as const,
   order: (id: string) => ["admin", "order", id] as const,
   enquiries: (status: string, page: number) => ["admin", "enquiries", status, page] as const,
-  appointments: (filters: Record<string, QueryValue>) => ["admin", "appointments", filters] as const,
+  appointments: (filters: Record<string, QueryValue>) =>
+    ["admin", "appointments", filters] as const,
   looks: (page: number) => ["admin", "looks", page] as const,
 };
 
@@ -96,7 +97,8 @@ export function useUpdateProduct(id: string) {
   return useMutation({
     mutationFn: (input: Partial<ProductInput>) =>
       api.patch<ProductDetail>(`/admin/products/${id}`, input),
-    onSuccess: () => invalidate(["admin", "products"], ["admin", "product", id], ["products"], ["product"]),
+    onSuccess: () =>
+      invalidate(["admin", "products"], ["admin", "product", id], ["products"], ["product"]),
   });
 }
 
@@ -121,16 +123,26 @@ type AssetKind = "images" | "tryon-assets" | "models";
 export function useUploadAsset(productId: string, kind: AssetKind) {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: ({ file, meta }: { file: File; meta: Record<string, unknown> }) => {
+    mutationFn: ({
+      file,
+      meta,
+      autoCutout = false,
+    }: {
+      file: File;
+      meta: Record<string, unknown>;
+      autoCutout?: boolean;
+    }) => {
       const form = new FormData();
       form.append("file", file);
       form.append("meta", JSON.stringify(meta));
+      if (autoCutout) form.append("auto_cutout", "true");
       return api.upload<ProductImage | TryOnAsset | Model3DAsset>(
         `/admin/products/${productId}/${kind}`,
         form,
       );
     },
-    onSuccess: () => invalidate(["admin", "product", productId], ["admin", "products"], ["product"]),
+    onSuccess: () =>
+      invalidate(["admin", "product", productId], ["admin", "products"], ["product"]),
   });
 }
 
@@ -139,7 +151,8 @@ export function useDeleteAsset(productId: string, kind: AssetKind) {
   return useMutation({
     mutationFn: (assetId: string) =>
       api.delete<{ message: string }>(`/admin/products/${productId}/${kind}/${assetId}`),
-    onSuccess: () => invalidate(["admin", "product", productId], ["admin", "products"], ["product"]),
+    onSuccess: () =>
+      invalidate(["admin", "product", productId], ["admin", "products"], ["product"]),
   });
 }
 

@@ -26,5 +26,7 @@ download hand_landmarker.task        "$BASE/hand_landmarker/hand_landmarker/floa
 download pose_landmarker_lite.task   "$BASE/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task"
 download selfie_multiclass_256x256.tflite "$BASE/image_segmenter/selfie_multiclass_256x256/float32/latest/selfie_multiclass_256x256.tflite"
 download mobilenet_v3_small.tflite   "$BASE/image_embedder/mobilenet_v3_small/float32/1/mobilenet_v3_small.tflite"
+# U²-Net salient object model used for automatic jewellery cut-outs (rembg), ~170 MB.
+download u2net.onnx                  "https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx"
 
 echo "Models ready in $DEST"

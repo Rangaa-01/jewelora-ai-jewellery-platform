@@ -35,6 +35,8 @@ dev = [
   "types-aiofiles",
   "faker>=28",
   "trimesh>=4.4",
+  "rembg>=2.0.60",
+  "onnxruntime>=1.18",
   "pygltflib>=1.16",
 ]
 

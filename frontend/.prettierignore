@@ -3,3 +3,4 @@ node_modules
 public/models
 coverage
 next-env.d.ts
+public/mediapipe

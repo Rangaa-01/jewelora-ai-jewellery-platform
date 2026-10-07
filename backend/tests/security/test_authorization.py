@@ -162,3 +162,29 @@ async def test_media_route_blocks_traversal_and_unsigned_private(client: AsyncCl
     assert (await client.get("/api/v1/media/public/../../etc/passwd")).status_code in (404, 403)
     assert (await client.get("/api/v1/media/private/customers/x/photos/a.webp")).status_code == 403
     assert (await client.get("/api/v1/media/etc/passwd")).status_code == 404
+
+
+async def test_auto_cutout_turns_a_photo_into_a_try_on_asset(
+    client: AsyncClient, db: AsyncSession
+) -> None:
+    from pathlib import Path
+
+    from jewelora_ai.models import models_dir
+
+    if not (models_dir() / "u2net.onnx").is_file():
+        pytest.skip("u2net.onnx not downloaded")
+    product = await make_product(db, jewellery_type="ring")
+    email, password = await make_staff(db, Role.MANAGER)
+    await login(client, email, password)
+    photos = Path(__file__).resolve().parents[3] / "database" / "seeds" / "photos"  # noqa: ASYNC240
+    response = await client.post(
+        f"/api/v1/admin/products/{product.id}/tryon-assets",
+        files={
+            "file": ("ring.jpg", (photos / "diamond-cluster-ring.jpg").read_bytes(), "image/jpeg")
+        },
+        data={"auto_cutout": "true"},
+    )
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert {"band_left", "band_right", "center", "top"} <= set(body["anchors"])
+    assert body["real_width_mm"] is not None and body["url"].endswith(".webp")

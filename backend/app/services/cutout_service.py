@@ -1,0 +1,221 @@
+"""Automatic try-on asset creation from ordinary product photography.
+
+1. Background removal (U²-Net via ``rembg``, model file ``ai/models/u2net.onnx``) turns a
+   studio photo into a transparent cut-out.
+2. The alpha mask is trimmed and, for pairs (earrings), reduced to one piece.
+3. Anchor points required by the fitting engine are estimated from the mask geometry per
+   jewellery type. Staff can refine them in the admin anchor editor.
+
+Everything runs on the server in a worker thread; the model loads lazily and once.
+"""
+
+from __future__ import annotations
+
+import io
+import os
+import threading
+from dataclasses import dataclass
+from typing import Any
+
+import cv2
+import numpy as np
+from PIL import Image
+
+from app.core.errors import ServiceUnavailableError, UploadError
+from app.core.settings import Settings
+
+# Typical physical widths (mm) used as a starting scale; staff can edit per product.
+DEFAULT_REAL_WIDTH_MM: dict[str, float] = {
+    "necklace": 150.0,
+    "chain": 140.0,
+    "pendant": 140.0,
+    "haram": 160.0,
+    "choker": 125.0,
+    "earrings": 22.0,
+    "ring": 20.0,
+    "bangle": 62.0,
+    "bracelet": 60.0,
+    "nose_ring": 12.0,
+    "maang_tikka": 36.0,
+    "waist_chain": 320.0,
+    "anklet": 95.0,
+}
+
+
+@dataclass(frozen=True)
+class CutoutResult:
+    png: bytes
+    width: int
+    height: int
+    anchors: dict[str, list[float]]
+    real_width_mm: float
+    real_height_mm: float
+    coverage: float  # fraction of the trimmed box that is opaque (quality hint)
+
+
+class _Remover:
+    _session: Any = None
+    _lock = threading.Lock()
+
+    @classmethod
+    def session(cls, settings: Settings) -> Any:
+        with cls._lock:
+            if cls._session is None:
+                model = settings.ai_models_dir / "u2net.onnx"
+                if not model.is_file():
+                    raise ServiceUnavailableError(
+                        "Automatic cut-out needs the u2net.onnx model "
+                        "(run scripts/download_models.sh).",
+                        code="cutout_unavailable",
+                    )
+                os.environ.setdefault("U2NET_HOME", str(settings.ai_models_dir))
+                from rembg import new_session
+
+                cls._session = new_session("u2net")
+            return cls._session
+
+
+def remove_background(data: bytes, settings: Settings) -> np.ndarray:
+    """RGBA uint8 array with the background made transparent."""
+    from rembg import remove
+
+    try:
+        with Image.open(io.BytesIO(data)) as img:
+            img.load()
+            rgb = img.convert("RGB")
+    except OSError as exc:
+        raise UploadError() from exc
+    if max(rgb.size) > 2048:
+        rgb.thumbnail((2048, 2048), Image.Resampling.LANCZOS)
+    out = remove(
+        rgb, session=_Remover.session(settings), alpha_matting=False, post_process_mask=True
+    )
+    return np.asarray(out.convert("RGBA"), dtype=np.uint8)
+
+
+def _largest_components(alpha: np.ndarray, keep: int) -> np.ndarray:
+    """Keep the ``keep`` largest connected blobs of the mask (drops dust and reflections)."""
+    mask = (alpha > 16).astype(np.uint8)
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
+    if count <= 2:
+        return mask
+    order = sorted(range(1, count), key=lambda i: -stats[i, cv2.CC_STAT_AREA])
+    chosen = [
+        i
+        for i in order[:keep]
+        if stats[i, cv2.CC_STAT_AREA] >= 0.02 * stats[order[0], cv2.CC_STAT_AREA]
+    ]
+    return np.isin(labels, chosen).astype(np.uint8)
+
+
+def _trim(
+    rgba: np.ndarray, mask: np.ndarray, pad_ratio: float = 0.04
+) -> tuple[np.ndarray, np.ndarray]:
+    ys, xs = np.where(mask > 0)
+    if len(xs) == 0:
+        raise UploadError(
+            "We couldn't find the jewellery in that photo. Use a clear photo on a plain background."
+        )
+    pad = int(max(rgba.shape[:2]) * pad_ratio)
+    x0, x1 = max(0, xs.min() - pad), min(rgba.shape[1], xs.max() + pad + 1)
+    y0, y1 = max(0, ys.min() - pad), min(rgba.shape[0], ys.max() + pad + 1)
+    cropped = rgba[y0:y1, x0:x1].copy()
+    cropped[..., 3] = np.where(mask[y0:y1, x0:x1] > 0, cropped[..., 3], 0)
+    return cropped, mask[y0:y1, x0:x1]
+
+
+def _edge_points(mask: np.ndarray) -> dict[str, tuple[float, float]]:
+    """Characteristic points of the opaque region in pixel coordinates."""
+    h, w = mask.shape
+    ys, xs = np.where(mask > 0)
+    top_y = int(ys.min())
+    top_xs = xs[ys <= top_y + max(2, h // 40)]
+    left_col, right_col = int(xs.min()), int(xs.max())
+    left_top = int(np.where(mask[:, left_col : left_col + max(1, w // 50)].any(axis=1))[0].min())
+    right_top = int(
+        np.where(mask[:, max(0, right_col - w // 50) : right_col + 1].any(axis=1))[0].min()
+    )
+    mid_row = int((ys.min() + ys.max()) / 2)
+    row_xs = np.where(mask[mid_row])[0]
+    return {
+        "top": (float(top_xs.mean()), float(top_y)),
+        "bottom": (float(xs[ys == ys.max()].mean()), float(ys.max())),
+        "left_top": (float(left_col), float(left_top)),
+        "right_top": (float(right_col), float(right_top)),
+        "mid_left": (float(row_xs.min()) if len(row_xs) else float(left_col), float(mid_row)),
+        "mid_right": (float(row_xs.max()) if len(row_xs) else float(right_col), float(mid_row)),
+        "center": (float(xs.mean()), float(ys.mean())),
+    }
+
+
+def estimate_anchors(mask: np.ndarray, jewellery_type: str) -> dict[str, list[float]]:
+    h, w = mask.shape
+    p = _edge_points(mask)
+
+    def n(pt: tuple[float, float]) -> list[float]:
+        return [round(min(max(pt[0] / w, 0.0), 1.0), 4), round(min(max(pt[1] / h, 0.0), 1.0), 4)]
+
+    if jewellery_type in {
+        "necklace",
+        "chain",
+        "pendant",
+        "haram",
+        "choker",
+        "waist_chain",
+        "anklet",
+    }:
+        return {
+            "left_end": n(p["left_top"]),
+            "right_end": n(p["right_top"]),
+            "bottom": n(p["bottom"]),
+        }
+    if jewellery_type == "earrings":
+        return {"top": n(p["top"]), "bottom": n(p["bottom"])}
+    if jewellery_type == "ring":
+        return {
+            "band_left": n(p["mid_left"]),
+            "band_right": n(p["mid_right"]),
+            "center": n(p["center"]),
+            "top": n(p["top"]),
+        }
+    if jewellery_type in {"bangle", "bracelet"}:
+        return {"left": n(p["mid_left"]), "right": n(p["mid_right"]), "center": n(p["center"])}
+    if jewellery_type == "nose_ring":
+        return {"pivot": n(p["left_top"]), "center": n(p["center"])}
+    if jewellery_type == "maang_tikka":
+        cx, cy = p["center"]
+        return {
+            "top": n(p["top"]),
+            "pendant_center": n((cx, (cy + p["bottom"][1]) / 2)),
+            "bottom": n(p["bottom"]),
+        }
+    return {"center": n(p["center"])}
+
+
+def make_tryon_asset(
+    data: bytes, jewellery_type: str, settings: Settings, *, single_piece: bool | None = None
+) -> CutoutResult:
+    """Full pipeline: photo bytes → transparent PNG + anchors for the given jewellery type."""
+    rgba = remove_background(data, settings)
+    keep_single = (
+        single_piece
+        if single_piece is not None
+        else jewellery_type in {"earrings", "bangle", "bracelet", "ring", "nose_ring"}
+    )
+    mask = _largest_components(rgba[..., 3], keep=1 if keep_single else 6)
+    cropped, cropped_mask = _trim(rgba, mask)
+    anchors = estimate_anchors(cropped_mask, jewellery_type)
+    real_w = DEFAULT_REAL_WIDTH_MM.get(jewellery_type, 50.0)
+    h, w = cropped_mask.shape
+    buf = io.BytesIO()
+    Image.fromarray(cropped).save(buf, format="PNG", optimize=True)
+    coverage = float(cropped_mask.mean())
+    return CutoutResult(
+        png=buf.getvalue(),
+        width=w,
+        height=h,
+        anchors=anchors,
+        real_width_mm=real_w,
+        real_height_mm=round(real_w * h / w, 2),
+        coverage=coverage,
+    )

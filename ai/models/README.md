@@ -10,6 +10,7 @@ to fetch them. The backend and the browser both use MediaPipe Tasks models:
 | `pose_landmarker_lite.task` | 33 body landmarks (shoulders, hips, ankles) | necklace/haram/waist chain/anklet fitting |
 | `selfie_multiclass_256x256.tflite` | hair / skin / clothes segmentation | occlusion masks |
 | `mobilenet_v3_small.tflite` | image embeddings | visual search, stylist similarity |
+| `u2net.onnx` | salient-object background removal (rembg) | automatic try-on cut-outs from product photos |
 
 The frontend loads the browser copies from `/models/*` (served from `frontend/public/models`,
 populated by `scripts/download_models.sh` via a symlink or copy — see `docs/ai-tryon.md`).
