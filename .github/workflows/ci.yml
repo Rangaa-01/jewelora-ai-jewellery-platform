@@ -59,7 +59,7 @@ jobs:
       - run: ./scripts/download_models.sh
       - name: Lint
         working-directory: backend
-        run: .venv/bin/ruff check . ../ai && .venv/bin/ruff format --check . ../ai
+        run: .venv/bin/ruff check . ../ai ../scripts && .venv/bin/ruff format --check . ../ai ../scripts
       - name: Type check
         working-directory: backend
         run: .venv/bin/mypy app ../ai/jewelora_ai

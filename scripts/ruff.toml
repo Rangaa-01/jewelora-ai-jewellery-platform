@@ -1,0 +1,7 @@
+# Developer tooling (asset generation, DB helpers). Looser than the application code.
+line-length = 120
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["E501", "RUF005", "S101"]

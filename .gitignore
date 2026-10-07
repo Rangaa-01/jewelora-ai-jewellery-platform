@@ -52,3 +52,5 @@ Thumbs.db
 *.log
 frontend/public/models/*
 !frontend/public/models/.gitkeep
+tests/.storage/
+database/seeds/.generated/

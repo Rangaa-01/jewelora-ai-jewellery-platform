@@ -10,13 +10,16 @@ from __future__ import annotations
 
 import os
 from collections.abc import AsyncIterator
+from pathlib import Path
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 os.environ.setdefault("APP_ENV", "test")
 os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
+os.environ.setdefault("STORAGE_LOCAL_ROOT", str(Path(__file__).parent / ".storage"))
 os.environ.setdefault(
     "TEST_DATABASE_URL",
     "postgresql+asyncpg://jewelora:jewelora_dev_password@127.0.0.1:5432/jewelora_test",
@@ -37,6 +40,12 @@ async def engine():  # type: ignore[no-untyped-def]
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(
+            text(
+                "INSERT INTO roles (id, name) VALUES "
+                "(1,'admin'),(2,'manager'),(3,'sales_staff'),(4,'customer')"
+            )
+        )
     yield engine
     await engine.dispose()
 

@@ -28,7 +28,7 @@ limiter = Limiter(
     key_func=_key_func,
     enabled=_settings.rate_limit_enabled,
     storage_uri=_settings.redis_url or "memory://",
-    headers_enabled=True,
+    headers_enabled=False,  # header injection requires a Response param on every limited route
     default_limits=["600/minute"],
 )
 

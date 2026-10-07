@@ -52,10 +52,10 @@ Seed accounts (development only, printed by the seeder):
 
 | Role | Email | Password |
 |------|-------|----------|
-| admin | admin@jewelora.local | `Admin#12345` |
-| manager | manager@jewelora.local | `Manager#12345` |
-| sales staff | sales@jewelora.local | `Sales#12345` |
-| customer | customer@jewelora.local | `Customer#12345` |
+| admin | admin@jewelora-demo.com | `Admin#12345` |
+| manager | manager@jewelora-demo.com | `Manager#12345` |
+| sales staff | sales@jewelora-demo.com | `Sales#12345` |
+| customer | customer@jewelora-demo.com | `Customer#12345` |
 
 ## 6. Run
 

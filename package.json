@@ -7,7 +7,7 @@
     "dev": "concurrently -n backend,frontend -c blue,magenta \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:frontend": "npm --prefix frontend run dev",
     "dev:backend": "cd backend && .venv/bin/uvicorn app.main:app --reload --host 127.0.0.1 --port ${BACKEND_PORT:-8000}",
-    "lint": "npm --prefix frontend run lint && cd backend && .venv/bin/ruff check . ../ai",
+    "lint": "npm --prefix frontend run lint && cd backend && .venv/bin/ruff check . ../ai ../scripts",
     "typecheck": "npm --prefix frontend run typecheck && cd backend && .venv/bin/mypy app ../ai/jewelora_ai",
     "test": "npm run test:frontend && npm run test:backend",
     "test:frontend": "npm --prefix frontend run test",
