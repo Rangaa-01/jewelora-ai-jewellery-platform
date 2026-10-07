@@ -20,6 +20,9 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["jewelora_ai"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"jewelora_ai/py.typed" = "jewelora_ai/py.typed"
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"

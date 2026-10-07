@@ -65,14 +65,17 @@ class TryOnEngine:
 
     def place(
         self, landmarks: Landmarks, items: list[TryOnItem]
-    ) -> tuple[list[tuple[TryOnItem, Placement]], list[str]]:
+    ) -> tuple[list[tuple[TryOnItem, Placement]], list[str], list[str]]:
+        """Returns (placed items, customer-facing warnings, anchor error codes)."""
         placed: list[tuple[TryOnItem, Placement]] = []
         warnings: list[str] = []
+        codes: list[str] = []
         for item in items:
             try:
                 anchor_sets = anchors_for(landmarks, item.asset.jewellery_type, item.slot)
             except AnchorError as exc:
                 code = str(exc).split(":")[0]
+                codes.append(code)
                 warnings.append(
                     WARNING_MESSAGES.get(code, "This piece couldn't be placed on this photo.")
                 )
@@ -86,14 +89,14 @@ class TryOnEngine:
                     item.adjustments,
                 )
                 placed.append((item, placement))
-        return placed, warnings
+        return placed, warnings, codes
 
     def run(self, request: TryOnRequest) -> TryOnResult:
         started = time.perf_counter()
         landmarks = request.landmarks or self.detect(request.image)
-        placed, warnings = self.place(landmarks, request.items)
+        placed, warnings, codes = self.place(landmarks, request.items)
         if not placed:
-            code = "nothing_placed"
+            code = codes[0] if len(set(codes)) == 1 else "nothing_placed"
             raise TryOnError(
                 code, warnings[0] if warnings else "We couldn't place this jewellery on your photo."
             )

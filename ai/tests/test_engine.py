@@ -64,7 +64,7 @@ def test_engine_fails_cleanly_when_nothing_can_be_placed() -> None:
                 ],
             )
         )
-    assert exc.value.code == "nothing_placed"
+    assert exc.value.code == "no_face"  # the single anchor failure is surfaced verbatim
     assert "face" in exc.value.message
 
 
