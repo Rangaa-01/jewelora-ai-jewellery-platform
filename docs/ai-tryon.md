@@ -77,6 +77,21 @@ spacing) to a finger width, then to circumference and Indian/US sizes. Every res
 carries `is_estimate: true` and a note to confirm in store. `WORLD_SPACING_TO_FINGER_WIDTH`
 is a calibration constant the shop should validate against measured customers.
 
+## Browser port
+
+`frontend/src/lib/tryon/fitting/{anchors,fitters,types}.ts` mirror `anchors.py` and
+`fitters.py` so live mode places jewellery exactly as photo mode does. Parity is enforced
+by `frontend/src/lib/tryon/fitting/parity.test.ts` against
+`ai/tests/fixtures/fitting_expectations.json`; regenerate it after any fitting change:
+
+```bash
+backend/.venv/bin/python scripts/export_fitting_fixtures.py
+```
+
+Live mode converts MediaPipe's normalised landmarks into displayed-frame pixels (mirrored
+for the selfie camera) before fitting, and swaps MediaPipe's selfie-assumed handedness
+labels for unmirrored rear-camera frames. See `docs/frontend.md` → "Live try-on".
+
 ## Models
 
 Downloaded by `scripts/download_models.sh` into `ai/models/` (backend) and copied to
