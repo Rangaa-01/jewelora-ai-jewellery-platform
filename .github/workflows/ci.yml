@@ -104,7 +104,7 @@ jobs:
       - run: npm ci --no-audit --no-fund && npm --prefix frontend ci --no-audit --no-fund
       - run: npx playwright install --with-deps chromium
       - working-directory: backend
-        run: uv venv -p 3.12 .venv && uv pip install -p .venv/bin/python -e . -e ../ai
+        run: uv venv -p 3.12 .venv && uv pip install -p .venv/bin/python -e ".[dev]" -e ../ai
       - uses: actions/cache@v4
         with: { path: ai/models, key: mediapipe-models-v1 }
       - run: ./scripts/download_models.sh && mkdir -p frontend/public/models && cp ai/models/*.task ai/models/*.tflite frontend/public/models/
