@@ -15,8 +15,8 @@ relevant E2E · UI inspected · problems fixed · docs updated · committed.
 | 8  | AI stylist + visual search | done |
 | 9  | Mix & match, bridal mode, ring size estimation | done |
 | 10 | Wishlist, saved looks, sharing, enquiry, appointments, cart & checkout | done |
-| 11 | Admin dashboard and analytics | in progress |
+| 11 | Admin dashboard and analytics | done |
 | 12 | Security hardening | done (review + fixes, see docs/security.md) |
 | 13 | Performance optimisation, PWA | done (PWA shell, lazy 3D/AI, cached embeddings) |
-| 14 | Automated testing completion | in progress (full E2E pass pending) |
-| 15 | Production deployment preparation | in progress |
+| 14 | Automated testing completion | done (47 E2E, 151 frontend unit, 57 backend, 20 AI) |
+| 15 | Production deployment preparation | done (Docker, CI, docs; see docs/acceptance.md) |
