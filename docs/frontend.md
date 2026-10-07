@@ -135,13 +135,16 @@ Live mode (`src/components/tryon/live-tryon.tsx`, `src/lib/tryon/live/`) runs en
 in the browser:
 
 - **Camera**: `getUserMedia` (front camera by default, switch button). The selfie preview
-  is mirrored with CSS; landmarks are converted into the *displayed* coordinate space
-  (`x' = width − x`) so the engine's "image-left/right" region names match what the
-  customer sees. MediaPipe reports handedness assuming a mirrored input, so the label is
-  swapped for the unmirrored rear camera.
+  is mirrored with CSS, but detection and fitting always run in the *raw* frame's pixel
+  space, exactly like an uploaded photo (so the shoulder/eye "roll" and left/right ends
+  come out the same as photo mode). The renderer reflects the finished overlay
+  (`x' = width − x`) to match the preview, and the customer's fine-tune nudges (made on
+  the mirrored view) are reflected back before fitting. Handedness labels are used as
+  MediaPipe reports them, the same convention as the server detector.
 - **Detection**: `@mediapipe/tasks-vision` FaceLandmarker / HandLandmarker /
   PoseLandmarker in `VIDEO` mode. The WASM runtime loads from
-  `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@<version>/wasm` and the `.task`
+  same-origin `/mediapipe/wasm/` (copied from `node_modules` by
+  `scripts/copy-mediapipe-wasm.mjs` on install/dev/build) and the `.task`
   models from same-origin `/models/`. Only the detectors the selected jewellery needs are
   created (`detectorsNeeded`). GPU delegate first, CPU fallback; "Low" quality forces CPU
   and a 640 px stream. Everything is dynamically imported on "Start camera" so nothing
@@ -154,7 +157,11 @@ in the browser:
   `scripts/export_fitting_fixtures.py`) and asserts anchors within 1e-6 px and matrices
   within 1e-9. Regenerate the expectations whenever the Python fitting changes.
 - **Rendering**: a `<canvas>` over the `<video>`; each placement is drawn with
-  `ctx.setTransform` from the 2×3 matrix. Variant metals are pre-tinted once per
+  `ctx.setTransform` from the 2×3 matrix. Strand pieces (necklaces, chains, pendants,
+  harams, chokers, waist chains, anklets with `left_end`/`right_end` anchors) use the
+  strand warp (`fitting/strand.ts`): the asset is sliced into 28 vertical strips that are
+  placed along the neck arc, and the part of the loop above the two top ends (the back of
+  the necklace) is clipped once per asset in an offscreen canvas. Variant metals are pre-tinted once per
   asset+variant in an offscreen canvas (`tint.ts`, same hue-remap as
   `compositor.tint_metal`; the server's 1 px mask blur is omitted).
 - **Capture**: composites the mirrored frame + overlay to a JPEG and submits it through

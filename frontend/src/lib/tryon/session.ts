@@ -71,6 +71,8 @@ export interface TryOnCapabilities {
 export interface LookItem {
   product: ProductSummary;
   variantId: string | null;
+  /** Chosen size (a necklace length, ring size…); null = the product's default size. */
+  sizeId: string | null;
   slot: string | null;
   adjustments: Adjustments;
 }
@@ -81,7 +83,7 @@ export function buildItemsPayload(items: LookItem[]): TryOnItemIn[] {
   return items.map((item) => ({
     product_id: item.product.id,
     variant_id: item.variantId,
-    size_id: null,
+    size_id: item.sizeId,
     slot: item.slot,
     adjustments: item.adjustments,
   }));
@@ -142,6 +144,7 @@ export function makeLookItem(product: ProductSummary, variantId: string | null =
   return {
     product,
     variantId,
+    sizeId: null,
     slot: defaultSlot(product.jewellery_type),
     adjustments: DEFAULT_ADJUSTMENTS,
   };

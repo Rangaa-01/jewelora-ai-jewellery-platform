@@ -23,6 +23,7 @@ upload → process_image (validate, orient, strip metadata, resize ≤ TRYON_MAX
        → MediaPipeLandmarkDetector.detect  (cached per photo in customer_photos.landmarks)
        → anchors_for(jewellery_type, slot)  (jewelora_ai/fitting/anchors.py)
        → fit_asset(asset, anchors, adjustments) → Placement (2×3 affine)
+         or, for strand pieces, strand_placement(…) → Placement with 28 strip affines
        → MediaPipeSegmenter (hair/skin/clothes masks; only when a placement needs occlusion)
        → AffineCompositor.render (tint variant metal, warp, lighting match, occlusion, shadow)
        → encode WebP → store privately → tryon_results row (+ analytics event, tryon_count)
@@ -47,6 +48,31 @@ Scale uses physical size when the asset declares `real_width_mm`/`real_height_mm
 (converted with average anthropometrics: 90 mm outer-eye distance, 76 mm palm width,
 380 mm shoulder width; yaw-corrected) blended 50/50 with the anchor-pair fit, except
 rings/bangles which always fit the detected body part.
+
+### Strand warp (neck pieces, waist chains, anklets)
+
+A necklace is not a rigid sticker: its two ends sit on the neck base and the rest hangs in
+a curve that depends on the piece's length. `fitting/strand.py` therefore:
+
+1. reads the asset's own arc: a parabola through its `left_end`, `bottom` (or the lowest
+   point) and `right_end` anchors;
+2. builds the target arc on the body: the chord between the two neck-base points (tilted
+   with the shoulders), and a hang depth taken from the asset's own depth scaled by the
+   chord, then multiplied by `selected length ÷ default length for the type` (clamped
+   0.6–1.8; defaults: choker 380 mm, necklace/pendant 457, chain 508, haram 711, waist
+   chain 820, anklet 254). The length comes from the chosen size's `measurement_mm`, or
+   the product's default size;
+3. slices the asset into 28 vertical strips and maps each strip from a point on the
+   source parabola to the matching point on the target parabola with a uniform-scale
+   similarity (rotation follows the local tangent), so proportions are never squashed;
+4. clips everything above the chord between the two ends (`chord_clip_row`): that is the
+   back of the loop, which goes behind the neck.
+
+Manual adjustments move/scale/rotate the whole target arc about its midpoint. The
+compositor warps strip by strip with a 2 px overlap (`_warp_strips`), then applies the
+usual tint, lighting, hair occlusion and shadow. The TypeScript port
+(`frontend/src/lib/tryon/fitting/strand.ts`) is covered by the parity test, so live mode
+drapes exactly like photo mode.
 
 ### Try-on assets (what the shop uploads)
 
@@ -91,8 +117,8 @@ is a calibration constant the shop should validate against measured customers.
 
 ## Browser port
 
-`frontend/src/lib/tryon/fitting/{anchors,fitters,types}.ts` mirror `anchors.py` and
-`fitters.py` so live mode places jewellery exactly as photo mode does. Parity is enforced
+`frontend/src/lib/tryon/fitting/{anchors,fitters,strand,types}.ts` mirror `anchors.py`,
+`fitters.py` and `strand.py` so live mode places jewellery exactly as photo mode does. Parity is enforced
 by `frontend/src/lib/tryon/fitting/parity.test.ts` against
 `ai/tests/fixtures/fitting_expectations.json`; regenerate it after any fitting change:
 
@@ -100,9 +126,9 @@ by `frontend/src/lib/tryon/fitting/parity.test.ts` against
 backend/.venv/bin/python scripts/export_fitting_fixtures.py
 ```
 
-Live mode converts MediaPipe's normalised landmarks into displayed-frame pixels (mirrored
-for the selfie camera) before fitting, and swaps MediaPipe's selfie-assumed handedness
-labels for unmirrored rear-camera frames. See `docs/frontend.md` → "Live try-on".
+Live mode fits in the raw frame's pixel space (never mirrored, like an uploaded photo) and
+mirrors only the drawn overlay for the selfie preview. See `docs/frontend.md` → "Live
+try-on".
 
 ## Models
 

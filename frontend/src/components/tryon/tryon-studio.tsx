@@ -223,6 +223,7 @@ export function TryOnStudio({ initialSlugs, initialVariantId, mode }: TryOnStudi
                 detection={session.result?.detection}
                 onRemove={(id) => setItems((cur) => cur.filter((i) => i.product.id !== id))}
                 onVariantChange={(id, variantId) => update(id, { variantId })}
+                onSizeChange={(id, sizeId) => update(id, { sizeId })}
                 onSlotChange={(id, slot) => update(id, { slot })}
               />
             </section>

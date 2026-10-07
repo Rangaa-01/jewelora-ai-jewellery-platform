@@ -11,6 +11,7 @@ import cv2
 import numpy as np
 
 from jewelora_ai.datatypes import Placement, SegmentationMasks, TryOnItem
+from jewelora_ai.fitting.strand import chord_clip_row
 
 MASK_NAMES = ("hair", "body_skin", "face_skin", "clothes", "background")
 
@@ -64,6 +65,39 @@ def _warp(asset: np.ndarray, matrix: np.ndarray, size: tuple[int, int]) -> np.nd
     )
 
 
+def _warp_strips(asset: np.ndarray, placement: Placement, size: tuple[int, int]) -> np.ndarray:
+    """Strand warp: draw each vertical strip with its own affine, blending overlaps softly."""
+    w, h = size
+    acc_rgb = np.zeros((h, w, 3), dtype=np.float32)
+    acc_a = np.zeros((h, w), dtype=np.float32)
+    overlap = 2  # px of overlap to hide seams between strips
+    for x0, x1, matrix in placement.strips:
+        xa, xb = max(0, x0 - overlap), min(asset.shape[1], x1 + overlap)
+        if xb <= xa:
+            continue
+        piece = np.zeros_like(asset)
+        piece[:, xa:xb] = asset[:, xa:xb]
+        warped = _warp(piece, matrix, size).astype(np.float32) / 255.0
+        a = warped[..., 3]
+        # "over" accumulation keeps colour correct where strips overlap
+        acc_rgb = acc_rgb * (1 - a[..., None]) + warped[..., :3] * a[..., None]
+        acc_a = acc_a + a * (1 - acc_a)
+    out = np.zeros((h, w, 4), dtype=np.float32)
+    out[..., :3] = acc_rgb
+    out[..., 3] = acc_a
+    return out
+
+
+def clip_above_chord(rgba: np.ndarray, chord_y: np.ndarray) -> np.ndarray:
+    """Make pixels above the top-end chord transparent (the back half of a looped necklace)."""
+    h = rgba.shape[0]
+    rows = np.arange(h, dtype=np.float64)[:, None]
+    keep = rows >= chord_y[None, :]
+    out = rgba.copy()
+    out[..., 3] = np.where(keep, out[..., 3], 0)
+    return out
+
+
 def _region_luminance(
     image: np.ndarray, bbox: tuple[int, int, int, int], alpha: np.ndarray
 ) -> float:
@@ -102,7 +136,11 @@ class AffineCompositor:
             rgba = item.asset.image
             if item.tint_hex:
                 rgba = tint_metal(rgba, item.tint_hex)
-            warped = _warp(rgba, placement.matrix, (w, h)).astype(np.float32) / 255.0
+            if placement.strips:
+                rgba = clip_above_chord(rgba, chord_clip_row(item.asset))
+                warped = _warp_strips(rgba, placement, (w, h))
+            else:
+                warped = _warp(rgba, placement.matrix, (w, h)).astype(np.float32) / 255.0
             colour, alpha = warped[..., :3], warped[..., 3]
             if alpha.max() <= 0:
                 continue

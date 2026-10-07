@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
+from typing import Any
 
 import numpy as np
 
@@ -19,6 +20,7 @@ from jewelora_ai.datatypes import (
 from jewelora_ai.fitting.anchors import AnchorError, anchors_for, pick_hand
 from jewelora_ai.fitting.fitters import fit_asset
 from jewelora_ai.fitting.ring_size import estimate_ring_size
+from jewelora_ai.fitting.strand import strand_placement
 from jewelora_ai.interfaces import LandmarkDetector, Renderer, Segmenter
 from jewelora_ai.rendering.compositor import AffineCompositor
 from jewelora_ai.segmentation.mediapipe_segmenter import NullSegmenter
@@ -42,6 +44,23 @@ WARNING_MESSAGES = {
     "hips_not_visible": "Waist chains need a photo showing your waist and hips.",
     "ankle_not_visible": "Anklets need a photo showing your ankles.",
 }
+
+
+STRAND_TYPES = frozenset(
+    {
+        JewelleryType.NECKLACE,
+        JewelleryType.CHAIN,
+        JewelleryType.PENDANT,
+        JewelleryType.HARAM,
+        JewelleryType.CHOKER,
+        JewelleryType.WAIST_CHAIN,
+        JewelleryType.ANKLET,
+    }
+)
+
+
+def _is_strand(asset: Any) -> bool:
+    return asset.jewellery_type in STRAND_TYPES
 
 
 class TryOnError(Exception):
@@ -81,13 +100,23 @@ class TryOnEngine:
                 )
                 continue
             for anchors in anchor_sets:
-                placement = fit_asset(
-                    item.asset,
-                    anchors,
-                    landmarks.image_width,
-                    landmarks.image_height,
-                    item.adjustments,
-                )
+                if _is_strand(item.asset) and {"left_end", "right_end"} <= set(item.asset.anchors):
+                    placement = strand_placement(
+                        item.asset,
+                        anchors,
+                        landmarks.image_width,
+                        landmarks.image_height,
+                        length_mm=item.length_mm,
+                        adjustments=item.adjustments,
+                    )
+                else:
+                    placement = fit_asset(
+                        item.asset,
+                        anchors,
+                        landmarks.image_width,
+                        landmarks.image_height,
+                        item.adjustments,
+                    )
                 placed.append((item, placement))
         return placed, warnings, codes
 

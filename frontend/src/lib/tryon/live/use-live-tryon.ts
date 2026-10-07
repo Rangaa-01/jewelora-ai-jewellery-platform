@@ -4,6 +4,21 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { JewelleryType, ProductDetail } from "@/lib/api/types";
 import { anchorsFor, detectorsNeeded } from "../fitting/anchors";
 import { fitAsset } from "../fitting/fitters";
+import { isStrand, strandPlacement } from "../fitting/strand";
+
+/** A nudge made on the mirrored preview, expressed in raw-frame space. */
+function mirrorAdjustments(a: Adjustments): Adjustments {
+  return { ...a, offset_x: -a.offset_x, rotation_deg: -a.rotation_deg };
+}
+
+/** The chosen size's length (mm), else the default size's; null = the asset's own drape. */
+function lengthMmFor(product: ProductDetail, sizeId: string | null): number | null {
+  const size =
+    product.sizes.find((s) => s.id === sizeId && s.measurement_mm) ??
+    product.sizes.find((s) => s.is_default && s.measurement_mm) ??
+    product.sizes.find((s) => s.measurement_mm);
+  return size?.measurement_mm ? Number(size.measurement_mm) : null;
+}
 import { AnchorError, type Adjustments } from "../fitting/types";
 import type { LookItem } from "../session";
 import { assetGeometry, loadDrawable, selectAsset, tintFor } from "./assets";
@@ -88,6 +103,7 @@ export function useLiveTryOn({ items, details, quality }: UseLiveTryOnArgs) {
             product: detail,
             variant,
             slot: item.slot,
+            lengthMm: lengthMmFor(detail, item.sizeId),
             adjustments: item.adjustments,
             geometry: assetGeometry(detail, asset),
             drawable,
@@ -147,22 +163,34 @@ export function useLiveTryOn({ items, details, quality }: UseLiveTryOnArgs) {
       }
       const mirrored = facingRef.current === "user";
       const started = performance.now();
-      const raw = detectors.detect(video, now, mirrored);
+      const raw = detectors.detect(video, now);
       const landmarks = smootherRef.current.apply(raw, now);
       const placements: LivePlacement[] = [];
       const missingNow: JewelleryType[] = [];
       for (const item of liveItemsRef.current) {
+        // Fitting runs in raw-frame space; the customer's nudges are made on the mirrored
+        // preview, so they are reflected back before fitting.
+        const adjustments = mirrored ? mirrorAdjustments(item.adjustments) : item.adjustments;
         try {
           for (const anchors of anchorsFor(landmarks, item.product.jewellery_type, item.slot)) {
             placements.push({
               item,
-              placement: fitAsset(
-                item.geometry,
-                anchors,
-                landmarks.image_width,
-                landmarks.image_height,
-                item.adjustments,
-              ),
+              placement: isStrand(item.geometry)
+                ? strandPlacement(
+                    item.geometry,
+                    anchors,
+                    landmarks.image_width,
+                    landmarks.image_height,
+                    item.lengthMm,
+                    adjustments,
+                  )
+                : fitAsset(
+                    item.geometry,
+                    anchors,
+                    landmarks.image_width,
+                    landmarks.image_height,
+                    adjustments,
+                  ),
             });
           }
         } catch (error) {
@@ -172,7 +200,7 @@ export function useLiveTryOn({ items, details, quality }: UseLiveTryOnArgs) {
       }
       placementsRef.current = placements;
       const ctx = canvas.getContext("2d");
-      if (ctx) drawPlacements(ctx, placements);
+      if (ctx) drawPlacements(ctx, placements, { scale: 1, mirrored });
       const elapsed = performance.now() - started;
       const sample = statsSample.current;
       sample.frames += 1;

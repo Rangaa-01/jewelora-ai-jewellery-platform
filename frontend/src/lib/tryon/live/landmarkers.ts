@@ -1,8 +1,8 @@
 /**
  * MediaPipe Tasks Vision wrapper for live detection. Loaded lazily (dynamic import) so
  * nothing from MediaPipe lands in the initial route bundle. Produces `Landmarks` in the
- * coordinate space of the *displayed* frame: when the preview is mirrored (selfie camera)
- * x is flipped, so "image-left/right" region names match what the customer sees.
+ * *raw* frame's pixel space (never mirrored) so fitting sees exactly what photo mode sees;
+ * the renderer mirrors the finished overlay for the selfie preview.
  */
 
 import type { Hand, Landmarks, Point } from "../fitting/types";
@@ -28,13 +28,8 @@ export interface DetectorLoadOptions {
   onProgress?: (label: string) => void;
 }
 
-function toPoints(
-  landmarks: { x: number; y: number }[],
-  width: number,
-  height: number,
-  mirrored: boolean,
-): Point[] {
-  return landmarks.map((p) => ({ x: mirrored ? (1 - p.x) * width : p.x * width, y: p.y * height }));
+function toPoints(landmarks: { x: number; y: number }[], width: number, height: number): Point[] {
+  return landmarks.map((p) => ({ x: p.x * width, y: p.y * height }));
 }
 
 export class LiveDetectors {
@@ -104,8 +99,8 @@ export class LiveDetectors {
     return detectors;
   }
 
-  /** Runs the loaded landmarkers on the current video frame. */
-  detect(video: HTMLVideoElement, timestampMs: number, mirrored: boolean): Landmarks {
+  /** Runs the loaded landmarkers on the current video frame (raw-frame pixel coordinates). */
+  detect(video: HTMLVideoElement, timestampMs: number): Landmarks {
     const width = video.videoWidth;
     const height = video.videoHeight;
     // MediaPipe requires strictly increasing timestamps per task.
@@ -123,7 +118,7 @@ export class LiveDetectors {
       const result = this.face.detectForVideo(video, ts);
       const face = result.faceLandmarks[0];
       if (face) {
-        out.face = toPoints(face, width, height, mirrored);
+        out.face = toPoints(face, width, height);
         out.face_score = 1;
       }
     }
@@ -131,13 +126,11 @@ export class LiveDetectors {
       const result = this.hands.detectForVideo(video, ts);
       out.hands = result.landmarks.map((pts, i): Hand => {
         const category = result.handedness[i]?.[0];
-        // MediaPipe labels handedness assuming a mirrored (selfie) input. For an unmirrored
-        // rear-camera frame the label is swapped to keep "left/right" slots meaningful.
-        let label = category?.categoryName ?? "Right";
-        if (!mirrored) label = label === "Left" ? "Right" : "Left";
+        // The raw frame is treated like an uploaded photo: the label is used as MediaPipe
+        // reports it, matching the server detector so slots mean the same in both modes.
         return {
-          points: toPoints(pts, width, height, mirrored),
-          handedness: label,
+          points: toPoints(pts, width, height),
+          handedness: category?.categoryName ?? "Right",
           score: category?.score ?? 0.5,
         };
       });
@@ -146,7 +139,7 @@ export class LiveDetectors {
       const result = this.pose.detectForVideo(video, ts);
       const pose = result.landmarks[0];
       if (pose) {
-        out.pose = toPoints(pose, width, height, mirrored);
+        out.pose = toPoints(pose, width, height);
         out.pose_visibility = pose.map((p) => p.visibility ?? 1);
       }
     }

@@ -18,6 +18,8 @@ from jewelora_ai.datatypes import Adjustments, AssetSpec, JewelleryType, Point
 from jewelora_ai.detectors.fixture_detector import landmarks_from_json
 from jewelora_ai.fitting.anchors import AnchorError, anchors_for
 from jewelora_ai.fitting.fitters import fit_asset
+from jewelora_ai.engine import STRAND_TYPES
+from jewelora_ai.fitting.strand import strand_placement
 
 ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "ai" / "tests" / "fixtures"
@@ -128,6 +130,17 @@ def main() -> None:
             placements = []
             for anchors in anchor_sets:
                 fits = [fit_asset(asset, anchors, lm.image_width, lm.image_height, adj) for adj in ADJUSTMENTS]
+                strands = (
+                    [
+                        strand_placement(
+                            asset, anchors, lm.image_width, lm.image_height, length_mm=length, adjustments=adj
+                        )
+                        for adj in ADJUSTMENTS
+                        for length in (None, 508.0)
+                    ]
+                    if asset.jewellery_type in STRAND_TYPES and "left_end" in asset.anchors
+                    else None
+                )
                 placements.append(
                     {
                         "anchors": {
@@ -151,6 +164,27 @@ def main() -> None:
                             }
                             for adj, fit in zip(ADJUSTMENTS, fits, strict=True)
                         ],
+                        "strands": [
+                            {
+                                "adjustments": {
+                                    "offset_x": adj.offset_x,
+                                    "offset_y": adj.offset_y,
+                                    "scale": adj.scale,
+                                    "rotation_deg": adj.rotation_deg,
+                                },
+                                "length_mm": length,
+                                "bbox": list(pl.bbox),
+                                "strips": [
+                                    {"x0": x0, "x1": x1, "matrix": [[float(v) for v in row] for row in m]}
+                                    for x0, x1, m in pl.strips
+                                ],
+                            }
+                            for (adj, length), pl in zip(
+                                [(a, l) for a in ADJUSTMENTS for l in (None, 508.0)], strands, strict=True
+                            )
+                        ]
+                        if strands
+                        else None,
                     }
                 )
             cases.append({"asset": asset_key, "slot": slot, "placements": placements})

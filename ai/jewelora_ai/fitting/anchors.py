@@ -76,7 +76,7 @@ def face_yaw_ratio(lm: Landmarks) -> float:
 def earring_anchors(lm: Landmarks) -> list[BodyAnchors]:
     if lm.face is None:
         raise AnchorError("no_face")
-    px_per_mm, roll = face_scale(lm)
+    px_per_mm, _roll = face_scale(lm)
     yaw = face_yaw_ratio(lm)
     face_w = lm.face[234].distance_to(lm.face[454])
     anchors: list[BodyAnchors] = []
@@ -99,7 +99,7 @@ def earring_anchors(lm: Landmarks) -> list[BodyAnchors]:
                 region=region,
                 points={"top": hang, "oval": oval},
                 px_per_mm=px_per_mm,
-                rotation_deg=roll,
+                rotation_deg=0.0,  # earrings hang with gravity, whatever the head tilt
                 confidence=max(0.3, min(1.0, vis)),
                 mirror=mirror,
                 occlusion={"hair": 0.55},

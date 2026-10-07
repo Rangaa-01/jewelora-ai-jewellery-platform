@@ -162,6 +162,8 @@ class Placement:
     confidence: float
     occlusion: dict[str, float]
     asset_id: str | None = None
+    # Strand warp: (x0, x1, 2x3 affine) per vertical strip of the asset. Empty = rigid.
+    strips: list[tuple[int, int, np.ndarray]] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -170,6 +172,10 @@ class Placement:
             "bbox": list(self.bbox),
             "confidence": round(float(self.confidence), 3),
             "asset_id": self.asset_id,
+            "strips": [
+                {"x0": x0, "x1": x1, "matrix": [[float(v) for v in row] for row in m]}
+                for x0, x1, m in self.strips
+            ],
         }
 
 
@@ -179,6 +185,7 @@ class TryOnItem:
     slot: str | None = None  # e.g. "ring_left_ring", "earrings"; None = default slot for the type
     adjustments: Adjustments = field(default_factory=Adjustments)
     tint_hex: str | None = None  # recolour metal (variant switching) before rendering
+    length_mm: float | None = None  # chosen necklace/chain length (drives the drop)
 
 
 @dataclass

@@ -89,7 +89,7 @@ export function faceScale(lm: Landmarks): [number, number] {
 
 export function earringAnchors(lm: Landmarks): BodyAnchors[] {
   const face = requireFace(lm);
-  const [pxPerMm, roll] = faceScale(lm);
+  const [pxPerMm] = faceScale(lm);
   const yaw = faceYawRatio(lm);
   const faceW = distance(face[234]!, face[454]!);
   const out: BodyAnchors[] = [];
@@ -110,7 +110,7 @@ export function earringAnchors(lm: Landmarks): BodyAnchors[] {
       region,
       points: { top: hang, oval },
       px_per_mm: pxPerMm,
-      rotation_deg: roll,
+      rotation_deg: 0, // earrings hang with gravity, whatever the head tilt
       confidence: Math.max(0.3, Math.min(1.0, vis)),
       mirror,
       occlusion: { hair: 0.55 },

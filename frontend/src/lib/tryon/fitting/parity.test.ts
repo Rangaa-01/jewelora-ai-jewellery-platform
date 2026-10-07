@@ -9,6 +9,7 @@ import type { JewelleryType } from "@/lib/api/types";
 import { anchorsFor } from "./anchors";
 import { AnchorError } from "./types";
 import { fitAsset } from "./fitters";
+import { isStrand, strandPlacement } from "./strand";
 import type { Adjustments, AssetGeometry, Landmarks } from "./types";
 
 const FIXTURES = join(__dirname, "../../../../../ai/tests/fixtures");
@@ -46,6 +47,12 @@ interface ExpectedCase {
       mirror: boolean;
     };
     fits: { adjustments: Adjustments; matrix: number[][]; bbox: number[] }[];
+    strands: {
+      adjustments: Adjustments;
+      length_mm: number | null;
+      bbox: number[];
+      strips: { x0: number; x1: number; matrix: number[][] }[];
+    }[] | null;
   }[];
 }
 
@@ -140,6 +147,29 @@ describe("fitting parity with the Python engine", () => {
               }
             }
             expect(placement.bbox).toEqual(fit.bbox);
+          }
+          expect(isStrand(asset)).toBe(exp.strands !== null);
+          for (const strand of exp.strands ?? []) {
+            const placement = strandPlacement(
+              asset,
+              anchors,
+              lm.image_width,
+              lm.image_height,
+              strand.length_mm,
+              strand.adjustments,
+            );
+            expect(placement.strips).toHaveLength(strand.strips.length);
+            placement.strips!.forEach((strip, k) => {
+              const want = strand.strips[k]!;
+              expect(strip.x0).toBe(want.x0);
+              expect(strip.x1).toBe(want.x1);
+              for (let r = 0; r < 2; r += 1) {
+                for (let col = 0; col < 3; col += 1) {
+                  expect(Math.abs(strip.matrix[r]![col]! - want.matrix[r]![col]!)).toBeLessThan(1e-7);
+                }
+              }
+            });
+            expect(placement.bbox).toEqual(strand.bbox);
           }
         });
       });

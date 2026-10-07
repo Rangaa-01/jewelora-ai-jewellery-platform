@@ -289,6 +289,17 @@ class TryOnService:
                 else None,
                 asset_id=str(asset_row.id),
             )
+            length_mm = None
+            if item.size_id:
+                size = next((sz for sz in product.sizes if sz.id == item.size_id), None)
+                if size and size.measurement_mm:
+                    length_mm = float(size.measurement_mm)
+            if length_mm is None:
+                default_size = next(
+                    (sz for sz in product.sizes if sz.is_default and sz.measurement_mm), None
+                )
+                if default_size:
+                    length_mm = float(default_size.measurement_mm)  # type: ignore[arg-type]
             built.append(
                 (
                     TryOnItem(
@@ -296,6 +307,7 @@ class TryOnService:
                         slot=item.slot,
                         adjustments=Adjustments(**item.adjustments.model_dump()),
                         tint_hex=tint,
+                        length_mm=length_mm,
                     ),
                     item,
                 )

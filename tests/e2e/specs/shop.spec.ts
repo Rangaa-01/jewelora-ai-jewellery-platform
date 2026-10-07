@@ -1,7 +1,54 @@
-import { expect, test, type Page } from "@playwright/test";
+import {
+  expect,
+  test,
+  type APIRequestContext,
+  type Page,
+} from "@playwright/test";
 
-const PRODUCT_SLUG = "gold-crescent-drop-earrings"; // no sizes, in stock, try-on enabled
+const PRODUCT_SLUG = "gold-crescent-drop-earrings"; // no sizes, try-on enabled
 const RING_SLUG = "rose-cut-diamond-cluster-ring"; // sized product
+
+/**
+ * Every run of this spec places an order, which reserves a unit of stock. So that the
+ * demo product never ends up "sold out" for the next run, a manager tops it up first.
+ */
+async function ensureInStock(
+  request: APIRequestContext,
+  slug: string,
+  minimum = 5,
+) {
+  const product = await (await request.get(`/api/v1/products/${slug}`)).json();
+  if (product.stock_quantity >= minimum) return;
+  const login = await request.post("/api/v1/auth/login", {
+    headers: { "X-Requested-With": "jewelora" },
+    data: {
+      identifier: "manager@jewelora-demo.com",
+      password: "Manager#12345",
+    },
+  });
+  expect(login.ok(), "manager login").toBeTruthy();
+  const variants = (product.variants as Record<string, unknown>[]).map((v) => ({
+    id: v.id,
+    sku_suffix: v.sku_suffix,
+    metal_type: v.metal_type,
+    stone_type: v.stone_type,
+    purity: v.purity,
+    price_delta: v.price_delta,
+    stock_quantity: minimum,
+    tint_hex: v.tint_hex,
+    is_default: v.is_default,
+    is_active: v.is_active,
+    sort_order: v.sort_order,
+  }));
+  const patched = await request.patch(`/api/v1/admin/products/${product.id}`, {
+    headers: { "X-Requested-With": "jewelora" },
+    data: { stock_quantity: minimum, variants },
+  });
+  expect(patched.status(), await patched.text()).toBe(200);
+  await request.post("/api/v1/auth/logout", {
+    headers: { "X-Requested-With": "jewelora" },
+  });
+}
 
 function uniqueEmail(): string {
   return `shopper-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`;
@@ -28,8 +75,10 @@ async function register(page: Page, email: string) {
 test.describe("shop", () => {
   test("guest bag survives sign-up, then wishlist, enquiry, appointment and checkout work end to end", async ({
     page,
+    request,
   }) => {
     test.setTimeout(180_000);
+    await ensureInStock(request, PRODUCT_SLUG);
     const errors: string[] = [];
     page.on("pageerror", (e) => errors.push(e.message));
 
@@ -197,6 +246,8 @@ test.describe("shop", () => {
     page,
   }) => {
     await page.goto("/looks/not-a-real-token-123");
-    await expect(page.getByText("This look isn't available")).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText("This look isn't available")).toBeVisible({
+      timeout: 30_000,
+    });
   });
 });

@@ -64,6 +64,13 @@ export const DEFAULT_ADJUSTMENTS: Adjustments = {
 /** 2×3 affine matrix [[a, b, tx], [c, d, ty]] mapping asset pixels → image pixels. */
 export type AffineMatrix = [[number, number, number], [number, number, number]];
 
+/** One vertical slice of the asset (x0..x1 in asset pixels) and the affine that places it. */
+export interface Strip {
+  x0: number;
+  x1: number;
+  matrix: AffineMatrix;
+}
+
 export interface Placement {
   region: string;
   matrix: AffineMatrix;
@@ -71,6 +78,8 @@ export interface Placement {
   confidence: number;
   occlusion: Record<string, number>;
   asset_id: string | null;
+  /** Strand warp pieces (necklaces etc.). Empty or absent means a single rigid transform. */
+  strips?: Strip[];
 }
 
 export class AnchorError extends Error {

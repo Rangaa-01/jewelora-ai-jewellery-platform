@@ -7,6 +7,8 @@ export interface LiveItem {
   product: ProductDetail;
   variant: ProductVariant | null;
   slot: string | null;
+  /** Length of the chosen (or default) size in mm; drives how far a strand hangs. */
+  lengthMm: number | null;
   adjustments: Adjustments;
   geometry: AssetGeometry;
   drawable: DrawableAsset;

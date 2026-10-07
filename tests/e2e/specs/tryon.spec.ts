@@ -47,7 +47,7 @@ test.describe("photo try-on", () => {
     expect(image.headers()["content-type"]).toBe("image/webp");
 
     await page.getByRole("button", { name: "Fine-tune the fit" }).click();
-    const slider = page.getByLabel("Size").first();
+    const slider = page.getByRole("slider", { name: "Size" });
     await expect(slider).toBeVisible();
     await slider.fill("1.4");
     await expect(page.getByText("Updating fit…")).toBeVisible({

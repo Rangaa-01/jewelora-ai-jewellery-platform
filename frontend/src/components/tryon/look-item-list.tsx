@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import Image from "next/image";
 import type { ProductDetail } from "@/lib/api/types";
 import { JEWELLERY_TYPE_LABELS, METAL_LABELS } from "@/lib/labels";
+import { STRAND_TYPES } from "@/lib/tryon/fitting/strand";
 import { slotOptionsFor, type DetectionSummary, type LookItem } from "@/lib/tryon/session";
 
 interface LookItemListProps {
@@ -12,7 +13,14 @@ interface LookItemListProps {
   detection?: DetectionSummary;
   onRemove: (productId: string) => void;
   onVariantChange: (productId: string, variantId: string | null) => void;
+  onSizeChange: (productId: string, sizeId: string | null) => void;
   onSlotChange: (productId: string, slot: string | null) => void;
+}
+
+/** Sizes worth offering in try-on: at least two, labelled by their length/measurement. */
+export function sizeOptionsFor(detail: ProductDetail | undefined) {
+  const sizes = detail?.sizes ?? [];
+  return sizes.length > 1 ? sizes : [];
 }
 
 const selectClasses =
@@ -25,6 +33,7 @@ export function LookItemList({
   detection,
   onRemove,
   onVariantChange,
+  onSizeChange,
   onSlotChange,
 }: LookItemListProps) {
   if (items.length === 0) {
@@ -36,9 +45,11 @@ export function LookItemList({
   }
   return (
     <ul className="flex flex-col gap-2">
-      {items.map(({ product, variantId, slot }) => {
+      {items.map(({ product, variantId, sizeId, slot }) => {
         const detail = details[product.slug];
         const variants = detail?.variants.filter((v) => v.is_active) ?? [];
+        const sizes = sizeOptionsFor(detail);
+        const defaultSize = sizes.find((sz) => sz.is_default) ?? sizes[0];
         const slots = slotOptionsFor(product.jewellery_type, detection);
         return (
           <li
@@ -72,7 +83,7 @@ export function LookItemList({
                 <X className="size-4" aria-hidden />
               </button>
             </div>
-            {(variants.length > 1 || slots.length > 0) && (
+            {(variants.length > 1 || sizes.length > 0 || slots.length > 0) && (
               <div className="grid gap-2 sm:grid-cols-2">
                 {variants.length > 1 && (
                   <label className="flex flex-col gap-1 text-xs">
@@ -86,6 +97,25 @@ export function LookItemList({
                         <option key={v.id} value={v.id}>
                           {METAL_LABELS[v.metal_type]}
                           {v.purity ? ` · ${v.purity}` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                {sizes.length > 0 && (
+                  <label className="flex flex-col gap-1 text-xs">
+                    <span className="text-fg-muted">
+                      {STRAND_TYPES.has(product.jewellery_type) ? "Length" : "Size"}
+                    </span>
+                    <select
+                      className={selectClasses}
+                      value={sizeId ?? defaultSize?.id ?? ""}
+                      onChange={(e) => onSizeChange(product.id, e.target.value || null)}
+                    >
+                      {sizes.map((sz) => (
+                        <option key={sz.id} value={sz.id}>
+                          {sz.label}
+                          {sz.measurement_mm ? ` · ${Number(sz.measurement_mm)} mm` : ""}
                         </option>
                       ))}
                     </select>
