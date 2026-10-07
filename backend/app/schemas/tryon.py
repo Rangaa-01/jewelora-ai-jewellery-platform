@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import Field
 
@@ -25,6 +25,10 @@ class TryOnItemIn(APIModel):
 
 class TryOnItemsIn(APIModel):
     items: list[TryOnItemIn] = Field(min_length=1, max_length=8)
+
+
+class TryOnRerunIn(TryOnItemsIn):
+    mode: Literal["look", "bridal"] = "look"
 
 
 class RingSizeOut(APIModel):

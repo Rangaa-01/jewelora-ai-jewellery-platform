@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import uuid
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Header, Request, Response, status
 from sqlalchemy import select
@@ -197,24 +198,48 @@ async def payment_webhook(
         body=body, signature=x_razorpay_signature
     ):
         raise AuthorizationError("Invalid webhook signature.")
-    event = json.loads(body or b"{}")
-    entity = event.get("payload", {}).get("payment", {}).get("entity", {})
+    try:
+        event = json.loads(body or b"{}")
+    except json.JSONDecodeError:
+        return Message(message="ignored")
+    entity = (
+        event.get("payload", {}).get("payment", {}).get("entity", {})
+        if isinstance(event, dict)
+        else {}
+    )
     provider_order_id = entity.get("order_id")
-    if provider_order_id:
-        payment = (
-            await db.execute(select(Payment).where(Payment.provider_order_id == provider_order_id))
-        ).scalar_one_or_none()
-        if payment is not None:
-            order = await db.get(Order, payment.order_id)
-            if event.get("event") == "payment.captured" and order is not None:
-                payment.status = PaymentStatus.CAPTURED.value
-                payment.provider_payment_id = entity.get("id")
-                order.status = OrderStatus.PAID.value
-                from datetime import UTC, datetime
-
-                order.paid_at = datetime.now(UTC)
-            elif event.get("event") == "payment.failed":
-                payment.status = PaymentStatus.FAILED.value
-                payment.failure_reason = str(entity.get("error_description", ""))[:255]
+    if not provider_order_id:
+        return Message(message="ignored")
+    payment = (
+        await db.execute(select(Payment).where(Payment.provider_order_id == provider_order_id))
+    ).scalar_one_or_none()
+    if payment is None:
+        return Message(message="ignored")
+    order = await db.get(Order, payment.order_id)
+    kind = event.get("event")
+    amount_ok = (
+        int(entity.get("amount", -1)) == int(payment.amount * 100)
+        and str(entity.get("currency", "")) == payment.currency
+    )
+    if kind == "payment.captured" and order is not None:
+        if payment.status == PaymentStatus.CAPTURED.value:
+            return Message(message="duplicate")  # idempotent replay
+        if not amount_ok or order.status != OrderStatus.AWAITING_PAYMENT.value:
+            payment.raw_response = {**(payment.raw_response or {}), "disputed_webhook": entity}
+            log.warning(
+                "payment_capture_mismatch",
+                order=order.order_number,
+                status=order.status,
+                amount_ok=amount_ok,
+            )
             await db.flush()
+            return Message(message="held")  # staff review in the admin dashboard
+        payment.status = PaymentStatus.CAPTURED.value
+        payment.provider_payment_id = entity.get("id")
+        order.status = OrderStatus.PAID.value
+        order.paid_at = datetime.now(UTC)
+    elif kind == "payment.failed" and payment.status == PaymentStatus.CREATED.value:
+        payment.status = PaymentStatus.FAILED.value
+        payment.failure_reason = str(entity.get("error_description", ""))[:255]
+    await db.flush()
     return Message(message="ok")

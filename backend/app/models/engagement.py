@@ -81,7 +81,9 @@ class SavedLook(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     preview_storage_key: Mapped[str | None] = mapped_column(String(512))
     share_token: Mapped[str | None] = mapped_column(String(32), unique=True)
-    is_public: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    shared_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))  # link sharing
+    is_public: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)  # feed opt-in
+    public_preview_key: Mapped[str | None] = mapped_column(String(512))  # copy under public/
     share_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text)
 

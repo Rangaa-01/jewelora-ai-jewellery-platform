@@ -67,7 +67,7 @@ async def test_saved_looks_share_and_public_feed(client: AsyncClient, db: AsyncS
     shared = await client.post(f"/api/v1/looks/{look['id']}/share?channel=whatsapp")
     assert shared.status_code == 200
     token = shared.json()["share_token"]
-    assert shared.json()["share_count"] == 1 and shared.json()["is_public"] is True
+    assert shared.json()["share_count"] == 1 and shared.json()["is_public"] is False
 
     logout(client)
     public = await client.get(f"/api/v1/looks/shared/{token}")

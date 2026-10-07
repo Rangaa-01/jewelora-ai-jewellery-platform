@@ -10,7 +10,7 @@ from decimal import Decimal
 from typing import Any
 
 import numpy as np
-from sqlalchemy import delete, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.errors import ServiceUnavailableError
@@ -25,6 +25,7 @@ from app.storage import ObjectStorage
 
 log = get_logger(__name__)
 
+_MATRIX_CACHE: dict[str, tuple[tuple[int, str], list[uuid.UUID], np.ndarray]] = {}
 EXACT_THRESHOLD = 0.97
 SIMILAR_THRESHOLD = 0.55
 
@@ -64,8 +65,12 @@ class VisualSearchService:
         from jewelora_ai.preprocessing import load_rgb
 
         embedder = EmbedderRuntime.get(self.settings)
-        rgb = load_rgb(data, max_dimension=640, min_dimension=64).rgb
-        return await asyncio.to_thread(embedder.embed, rgb)
+
+        def _run() -> np.ndarray:
+            rgb = load_rgb(data, max_dimension=640, min_dimension=64).rgb
+            return np.asarray(embedder.embed(rgb), dtype=np.float32)
+
+        return await asyncio.to_thread(_run)
 
     async def index_product(self, product: Product) -> int:
         """(Re)compute embeddings for every image of a product. Returns the count indexed."""
@@ -104,10 +109,22 @@ class VisualSearchService:
             total += await self.index_product(product)
         return total
 
-    async def search(
-        self, data: bytes, *, limit: int, customer_id: uuid.UUID | None, session_token: str | None
-    ) -> tuple[tuple[Product, float] | None, list[tuple[Product, float]], int]:
-        query = await self._embed_bytes(data)
+    async def _index_matrix(self) -> tuple[list[uuid.UUID], np.ndarray]:
+        """Normalised embedding matrix for active products, cached until the table changes."""
+        version = (
+            await self.db.execute(
+                select(
+                    func.count(ProductEmbedding.product_image_id),
+                    func.max(ProductEmbedding.created_at),
+                )
+                .join(Product, Product.id == ProductEmbedding.product_id)
+                .where(Product.is_active.is_(True))
+            )
+        ).one()
+        key = (int(version[0]), str(version[1]))
+        cached = _MATRIX_CACHE.get("index")
+        if cached and cached[0] == key:
+            return cached[1], cached[2]
         rows = (
             await self.db.execute(
                 select(ProductEmbedding.product_id, ProductEmbedding.vector)
@@ -115,12 +132,28 @@ class VisualSearchService:
                 .where(Product.is_active.is_(True))
             )
         ).all()
-        if not rows:
+
+        def _build() -> np.ndarray:
+            if not rows:
+                return np.zeros((0, 1), dtype=np.float32)
+            raw = np.asarray([[float(v) for v in vector] for _, vector in rows], dtype=np.float32)
+            norms = np.linalg.norm(raw, axis=1, keepdims=True)
+            return (raw / np.where(norms == 0, 1, norms)).astype(np.float32)
+
+        matrix = await asyncio.to_thread(_build)
+        ids = [pid for pid, _ in rows]
+        _MATRIX_CACHE["index"] = (key, ids, matrix)
+        return ids, matrix
+
+    async def search(
+        self, data: bytes, *, limit: int, customer_id: uuid.UUID | None, session_token: str | None
+    ) -> tuple[tuple[Product, float] | None, list[tuple[Product, float]], int]:
+        query = await self._embed_bytes(data)
+        product_ids, matrix = await self._index_matrix()
+        if matrix.shape[0] == 0:
             return None, [], 0
-        raw = np.asarray([[float(v) for v in vector] for _, vector in rows], dtype=np.float32)
-        norms = np.linalg.norm(raw, axis=1, keepdims=True)
-        matrix = (raw / np.where(norms == 0, 1, norms)).astype(np.float32)
         sims = matrix @ query
+        rows = [(pid, None) for pid in product_ids]
         best: dict[uuid.UUID, float] = {}
         for (product_id, _), sim in zip(rows, sims, strict=True):
             best[product_id] = max(best.get(product_id, -1.0), float(sim))

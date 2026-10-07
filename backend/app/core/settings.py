@@ -79,7 +79,7 @@ class Settings(BaseSettings):
 
     # --- Uploads -----------------------------------------------------------------
     upload_max_bytes: int = 12 * 1024 * 1024
-    upload_max_pixels: int = 32_000_000
+    upload_max_pixels: int = 25_000_000
     upload_allowed_image_types: list[str] = Field(
         default_factory=lambda: ["image/jpeg", "image/png", "image/webp"]
     )

@@ -4,7 +4,8 @@ from fastapi import APIRouter
 
 from app.api.v1.auth import user_out
 from app.core.deps import CurrentCustomerDep, CurrentUserDep, DBDep
-from app.models.user import Customer, User
+from app.core.errors import NotFoundError
+from app.models.user import Customer, Store, User
 from app.schemas.auth import CustomerProfileOut, CustomerProfileUpdate
 
 router = APIRouter(prefix="/customers", tags=["customers"])
@@ -38,6 +39,10 @@ async def update_my_profile(
     data: CustomerProfileUpdate, customer: CurrentCustomerDep, user: CurrentUserDep, db: DBDep
 ) -> CustomerProfileOut:
     changes = data.model_dump(exclude_unset=True)
+    if changes.get("preferred_store_id") is not None:
+        store = await db.get(Store, changes["preferred_store_id"])
+        if store is None or not store.is_active:
+            raise NotFoundError("That store doesn't exist.", code="store_not_found")
     if changes.get("full_name"):
         user.full_name = changes.pop("full_name")
     for key, value in changes.items():

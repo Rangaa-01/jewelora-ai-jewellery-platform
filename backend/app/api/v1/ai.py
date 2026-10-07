@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+
 from fastapi import APIRouter, File, Query, Request, Response, UploadFile
 
 from app.core.deps import DBDep, OptionalUserDep, SessionTokenDep, SettingsDep, StorageDep
@@ -72,7 +74,7 @@ async def visual_search(
     data = await image.read(settings.upload_max_bytes + 1)
     if len(data) > settings.upload_max_bytes:
         raise PayloadTooLargeError()
-    processed = process_image(data, settings, max_dimension=1024)  # validates + strips metadata
+    processed = await asyncio.to_thread(process_image, data, settings, max_dimension=1024)
     customer_id = user.customer.id if user and user.customer else None
     exact, similar, indexed = await VisualSearchService(db, storage, settings).search(
         processed.data, limit=limit, customer_id=customer_id, session_token=session_token

@@ -30,3 +30,27 @@ Security controls and where they live.
 ## Reporting
 
 Security issues: contact the shop's engineering owner directly; do not open public issues.
+
+## Security review log
+
+2026-10-07 — internal review of the backend (read-only audit, then fixes with regression
+tests in `backend/tests/security/test_hardening.py`):
+
+- Proxy trust: nginx now *replaces* `X-Forwarded-For` and uvicorn trusts only private
+  networks (`FORWARDED_ALLOW_IPS`), so per-IP rate limits cannot be spoofed. Set `REDIS_URL`
+  when running several replicas.
+- CPU-bound image decoding/encoding moved off the event loop (`asyncio.to_thread`).
+- Look sharing: a share link no longer publishes a look to the public feed; the feed is an
+  explicit `is_public` opt-in that copies the preview to a public key, so private try-on
+  result keys never leave their owner.
+- Guest session secrets are hashed before use in storage paths/URLs; logout clears the
+  guest session cookie; CSRF header check also covers guest sessions.
+- Payments: capture requires `awaiting_payment` + matching amount/currency, webhook replays
+  are idempotent, late failures cannot undo a capture, mismatches are held for staff.
+- Stock: cancellations restore exactly what was reserved (no inflation via variant stock).
+- Admin least privilege: only managers/admins change order status or browse saved looks;
+  customer detail views are audit-logged; staff/store references validated.
+- Stylist LLM: untrusted-text instruction in the system prompt, reasons sanitised (no
+  markup/links). Visual search embedding matrix cached off the event loop.
+- Accepted trade-off: `email_taken`/`account_locked` responses reveal account existence to
+  improve usability; rate limits bound enumeration speed.

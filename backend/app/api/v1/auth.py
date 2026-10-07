@@ -4,7 +4,14 @@ from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Request, Response, status
 
-from app.core.deps import ACCESS_COOKIE, REFRESH_COOKIE, CurrentUserDep, DBDep, SettingsDep
+from app.core.deps import (
+    ACCESS_COOKIE,
+    REFRESH_COOKIE,
+    SESSION_COOKIE,
+    CurrentUserDep,
+    DBDep,
+    SettingsDep,
+)
 from app.core.errors import AuthenticationError
 from app.core.rate_limit import AUTH_LIMIT, OTP_LIMIT, limiter
 from app.core.settings import Settings
@@ -55,8 +62,11 @@ def set_auth_cookies(response: Response, settings: Settings, pair: TokenPair) ->
         )
 
 
-def clear_auth_cookies(response: Response, settings: Settings) -> None:
-    for name in (ACCESS_COOKIE, REFRESH_COOKIE):
+def clear_auth_cookies(
+    response: Response, settings: Settings, *, session_too: bool = False
+) -> None:
+    names = [ACCESS_COOKIE, REFRESH_COOKIE] + ([SESSION_COOKIE] if session_too else [])
+    for name in names:
         response.delete_cookie(name, path="/", domain=settings.cookie_domain)
 
 
@@ -118,7 +128,7 @@ async def refresh(
 @router.post("/logout", response_model=Message)
 async def logout(request: Request, response: Response, db: DBDep, settings: SettingsDep) -> Message:
     await AuthService(db, settings).revoke_refresh_token(request.cookies.get(REFRESH_COOKIE))
-    clear_auth_cookies(response, settings)
+    clear_auth_cookies(response, settings, session_too=True)
     return Message(message="Signed out.")
 
 

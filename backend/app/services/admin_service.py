@@ -25,6 +25,7 @@ from app.models.engagement import (
 )
 from app.models.enums import AnalyticsEventType, OrderStatus, PaymentStatus
 from app.models.user import Customer, User
+from app.services.catalogue_service import escape_like
 from app.services.commerce_service import ORDER_OPTIONS
 from app.services.engagement_service import LOOK_OPTIONS
 
@@ -88,7 +89,7 @@ class AdminService:
             .options(selectinload(Customer.user))
         )
         if q:
-            term = f"%{q.strip()}%"
+            term = f"%{escape_like(q.strip())}%"
             stmt = stmt.where(
                 (User.full_name.ilike(term)) | (User.email.ilike(term)) | (User.phone.ilike(term))
             )
@@ -140,7 +141,7 @@ class AdminService:
         if status:
             stmt = stmt.where(Order.status == status)
         if q:
-            term = f"%{q.strip()}%"
+            term = f"%{escape_like(q.strip())}%"
             stmt = stmt.where(
                 (Order.order_number.ilike(term))
                 | (Order.contact_name.ilike(term))
@@ -205,10 +206,18 @@ class AdminService:
         )
         return list((await self.db.execute(stmt)).scalars().unique().all()), int(total)
 
+    async def _check_staff(self, staff_id: object) -> None:
+        if staff_id is None:
+            return
+        user = await self.db.get(User, staff_id)
+        if user is None or not set(user.role_names) & {"admin", "manager", "sales_staff"}:
+            raise NotFoundError("That staff member doesn't exist.", code="staff_not_found")
+
     async def update_enquiry(self, enquiry_id: uuid.UUID, **changes: object) -> Enquiry:
         enquiry = await self.db.get(Enquiry, enquiry_id)
         if enquiry is None:
             raise NotFoundError(code="enquiry_not_found")
+        await self._check_staff(changes.get("assigned_staff_id"))
         for key, value in changes.items():
             if value is None:
                 continue
@@ -254,6 +263,7 @@ class AdminService:
         appointment = await self.db.get(Appointment, appointment_id)
         if appointment is None:
             raise NotFoundError(code="appointment_not_found")
+        await self._check_staff(changes.get("assigned_staff_id"))
         for key, value in changes.items():
             if value is None:
                 continue

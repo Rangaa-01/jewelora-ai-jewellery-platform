@@ -5,6 +5,7 @@ import uuid
 from fastapi import APIRouter, Query, Request, status
 
 from app.core.deps import CurrentCustomerDep, DBDep, SessionTokenDep, SettingsDep, StorageDep
+from app.core.rate_limit import PUBLIC_FORM_LIMIT, limiter
 from app.schemas.common import Message
 from app.schemas.engagement import PublicLookOut, SavedLookIn, SavedLookOut, SavedLookUpdate
 from app.services.engagement_serializers import look_out, public_look_out
@@ -15,13 +16,20 @@ router = APIRouter(prefix="/looks", tags=["looks"])
 
 @router.get("", response_model=list[SavedLookOut])
 async def my_looks(
-    customer: CurrentCustomerDep, db: DBDep, storage: StorageDep, settings: SettingsDep
+    customer: CurrentCustomerDep,
+    db: DBDep,
+    storage: StorageDep,
+    settings: SettingsDep,
+    limit: int = Query(default=50, ge=1, le=200),
 ) -> list[SavedLookOut]:
-    return [look_out(look, storage, settings) for look in await LookService(db).list_mine(customer)]
+    looks = await LookService(db).list_mine(customer)
+    return [look_out(look, storage, settings) for look in looks[:limit]]
 
 
 @router.post("", response_model=SavedLookOut, status_code=status.HTTP_201_CREATED)
+@limiter.limit(PUBLIC_FORM_LIMIT)
 async def create_look(
+    request: Request,
     data: SavedLookIn,
     customer: CurrentCustomerDep,
     db: DBDep,
@@ -29,7 +37,7 @@ async def create_look(
     settings: SettingsDep,
     session_token: SessionTokenDep,
 ) -> SavedLookOut:
-    look = await LookService(db).create(customer, data, session_token=session_token)
+    look = await LookService(db, storage).create(customer, data, session_token=session_token)
     return look_out(look, storage, settings)
 
 
@@ -65,7 +73,9 @@ async def update_look(
     storage: StorageDep,
     settings: SettingsDep,
 ) -> SavedLookOut:
-    return look_out(await LookService(db).update(customer, look_id, data), storage, settings)
+    return look_out(
+        await LookService(db, storage).update(customer, look_id, data), storage, settings
+    )
 
 
 @router.post("/{look_id}/share", response_model=SavedLookOut)

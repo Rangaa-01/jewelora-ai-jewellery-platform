@@ -7,7 +7,7 @@ import secrets
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, File, Form, Request, Response, UploadFile, status
+from fastapi import APIRouter, File, Form, Query, Request, Response, UploadFile, status
 from sqlalchemy import select
 
 from app.core.deps import (
@@ -31,6 +31,7 @@ from app.schemas.tryon import (
     RingSizeOut,
     TryOnCapabilitiesOut,
     TryOnItemIn,
+    TryOnRerunIn,
     TryOnResultOut,
 )
 from app.services.tryon_service import (
@@ -144,9 +145,10 @@ async def photo_tryon(
             f"Photos must be smaller than {settings.upload_max_bytes // (1024 * 1024)} MB."
         )
     device_info: dict[str, Any] | None = None
-    if device:
+    if device and len(device) <= 2000:
         try:
-            device_info = json.loads(device)
+            parsed = json.loads(device)
+            device_info = parsed if isinstance(parsed, dict) else None
         except json.JSONDecodeError:
             device_info = None
     service = TryOnService(db, storage, settings)
@@ -170,7 +172,7 @@ async def rerun_on_photo(
     request: Request,
     response: Response,
     photo_id: uuid.UUID,
-    body: dict[str, Any],
+    body: TryOnRerunIn,
     db: DBDep,
     storage: StorageDep,
     settings: SettingsDep,
@@ -179,11 +181,10 @@ async def rerun_on_photo(
 ) -> TryOnResultOut:
     """Try different pieces on an already-uploaded photo (landmarks are reused)."""
     owner = await resolve_owner(request, response, user, session_token, db)
-    parsed_items = parse_items_json(json.dumps(body.get("items", [])))
     service = TryOnService(db, storage, settings)
     photo = await service.get_photo(owner, photo_id)
     result = await service.run_photo_tryon(
-        owner, photo=photo, items=parsed_items, mode=str(body.get("mode", "look")), device_info=None
+        owner, photo=photo, items=body.items, mode=body.mode, device_info=None
     )
     return result_out(result, storage)
 
@@ -241,10 +242,11 @@ async def list_photos(
     settings: SettingsDep,
     user: OptionalUserDep,
     session_token: SessionTokenDep,
+    limit: int = Query(default=50, ge=1, le=200),
 ) -> list[CustomerPhotoOut]:
     owner = await resolve_owner(request, response, user, session_token, db)
     photos = await TryOnService(db, storage, settings).list_photos(owner)
-    return [photo_out(p, storage) for p in photos]
+    return [photo_out(p, storage) for p in photos[:limit]]
 
 
 @router.delete("/photos/{photo_id}", response_model=Message)

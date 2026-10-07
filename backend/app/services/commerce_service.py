@@ -258,14 +258,38 @@ class OrderService:
         )
 
     @staticmethod
-    def _reserve_stock(item: CartItem) -> None:
+    def _reserve_stock(item: CartItem) -> dict[str, int]:
+        """Deduct stock and return exactly what was deducted so a cancellation can restore it."""
+        reserved: dict[str, int] = {}
         if item.product.is_made_to_order:
-            return
+            return reserved
         if item.variant and item.variant.stock_quantity:
-            item.variant.stock_quantity = max(0, item.variant.stock_quantity - item.quantity)
+            dec = min(item.variant.stock_quantity, item.quantity)
+            item.variant.stock_quantity -= dec
+            reserved["variant"] = dec
         if item.size and item.size.stock_quantity:
-            item.size.stock_quantity = max(0, item.size.stock_quantity - item.quantity)
-        item.product.stock_quantity = max(0, item.product.stock_quantity - item.quantity)
+            dec = min(item.size.stock_quantity, item.quantity)
+            item.size.stock_quantity -= dec
+            reserved["size"] = dec
+        dec = min(item.product.stock_quantity, item.quantity)
+        item.product.stock_quantity -= dec
+        reserved["product"] = dec
+        return reserved
+
+    async def _restore_stock(self, order_item: OrderItem) -> None:
+        reserved = order_item.stock_reservation or {}
+        if order_item.product_id and reserved.get("product"):
+            product = await self.db.get(Product, order_item.product_id)
+            if product:
+                product.stock_quantity += reserved["product"]
+        if order_item.variant_id and reserved.get("variant"):
+            variant = await self.db.get(ProductVariant, order_item.variant_id)
+            if variant:
+                variant.stock_quantity += reserved["variant"]
+        if order_item.size_id and reserved.get("size"):
+            size = await self.db.get(ProductSize, order_item.size_id)
+            if size:
+                size.stock_quantity += reserved["size"]
 
     async def place(
         self,
@@ -322,8 +346,9 @@ class OrderService:
         self.db.add(order)
         await self.db.flush()
         for item in items:
-            order.items.append(self._snapshot(item))
-            self._reserve_stock(item)
+            snapshot = self._snapshot(item)
+            snapshot.stock_reservation = self._reserve_stock(item)
+            order.items.append(snapshot)
             await record_event(
                 self.db,
                 AnalyticsEventType.PRODUCT_PURCHASE,
@@ -402,6 +427,12 @@ class OrderService:
         )
         if payment is None:
             raise NotFoundError(code="payment_not_found")
+        awaiting = order.status == OrderStatus.AWAITING_PAYMENT.value
+        if not awaiting or payment.status != PaymentStatus.CREATED.value:
+            raise ConflictError(
+                "This order is no longer awaiting payment. Please contact the store.",
+                code="order_not_payable",
+            )
         verified = self.provider.verify_payment(
             provider_order_id=provider_order_id,
             provider_payment_id=provider_payment_id,
@@ -432,9 +463,7 @@ class OrderService:
         order.status = OrderStatus.CANCELLED.value
         order.cancelled_at = datetime.now(UTC)
         for item in order.items:
-            if item.product_id:
-                product = await self.db.get(Product, item.product_id)
-                if product and not product.is_made_to_order:
-                    product.stock_quantity += item.quantity
+            await self._restore_stock(item)
+            item.stock_reservation = None
         await self.db.flush()
         return await self._load(order.id)

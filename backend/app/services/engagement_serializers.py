@@ -82,7 +82,7 @@ def public_look_out(look: SavedLook, storage: ObjectStorage) -> PublicLookOut:
         token=look.share_token,
         title=look.title,
         kind=look.kind,
-        preview_url=url_for_key(look.preview_storage_key, storage),
+        preview_url=url_for_key(look.public_preview_key or look.preview_storage_key, storage),
         items=look_items_out(look, storage),
         total_price=str(look_total(look)),
         created_at=look.created_at,

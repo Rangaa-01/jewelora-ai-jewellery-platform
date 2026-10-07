@@ -126,6 +126,8 @@ class OrderItem(UUIDPrimaryKeyMixin, Base):
     unit_price: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     quantity: Mapped[int] = mapped_column(Integer, nullable=False)
     line_total: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    # Exactly what was deducted from stock at order time, so cancellation restores the same.
+    stock_reservation: Mapped[dict[str, int] | None] = mapped_column(JSONB)
 
     order: Mapped[Order] = relationship(back_populates="items")
 

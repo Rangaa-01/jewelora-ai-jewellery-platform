@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, Query, status
 from app.api.v1.appointments import _products_for
 from app.api.v1.auth import user_out
 from app.api.v1.orders import order_out
-from app.core.deps import AdminUserDep, DBDep, SettingsDep, StorageDep, require_roles
+from app.core.deps import AdminUserDep, DBDep, SettingsDep, StaffUserDep, StorageDep, require_roles
 from app.core.logging import get_logger
 from app.core.settings import get_settings
 from app.models.catalogue import Product
@@ -75,8 +75,11 @@ async def admin_customers(
 
 
 @router.get("/customers/{customer_id}", response_model=AdminCustomerDetailOut)
-async def admin_customer(customer_id: uuid.UUID, db: DBDep) -> AdminCustomerDetailOut:
+async def admin_customer(
+    customer_id: uuid.UUID, db: DBDep, staff: StaffUserDep
+) -> AdminCustomerDetailOut:
     customer, counts = await AdminService(db).get_customer(customer_id)
+    log.info("admin_customer_viewed", customer_id=str(customer_id), by=str(staff.id))
     base = _customer_out(customer, counts)
     return AdminCustomerDetailOut(
         **base.model_dump(),
@@ -103,7 +106,7 @@ async def admin_update_customer(
             await AuthService(db, get_settings()).revoke_all_sessions(customer.user)
     await db.flush()
     log.info("admin_customer_updated", customer_id=str(customer_id), by=str(user.id))
-    return await admin_customer(customer_id, db)
+    return await admin_customer(customer_id, db, user)
 
 
 @router.post(
@@ -149,7 +152,11 @@ async def admin_order(order_id: uuid.UUID, db: DBDep, storage: StorageDep) -> Or
     return order_out(await AdminService(db).get_order(order_id), storage)
 
 
-@router.patch("/orders/{order_id}", response_model=OrderOut)
+@router.patch(
+    "/orders/{order_id}",
+    response_model=OrderOut,
+    dependencies=[Depends(require_roles(Role.ADMIN, Role.MANAGER))],
+)
 async def admin_update_order(
     order_id: uuid.UUID, data: AdminOrderUpdate, db: DBDep, storage: StorageDep
 ) -> OrderOut:
@@ -213,7 +220,11 @@ async def admin_update_appointment(
     return appointment_out(appointment, await _products_for(db, appointment), storage)
 
 
-@router.get("/looks", response_model=Page[SavedLookOut])
+@router.get(
+    "/looks",
+    response_model=Page[SavedLookOut],
+    dependencies=[Depends(require_roles(Role.ADMIN, Role.MANAGER))],
+)
 async def admin_looks(
     db: DBDep,
     storage: StorageDep,

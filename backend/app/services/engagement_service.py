@@ -35,6 +35,8 @@ from app.schemas.engagement import (
 from app.services.analytics_service import record_event
 from app.services.catalogue_service import PRODUCT_LOAD_OPTIONS, CatalogueService
 from app.services.references import reference, share_token
+from app.storage import ObjectStorage
+from app.storage.base import look_preview_key
 
 APPOINTMENT_OPEN_HOUR = 10
 APPOINTMENT_CLOSE_HOUR = 20
@@ -152,8 +154,23 @@ LOOK_OPTIONS = (
 
 
 class LookService:
-    def __init__(self, db: AsyncSession) -> None:
+    def __init__(self, db: AsyncSession, storage: ObjectStorage | None = None) -> None:
         self.db = db
+        self.storage = storage
+
+    async def _publish_preview(self, look: SavedLook) -> None:
+        """Copy the private try-on image to a public key when a look is made public."""
+        if look.public_preview_key or not look.preview_storage_key or self.storage is None:
+            return
+        data = await self.storage.get(look.preview_storage_key)
+        key = look_preview_key(str(look.customer_id), "webp")
+        await self.storage.put(key, data, "image/webp")
+        look.public_preview_key = key
+
+    async def _unpublish_preview(self, look: SavedLook) -> None:
+        if look.public_preview_key and self.storage is not None:
+            await self.storage.delete(look.public_preview_key)
+        look.public_preview_key = None
 
     async def list_mine(self, customer: Customer) -> list[SavedLook]:
         stmt = (
@@ -241,6 +258,8 @@ class LookService:
                 saved_look_id=look.id,
                 properties={"role": "item"},
             )
+        if look.is_public:
+            await self._publish_preview(look)
         await self.db.flush()
         stmt = select(SavedLook).options(*LOOK_OPTIONS).where(SavedLook.id == look.id)
         return (
@@ -256,8 +275,12 @@ class LookService:
         look = await self.get_mine(customer, look_id)
         for key, value in data.model_dump(exclude_unset=True).items():
             setattr(look, key, value)
-        if look.is_public and not look.share_token:
-            look.share_token = share_token()
+        if look.is_public:
+            if not look.share_token:
+                look.share_token = share_token()
+            await self._publish_preview(look)
+        else:
+            await self._unpublish_preview(look)
         await self.db.flush()
         return look
 
@@ -267,7 +290,8 @@ class LookService:
         look = await self.get_mine(customer, look_id)
         if not look.share_token:
             look.share_token = share_token()
-        look.is_public = True
+        # Link sharing only: the look becomes reachable by token, never listed publicly.
+        look.shared_at = look.shared_at or datetime.now(UTC)
         look.share_count += 1
         await record_event(
             self.db,
@@ -296,7 +320,10 @@ class LookService:
         stmt = (
             select(SavedLook)
             .options(*LOOK_OPTIONS)
-            .where(SavedLook.share_token == token, SavedLook.is_public.is_(True))
+            .where(
+                SavedLook.share_token == token,
+                (SavedLook.is_public.is_(True)) | (SavedLook.shared_at.is_not(None)),
+            )
         )
         look = (await self.db.execute(stmt)).scalars().unique().one_or_none()
         if look is None:
@@ -307,7 +334,7 @@ class LookService:
         stmt = (
             select(SavedLook)
             .options(*LOOK_OPTIONS)
-            .where(SavedLook.is_public.is_(True), SavedLook.preview_storage_key.is_not(None))
+            .where(SavedLook.is_public.is_(True), SavedLook.public_preview_key.is_not(None))
             .order_by(SavedLook.share_count.desc(), SavedLook.created_at.desc())
             .limit(limit)
         )
@@ -326,6 +353,27 @@ def look_total(look: SavedLook) -> Decimal:
             price += size.price_delta
         total += price
     return total
+
+
+async def _resolve_look_reference(
+    db: AsyncSession,
+    saved_look_id: uuid.UUID | None,
+    look_token: str | None,
+    customer: Customer | None,
+) -> uuid.UUID | None:
+    """A look may be referenced by its owner (id) or by anyone holding a share token."""
+    if look_token:
+        return (await LookService(db).by_token(look_token)).id
+    if saved_look_id is None:
+        return None
+    look = await db.get(SavedLook, saved_look_id)
+    if look is None or (
+        (customer is None or look.customer_id != customer.id)
+        and not look.is_public
+        and not look.shared_at
+    ):
+        raise NotFoundError(code="look_not_found")
+    return look.id
 
 
 class AppointmentService:
@@ -414,9 +462,9 @@ class AppointmentService:
         product_ids = list(data.product_ids)
         for slug in data.product_slugs:
             product_ids.append((await catalogue.get_product_by_slug(slug)).id)
-        saved_look_id = data.saved_look_id
-        if data.look_token and saved_look_id is None:
-            saved_look_id = (await LookService(self.db).by_token(data.look_token)).id
+        saved_look_id = await _resolve_look_reference(
+            self.db, data.saved_look_id, data.look_token, customer
+        )
         appointment = Appointment(
             customer_id=customer.id if customer else None,
             store_id=store.id,
@@ -447,8 +495,8 @@ class AppointmentService:
             to=store.email or self.settings.notification_email_from,
             subject=f"New appointment {appointment.reference} at {store.name}",
             body=(
-                f"{data.guest_name} ({data.guest_phone}) requested {starts:%d %b %Y %H:%M} "
-                f"for {data.party_size}. Purpose: {data.purpose or '-'}."
+                f"{data.guest_name} requested {starts:%d %b %Y %H:%M} for {data.party_size}. "
+                f"Purpose: {data.purpose or '-'}. Open the admin dashboard for contact details."
             ),
         )
         return appointment
@@ -498,9 +546,9 @@ class EnquiryService:
             )
         elif data.product_slug:
             product = await CatalogueService(self.db).get_product_by_slug(data.product_slug)
-        saved_look_id = data.saved_look_id
-        if data.look_token and saved_look_id is None:
-            saved_look_id = (await LookService(self.db).by_token(data.look_token)).id
+        saved_look_id = await _resolve_look_reference(
+            self.db, data.saved_look_id, data.look_token, customer
+        )
         enquiry = Enquiry(
             customer_id=customer.id if customer else None,
             product_id=product.id if product else None,
@@ -528,8 +576,8 @@ class EnquiryService:
             subject=f"New enquiry {enquiry.reference}"
             + (f" about {product.name}" if product else ""),
             body=(
-                f"{data.name} ({data.phone}, prefers {data.preferred_contact.value}): "
-                f"{data.message}"
+                f"{data.name} sent an enquiry (prefers {data.preferred_contact.value}). "
+                "Open the admin dashboard to read it and reply."
             ),
         )
         await self.db.refresh(enquiry, attribute_names=["product"])

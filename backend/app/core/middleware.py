@@ -82,7 +82,7 @@ class CSRFHeaderMiddleware(BaseHTTPMiddleware):
     ) -> Response:
         if (
             request.method in UNSAFE_METHODS
-            and ("access_token" in request.cookies or "refresh_token" in request.cookies)
+            and any(c in request.cookies for c in ("access_token", "refresh_token", "jw_session"))
             and not request.url.path.endswith(CSRF_EXEMPT_SUFFIXES)
             and request.headers.get(CSRF_HEADER, "").lower() != "jewelora"
         ):

@@ -100,18 +100,14 @@ async def test_sales_staff_can_work_queues_but_not_manage(
 
     orders = await client.get("/api/v1/admin/orders", params={"q": "priya"})
     assert orders.json()["total"] == 1
-    paid = await client.patch(
-        f"/api/v1/admin/orders/{ids['order_id']}",
-        json={"mark_paid": True, "status": "ready_for_pickup"},
-    )
+    # Marking paid / changing order status is a manager decision.
     assert (
-        paid.json()["status"] == "ready_for_pickup"
-        and paid.json()["paid_at"]
-        and paid.json()["payment"]["status"] == "captured"
-    )
+        await client.patch(f"/api/v1/admin/orders/{ids['order_id']}", json={"mark_paid": True})
+    ).status_code == 403
 
-    looks = await client.get("/api/v1/admin/looks")
-    assert looks.json()["total"] == 1
+    assert (await client.get("/api/v1/admin/looks")).status_code == 403, (
+        "private looks are manager+"
+    )
 
     # Sales staff cannot manage customers' accounts, staff or the catalogue.
     assert (
@@ -151,6 +147,18 @@ async def test_admin_analytics_overview(client: AsyncClient, db: AsyncSession) -
     assert body["most_enquired"][0]["product_id"] == ids["product_id"]
     assert body["most_purchased"][0]["product_id"] == ids["product_id"]
     assert Decimal(body["revenue"]["pending"]) > 0 and body["orders_per_day"][0]["count"] == 1
+
+    paid = await client.patch(
+        f"/api/v1/admin/orders/{ids['order_id']}",
+        json={"mark_paid": True, "status": "ready_for_pickup"},
+    )
+    assert (
+        paid.json()["status"] == "ready_for_pickup"
+        and paid.json()["paid_at"]
+        and paid.json()["payment"]["status"] == "captured"
+    )
+    looks = await client.get("/api/v1/admin/looks")
+    assert looks.json()["total"] == 1
 
     staff = await client.post(
         "/api/v1/admin/staff",

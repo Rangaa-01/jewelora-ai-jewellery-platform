@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import threading
 import uuid
@@ -54,7 +55,11 @@ class Owner:
 
     @property
     def key(self) -> str:
-        return str(self.customer_id) if self.customer_id else f"anon-{self.session_token}"
+        """Storage path component. Guest session secrets are never embedded in paths/URLs."""
+        if self.customer_id:
+            return str(self.customer_id)
+        digest = hashlib.sha256((self.session_token or "").encode()).hexdigest()[:32]
+        return f"anon-{digest}"
 
 
 class EngineRuntime:
@@ -68,6 +73,8 @@ class EngineRuntime:
         self._engine: Any = None
         self._asset_cache: OrderedDict[str, Any] = OrderedDict()
         self._asset_lock = threading.Lock()
+        self._cache_bytes = 0
+        self.cache_limit_bytes = 256 * 1024 * 1024
 
     @classmethod
     def get(cls, settings: Settings) -> EngineRuntime:
@@ -114,10 +121,17 @@ class EngineRuntime:
         return None
 
     def cache_put(self, key: str, value: Any) -> None:
+        size = int(getattr(value, "nbytes", 0))
         with self._asset_lock:
+            if key in self._asset_cache:
+                self._cache_bytes -= int(getattr(self._asset_cache[key], "nbytes", 0))
             self._asset_cache[key] = value
-            if len(self._asset_cache) > 64:
-                self._asset_cache.popitem(last=False)
+            self._cache_bytes += size
+            while self._asset_cache and (
+                self._cache_bytes > self.cache_limit_bytes or len(self._asset_cache) > 64
+            ):
+                _, evicted = self._asset_cache.popitem(last=False)
+                self._cache_bytes -= int(getattr(evicted, "nbytes", 0))
 
 
 class TryOnService:
@@ -130,8 +144,8 @@ class TryOnService:
     # --- photos ---------------------------------------------------------------------------
 
     async def store_photo(self, owner: Owner, data: bytes) -> CustomerPhoto:
-        processed = process_image(
-            data, self.settings, max_dimension=self.settings.tryon_max_dimension
+        processed = await asyncio.to_thread(
+            process_image, data, self.settings, max_dimension=self.settings.tryon_max_dimension
         )
         key = customer_photo_key(owner.key, processed.extension)
         await self.storage.put(key, processed.data, processed.content_type)
@@ -174,6 +188,8 @@ class TryOnService:
     async def delete_photo(self, owner: Owner, photo_id: uuid.UUID) -> None:
         photo = await self.get_photo(owner, photo_id)
         photo.is_deleted = True
+        photo.landmarks = None
+        photo.detection_summary = None
         await self.storage.delete(photo.storage_key)
         results = (
             (await self.db.execute(select(TryOnResult).where(TryOnResult.photo_id == photo.id)))
@@ -203,7 +219,10 @@ class TryOnService:
         from jewelora_ai.preprocessing import load_rgb
 
         data = await self.storage.get(photo.storage_key)
-        return load_rgb(data, max_dimension=self.settings.tryon_max_dimension).rgb
+        pre = await asyncio.to_thread(
+            load_rgb, data, max_dimension=self.settings.tryon_max_dimension
+        )
+        return pre.rgb
 
     def _select_asset(
         self, product: Product, variant_id: uuid.UUID | None
@@ -316,7 +335,7 @@ class TryOnService:
         if session is None:
             session = TryOnSession(
                 customer_id=owner.customer_id,
-                session_token=owner.session_token,
+                session_token=None if owner.customer_id else owner.session_token,
                 mode=mode,
                 photo_id=photo.id,
                 device_info=device_info,
@@ -351,7 +370,7 @@ class TryOnService:
             log.exception("tryon_engine_error", result_id=str(result.id))
             raise TryOnError(code="engine_error") from exc
 
-        encoded = encode_image(outcome.image, fmt="WEBP", quality=90)
+        encoded = await asyncio.to_thread(encode_image, outcome.image, fmt="WEBP", quality=90)
         key = tryon_result_key(owner.key, "webp")
         await self.storage.put(key, encoded, "image/webp")
         result.status = TryOnStatus.COMPLETED.value

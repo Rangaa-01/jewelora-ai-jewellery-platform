@@ -48,6 +48,12 @@ PRODUCT_LOAD_OPTIONS = (
 )
 
 
+def escape_like(value: str) -> str:
+    """Escape LIKE/ILIKE wildcards in user input (SQLAlchemy binds the value; this only
+    prevents `%`/`_` from turning a search into a full scan)."""
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 def _price_expr() -> ColumnElement[Decimal]:
     """Effective selling price as a SQL expression (base price less percentage discount)."""
     return cast(
@@ -70,7 +76,7 @@ class CatalogueService:
 
     def _apply_filters(self, stmt: Select[Product], f: ProductFilters) -> Select[Product]:
         if f.q:
-            term = f"%{f.q.strip()}%"
+            term = f"%{escape_like(f.q.strip())}%"
             stmt = stmt.where(
                 or_(
                     Product.name.ilike(term),
