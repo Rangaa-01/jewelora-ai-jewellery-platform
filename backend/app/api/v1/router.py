@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from app.api.v1 import (
     appointments,
     auth,
+    cart,
     categories,
     collections,
     customers,
@@ -12,6 +13,7 @@ from app.api.v1 import (
     health,
     looks,
     media,
+    orders,
     products,
     stores,
     tryon,
@@ -33,4 +35,6 @@ api_router.include_router(wishlist.router)
 api_router.include_router(looks.router)
 api_router.include_router(appointments.router)
 api_router.include_router(enquiries.router)
+api_router.include_router(cart.router)
+api_router.include_router(orders.router)
 api_router.include_router(admin_router)
