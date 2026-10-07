@@ -4,10 +4,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query, Request
 
-from app.core.deps import DBDep, OptionalUserDep, StorageDep, is_staff
+from app.core.deps import DBDep, OptionalUserDep, SessionTokenDep, StorageDep, is_staff
 from app.core.rate_limit import SEARCH_LIMIT, limiter
+from app.models.enums import AnalyticsEventType
 from app.schemas.catalogue import ProductDetailOut, ProductFilters, ProductSummaryOut
 from app.schemas.common import Page
+from app.services.analytics_service import record_event
 from app.services.catalogue_service import CatalogueService
 from app.services.serializers import product_detail_out, product_summary_out
 
@@ -35,12 +37,19 @@ async def list_products(
 
 @router.get("/{slug}", response_model=ProductDetailOut, summary="Product detail by slug")
 async def get_product(
-    slug: str, db: DBDep, storage: StorageDep, user: OptionalUserDep
+    slug: str, db: DBDep, storage: StorageDep, user: OptionalUserDep, session_token: SessionTokenDep
 ) -> ProductDetailOut:
     service = CatalogueService(db)
     product = await service.get_product_by_slug(slug, include_inactive=is_staff(user))
     if not is_staff(user):
         await service.record_view(product)
+        await record_event(
+            db,
+            AnalyticsEventType.PRODUCT_VIEW,
+            product_id=product.id,
+            customer_id=user.customer.id if user and user.customer else None,
+            session_token=session_token,
+        )
     return product_detail_out(product, storage)
 
 
