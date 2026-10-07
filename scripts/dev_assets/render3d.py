@@ -73,10 +73,10 @@ def _gem_mesh(radius: float, gem: str) -> trimesh.Trimesh:
 def ring(metal: str = "gold", gem: str = "diamond", style: str = "solitaire") -> trimesh.Scene:
     inner_r = 8.5  # mm
     band_r = 1.1 if style != "band" else 1.6
+    # The torus is created in the XY plane, so the ring stands upright with the head at +Y.
     band = trimesh.creation.torus(
         major_radius=inner_r + band_r, minor_radius=band_r, major_sections=96, minor_sections=24
     )
-    band.apply_transform(trimesh.transformations.rotation_matrix(math.pi / 2, [1, 0, 0]))
     scene = trimesh.Scene()
     scene.add_geometry(_with_material(band, _metal_material(metal)), node_name="band")
     top_y = inner_r + band_r
