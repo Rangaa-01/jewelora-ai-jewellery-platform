@@ -3,15 +3,19 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.api.v1 import (
+    appointments,
     auth,
     categories,
     collections,
     customers,
+    enquiries,
     health,
+    looks,
     media,
     products,
     stores,
     tryon,
+    wishlist,
 )
 from app.api.v1.admin import router as admin_router
 
@@ -25,4 +29,8 @@ api_router.include_router(collections.router)
 api_router.include_router(stores.router)
 api_router.include_router(media.router)
 api_router.include_router(tryon.router)
+api_router.include_router(wishlist.router)
+api_router.include_router(looks.router)
+api_router.include_router(appointments.router)
+api_router.include_router(enquiries.router)
 api_router.include_router(admin_router)
