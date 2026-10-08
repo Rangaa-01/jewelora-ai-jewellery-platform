@@ -180,7 +180,7 @@ async def test_auto_cutout_turns_a_photo_into_a_try_on_asset(
     response = await client.post(
         f"/api/v1/admin/products/{product.id}/tryon-assets",
         files={
-            "file": ("ring.jpg", (photos / "diamond-cluster-ring.jpg").read_bytes(), "image/jpeg")
+            "file": ("ring.jpg", (photos / "ruby-flower-cluster-ring.jpg").read_bytes(), "image/jpeg")
         },
         data={"auto_cutout": "true"},
     )

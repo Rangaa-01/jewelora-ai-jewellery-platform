@@ -254,6 +254,8 @@ export function TryOnAssetsPanel({ product }: { product: ProductDetail }) {
   });
   const [deleting, setDeleting] = useState<string | null>(null);
   const [autoCutout, setAutoCutout] = useState(false);
+  const [singlePiece, setSinglePiece] = useState(false);
+  const [punchHoles, setPunchHoles] = useState(false);
   const preview = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
   useEffect(
     () => () => {
@@ -317,6 +319,20 @@ export function TryOnAssetsPanel({ product }: { product: ProductDetail }) {
                 Removes the background and estimates the anchors for you. Use it for ordinary studio
                 photos; anchors you place still take priority.
               </p>
+              {autoCutout && (
+                <div className="mt-2 flex flex-col gap-1">
+                  <Checkbox
+                    label="Keep only the largest piece"
+                    checked={singlePiece}
+                    onChange={(e) => setSinglePiece(e.target.checked)}
+                  />
+                  <Checkbox
+                    label="Re-open holes filled with backdrop (inside rings, loops of chain)"
+                    checked={punchHoles}
+                    onChange={(e) => setPunchHoles(e.target.checked)}
+                  />
+                </div>
+              )}
             </div>
             <AnchorEditor type={type} imageUrl={preview} anchors={anchors} onChange={setAnchors} />
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

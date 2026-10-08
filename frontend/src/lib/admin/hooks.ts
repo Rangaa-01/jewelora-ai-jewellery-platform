@@ -127,15 +127,23 @@ export function useUploadAsset(productId: string, kind: AssetKind) {
       file,
       meta,
       autoCutout = false,
+      singlePiece,
+      punchHoles,
     }: {
       file: File;
       meta: Record<string, unknown>;
       autoCutout?: boolean;
+      /** Keep only the largest piece (pairs, loose stones in the photo). */
+      singlePiece?: boolean;
+      /** Re-open the inside of rings/loops that the matting filled with backdrop. */
+      punchHoles?: boolean;
     }) => {
       const form = new FormData();
       form.append("file", file);
       form.append("meta", JSON.stringify(meta));
       if (autoCutout) form.append("auto_cutout", "true");
+      if (autoCutout && singlePiece !== undefined) form.append("single_piece", String(singlePiece));
+      if (autoCutout && punchHoles !== undefined) form.append("punch_holes", String(punchHoles));
       return api.upload<ProductImage | TryOnAsset | Model3DAsset>(
         `/admin/products/${productId}/${kind}`,
         form,

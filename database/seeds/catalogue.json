@@ -1,1990 +1,2564 @@
 {
-  "stores": [
+ "stores": [
+  {
+   "name": "Jewelora Flagship — T. Nagar",
+   "slug": "t-nagar",
+   "address_line1": "118 Usman Road",
+   "address_line2": "T. Nagar",
+   "city": "Chennai",
+   "state": "Tamil Nadu",
+   "postal_code": "600017",
+   "phone": "+914424340000",
+   "email": "tnagar@jewelora.example",
+   "latitude": 13.0418,
+   "longitude": 80.2341,
+   "opening_hours": {
+    "mon": "10:00-20:30",
+    "tue": "10:00-20:30",
+    "wed": "10:00-20:30",
+    "thu": "10:00-20:30",
+    "fri": "10:00-20:30",
+    "sat": "10:00-21:00",
+    "sun": "10:30-20:00"
+   }
+  },
+  {
+   "name": "Jewelora — Anna Nagar",
+   "slug": "anna-nagar",
+   "address_line1": "2nd Avenue, Block C",
+   "address_line2": "Anna Nagar East",
+   "city": "Chennai",
+   "state": "Tamil Nadu",
+   "postal_code": "600102",
+   "phone": "+914426260000",
+   "email": "annanagar@jewelora.example",
+   "latitude": 13.0878,
+   "longitude": 80.2098,
+   "opening_hours": {
+    "mon": "10:30-20:00",
+    "tue": "10:30-20:00",
+    "wed": "10:30-20:00",
+    "thu": "10:30-20:00",
+    "fri": "10:30-20:00",
+    "sat": "10:00-20:30",
+    "sun": "11:00-19:00"
+   }
+  }
+ ],
+ "categories": [
+  {
+   "name": "Necklaces",
+   "slug": "necklaces",
+   "jewellery_type": "necklace",
+   "sort_order": 1,
+   "description": "Chokers, classic necklaces and long harams for every occasion."
+  },
+  {
+   "name": "Chokers",
+   "slug": "chokers",
+   "parent": "necklaces",
+   "jewellery_type": "choker",
+   "sort_order": 1
+  },
+  {
+   "name": "Harams",
+   "slug": "harams",
+   "parent": "necklaces",
+   "jewellery_type": "haram",
+   "sort_order": 2
+  },
+  {
+   "name": "Chains",
+   "slug": "chains",
+   "jewellery_type": "chain",
+   "sort_order": 2,
+   "description": "Everyday gold and platinum chains."
+  },
+  {
+   "name": "Pendants",
+   "slug": "pendants",
+   "jewellery_type": "pendant",
+   "sort_order": 3
+  },
+  {
+   "name": "Earrings",
+   "slug": "earrings",
+   "jewellery_type": "earrings",
+   "sort_order": 4,
+   "description": "Jhumkas, drops, studs and hoops."
+  },
+  {
+   "name": "Rings",
+   "slug": "rings",
+   "jewellery_type": "ring",
+   "sort_order": 5,
+   "description": "Solitaires, halos and eternity bands."
+  },
+  {
+   "name": "Bangles",
+   "slug": "bangles",
+   "jewellery_type": "bangle",
+   "sort_order": 6
+  },
+  {
+   "name": "Bracelets",
+   "slug": "bracelets",
+   "jewellery_type": "bracelet",
+   "sort_order": 7
+  },
+  {
+   "name": "Nose Rings",
+   "slug": "nose-rings",
+   "jewellery_type": "nose_ring",
+   "sort_order": 8
+  },
+  {
+   "name": "Maang Tikka",
+   "slug": "maang-tikka",
+   "jewellery_type": "maang_tikka",
+   "sort_order": 9
+  },
+  {
+   "name": "Waist Chains",
+   "slug": "waist-chains",
+   "jewellery_type": "waist_chain",
+   "sort_order": 10,
+   "description": "Vaddanam and ottiyanam for bridal wear."
+  },
+  {
+   "name": "Anklets",
+   "slug": "anklets",
+   "jewellery_type": "anklet",
+   "sort_order": 11
+  },
+  {
+   "name": "Bridal Sets",
+   "slug": "bridal-sets",
+   "jewellery_type": "set",
+   "sort_order": 12,
+   "description": "Complete coordinated bridal jewellery."
+  }
+ ],
+ "collections": [
+  {
+   "name": "Diamond Edit",
+   "slug": "diamond-edit",
+   "tagline": "Certified brilliance",
+   "description": "Solitaires, rivières and diamond drops in 18K white, yellow and rose gold.",
+   "is_featured": true,
+   "sort_order": 1
+  },
+  {
+   "name": "Bridal Grandeur",
+   "slug": "bridal-grandeur",
+   "tagline": "Everything for the big day",
+   "description": "Statement necklaces, naths, tikkas and sets designed to be worn together.",
+   "is_bridal": true,
+   "is_featured": true,
+   "sort_order": 2
+  },
+  {
+   "name": "Coloured Gems",
+   "slug": "coloured-gems",
+   "tagline": "Topaz, amethyst, emerald, ruby",
+   "description": "Vivid stones in modern settings.",
+   "is_featured": true,
+   "sort_order": 3
+  },
+  {
+   "name": "Pearl Atelier",
+   "slug": "pearl-atelier",
+   "tagline": "Soft light, every day",
+   "description": "Seed pearls, keshi pearls and cascades in warm gold.",
+   "is_featured": true,
+   "sort_order": 4
+  },
+  {
+   "name": "Everyday Luxe",
+   "slug": "everyday-luxe",
+   "tagline": "Light, wearable, yours",
+   "description": "Chains, studs and slim bangles for every day.",
+   "is_featured": true,
+   "sort_order": 5
+  },
+  {
+   "name": "Silver Studio",
+   "slug": "silver-studio",
+   "tagline": "Sculptural sterling",
+   "description": "Contemporary silver with topaz, citrine and emerald.",
+   "is_featured": false,
+   "sort_order": 6
+  },
+  {
+   "name": "Heritage Revival",
+   "slug": "heritage-revival",
+   "tagline": "Antique forms, 22K gold",
+   "description": "Harams, waist chains and tikkas inspired by museum pieces.",
+   "is_featured": false,
+   "sort_order": 7
+  }
+ ],
+ "products": [
+  {
+   "sku": "JM-RG-2301",
+   "name": "Solitaire Diamond Ring",
+   "category": "rings",
+   "jewellery_type": "ring",
+   "metal_type": "white_gold",
+   "purity": "18K",
+   "stone_type": "diamond",
+   "base_price": 186000,
+   "discount_percent": 0,
+   "gross_weight_g": 3.4,
+   "net_weight_g": 3.1,
+   "making_charges": 14000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "engagement",
+    "anniversary"
+   ],
+   "tags": [
+    "solitaire",
+    "engagement",
+    "classic"
+   ],
+   "style": "classic",
+   "is_featured": true,
+   "is_new": true,
+   "collections": [
+    "diamond-edit",
+    "bridal-grandeur"
+   ],
+   "short_description": "A single round brilliant held high in a four-claw white gold setting.",
+   "photos": [
     {
-      "name": "Jewelora Flagship — T. Nagar",
-      "slug": "t-nagar",
-      "address_line1": "118 Usman Road",
-      "address_line2": "T. Nagar",
-      "city": "Chennai",
-      "state": "Tamil Nadu",
-      "postal_code": "600017",
-      "phone": "+914424340000",
-      "email": "tnagar@jewelora.example",
-      "latitude": 13.0418,
-      "longitude": 80.2341,
-      "opening_hours": {
-        "mon": "10:00-20:30",
-        "tue": "10:00-20:30",
-        "wed": "10:00-20:30",
-        "thu": "10:00-20:30",
-        "fri": "10:00-20:30",
-        "sat": "10:00-21:00",
-        "sun": "10:30-20:00"
-      }
-    },
-    {
-      "name": "Jewelora — Anna Nagar",
-      "slug": "anna-nagar",
-      "address_line1": "2nd Avenue, Block C",
-      "address_line2": "Anna Nagar East",
-      "city": "Chennai",
-      "state": "Tamil Nadu",
-      "postal_code": "600102",
-      "phone": "+914426260000",
-      "email": "annanagar@jewelora.example",
-      "latitude": 13.0878,
-      "longitude": 80.2098,
-      "opening_hours": {
-        "mon": "10:30-20:00",
-        "tue": "10:30-20:00",
-        "wed": "10:30-20:00",
-        "thu": "10:30-20:00",
-        "fri": "10:30-20:00",
-        "sat": "10:00-20:30",
-        "sun": "11:00-19:00"
-      }
+     "file": "solitaire-diamond-ring.jpg",
+     "punch_holes": true
     }
-  ],
-  "categories": [
+   ],
+   "variants": [
     {
-      "name": "Necklaces",
-      "slug": "necklaces",
-      "jewellery_type": "necklace",
-      "sort_order": 1,
-      "description": "Chokers, classic necklaces and long harams for every occasion."
-    },
-    {
-      "name": "Chokers",
-      "slug": "chokers",
-      "parent": "necklaces",
-      "jewellery_type": "choker",
-      "sort_order": 1
-    },
-    {
-      "name": "Harams",
-      "slug": "harams",
-      "parent": "necklaces",
-      "jewellery_type": "haram",
-      "sort_order": 2
-    },
-    {
-      "name": "Chains",
-      "slug": "chains",
-      "jewellery_type": "chain",
-      "sort_order": 2,
-      "description": "Everyday gold and platinum chains."
-    },
-    {
-      "name": "Pendants",
-      "slug": "pendants",
-      "jewellery_type": "pendant",
-      "sort_order": 3
-    },
-    {
-      "name": "Earrings",
-      "slug": "earrings",
-      "jewellery_type": "earrings",
-      "sort_order": 4,
-      "description": "Jhumkas, drops, studs and hoops."
-    },
-    {
-      "name": "Rings",
-      "slug": "rings",
-      "jewellery_type": "ring",
-      "sort_order": 5,
-      "description": "Solitaires, halos and eternity bands."
-    },
-    {
-      "name": "Bangles",
-      "slug": "bangles",
-      "jewellery_type": "bangle",
-      "sort_order": 6
-    },
-    {
-      "name": "Bracelets",
-      "slug": "bracelets",
-      "jewellery_type": "bracelet",
-      "sort_order": 7
-    },
-    {
-      "name": "Nose Rings",
-      "slug": "nose-rings",
-      "jewellery_type": "nose_ring",
-      "sort_order": 8
-    },
-    {
-      "name": "Maang Tikka",
-      "slug": "maang-tikka",
-      "jewellery_type": "maang_tikka",
-      "sort_order": 9
-    },
-    {
-      "name": "Waist Chains",
-      "slug": "waist-chains",
-      "jewellery_type": "waist_chain",
-      "sort_order": 10,
-      "description": "Vaddanam and ottiyanam for bridal wear."
-    },
-    {
-      "name": "Anklets",
-      "slug": "anklets",
-      "jewellery_type": "anklet",
-      "sort_order": 11
-    },
-    {
-      "name": "Bridal Sets",
-      "slug": "bridal-sets",
-      "jewellery_type": "set",
-      "sort_order": 12,
-      "description": "Complete coordinated bridal jewellery."
+     "sku_suffix": "WG",
+     "metal_type": "white_gold",
+     "stone_type": "diamond",
+     "purity": "18K",
+     "is_default": true
     }
-  ],
-  "collections": [
+   ],
+   "stone_weight_ct": 0.5,
+   "sizes": [
     {
-      "name": "Temple Heritage",
-      "slug": "temple-heritage",
-      "tagline": "Divine motifs in 22K gold",
-      "description": "Lakshmi, peacock and lotus motifs inspired by South Indian temple art.",
-      "is_featured": true,
-      "sort_order": 1
+     "label": "11",
+     "measurement_mm": 16.2
     },
     {
-      "name": "Bridal Grandeur",
-      "slug": "bridal-grandeur",
-      "tagline": "Everything for the big day",
-      "description": "Harams, chokers, vaddanam and tikkas designed to be worn together.",
-      "is_bridal": true,
-      "is_featured": true,
-      "sort_order": 2
+     "label": "12",
+     "measurement_mm": 16.5,
+     "is_default": true
     },
     {
-      "name": "Diamond Edit",
-      "slug": "diamond-edit",
-      "tagline": "Certified brilliance",
-      "description": "Solitaires, halos and diamond drops in 18K white and rose gold.",
-      "is_featured": true,
-      "sort_order": 3
+     "label": "13",
+     "measurement_mm": 16.9
     },
     {
-      "name": "Everyday Luxe",
-      "slug": "everyday-luxe",
-      "tagline": "Light, wearable, yours",
-      "description": "Chains, studs and slim bangles for every day.",
-      "is_featured": true,
-      "sort_order": 4
+     "label": "14",
+     "measurement_mm": 17.2
+    },
+    {
+     "label": "15",
+     "measurement_mm": 17.5
     }
-  ],
-  "products": [
+   ]
+  },
+  {
+   "sku": "JM-RG-2302",
+   "name": "Ruby Flower Cluster Ring",
+   "category": "rings",
+   "jewellery_type": "ring",
+   "metal_type": "white_gold",
+   "purity": "18K",
+   "stone_type": "ruby",
+   "base_price": 98000,
+   "discount_percent": 0,
+   "gross_weight_g": 4.1,
+   "net_weight_g": 3.8,
+   "making_charges": 9000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "festive",
+    "party"
+   ],
+   "tags": [
+    "cluster",
+    "flower",
+    "ruby"
+   ],
+   "style": "statement",
+   "is_featured": true,
+   "is_new": false,
+   "collections": [
+    "coloured-gems"
+   ],
+   "short_description": "Five marquise rubies around a diamond centre on a wide polished shank.",
+   "photos": [
+    "ruby-flower-cluster-ring.jpg"
+   ],
+   "variants": [
     {
-      "sku": "JN-NK-2001",
-      "name": "Heritage Gold Medallion Necklace",
-      "category": "necklaces",
-      "jewellery_type": "necklace",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 224000,
-      "gross_weight_g": 42.0,
-      "net_weight_g": 42.0,
-      "making_charges": 21000,
-      "stock_quantity": 1,
-      "occasions": [
-        "wedding",
-        "festive"
-      ],
-      "tags": [
-        "heritage",
-        "medallion",
-        "antique"
-      ],
-      "style": "traditional",
-      "is_featured": true,
-      "is_new": true,
-      "collections": [
-        "temple-heritage"
-      ],
-      "short_description": "A braided gold collar with a repoussé medallion and tasselled drops, in the antique Mediterranean manner.",
-      "photos": [
-        "gold-medallion-necklace.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "YG",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "16\"",
-          "measurement_mm": 406,
-          "is_default": true
-        },
-        {
-          "label": "18\"",
-          "measurement_mm": 457
-        }
-      ]
-    },
-    {
-      "sku": "JN-NK-2002",
-      "name": "Gold Fringe Collar",
-      "category": "chokers",
-      "jewellery_type": "choker",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 168000,
-      "gross_weight_g": 31.0,
-      "net_weight_g": 31.0,
-      "making_charges": 16000,
-      "stock_quantity": 2,
-      "occasions": [
-        "reception",
-        "festive"
-      ],
-      "tags": [
-        "fringe",
-        "collar",
-        "antique"
-      ],
-      "style": "traditional",
-      "is_featured": true,
-      "collections": [
-        "temple-heritage",
-        "bridal-grandeur"
-      ],
-      "short_description": "A close-fitting collar of fine gold fringe that moves with you.",
-      "photos": [
-        "gold-fringe-collar.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "YG",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "14\"",
-          "measurement_mm": 356,
-          "is_default": true
-        },
-        {
-          "label": "15\"",
-          "measurement_mm": 381
-        }
-      ]
-    },
-    {
-      "sku": "JN-ER-2003",
-      "name": "Diamond Cluster Studs",
-      "category": "earrings",
-      "jewellery_type": "earrings",
-      "metal_type": "white_gold",
-      "purity": "18K",
-      "stone_type": "diamond",
-      "base_price": 145000,
-      "gross_weight_g": 6.2,
-      "net_weight_g": 5.4,
-      "stone_weight_ct": 2.1,
-      "diamond_details": {
-        "clarity": "VS2",
-        "colour": "G",
-        "count": 38,
-        "cut": "old european"
-      },
-      "making_charges": 12000,
-      "stock_quantity": 2,
-      "occasions": [
-        "reception",
-        "cocktail",
-        "anniversary"
-      ],
-      "tags": [
-        "cluster",
-        "diamond",
-        "studs"
-      ],
-      "style": "contemporary",
-      "is_featured": true,
-      "is_new": true,
-      "collections": [
-        "diamond-edit"
-      ],
-      "short_description": "Rosette clusters of old-cut diamonds in silver-topped white gold.",
-      "photos": [
-        "diamond-cluster-earrings.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "WG",
-          "metal_type": "white_gold",
-          "stone_type": "diamond",
-          "purity": "18K",
-          "is_default": true
-        }
-      ]
-    },
-    {
-      "sku": "JN-ER-2004",
-      "name": "Gold Sphere Drop Earrings",
-      "category": "earrings",
-      "jewellery_type": "earrings",
-      "metal_type": "gold",
-      "purity": "18K",
-      "stone_type": "none",
-      "base_price": 58000,
-      "gross_weight_g": 9.0,
-      "net_weight_g": 9.0,
-      "making_charges": 6500,
-      "stock_quantity": 4,
-      "occasions": [
-        "everyday",
-        "gifting"
-      ],
-      "tags": [
-        "sphere",
-        "drop",
-        "minimal"
-      ],
-      "style": "minimal",
-      "is_featured": true,
-      "collections": [
-        "everyday-luxe"
-      ],
-      "short_description": "Polished gold spheres on slender hooks; quietly modern.",
-      "photos": [
-        "gold-sphere-earrings.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "YG",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "18K",
-          "is_default": true
-        }
-      ]
-    },
-    {
-      "sku": "JN-RG-2005",
-      "name": "Rose-cut Diamond Cluster Ring",
-      "category": "rings",
-      "jewellery_type": "ring",
-      "metal_type": "white_gold",
-      "purity": "18K",
-      "stone_type": "diamond",
-      "base_price": 198000,
-      "gross_weight_g": 4.4,
-      "net_weight_g": 3.6,
-      "stone_weight_ct": 1.6,
-      "diamond_details": {
-        "clarity": "VS1",
-        "colour": "H",
-        "cut": "rose cut",
-        "certificate": "IGI"
-      },
-      "making_charges": 11000,
-      "stock_quantity": 1,
-      "occasions": [
-        "engagement",
-        "anniversary"
-      ],
-      "tags": [
-        "rose cut",
-        "cluster",
-        "vintage"
-      ],
-      "style": "contemporary",
-      "is_featured": true,
-      "is_new": true,
-      "collections": [
-        "diamond-edit"
-      ],
-      "short_description": "A rose-cut centre framed by a halo of smaller rose cuts.",
-      "photos": [
-        "diamond-cluster-ring.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "WG",
-          "metal_type": "white_gold",
-          "stone_type": "diamond",
-          "purity": "18K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "11",
-          "measurement_mm": 16.2
-        },
-        {
-          "label": "12",
-          "measurement_mm": 16.5,
-          "is_default": true
-        },
-        {
-          "label": "13",
-          "measurement_mm": 16.9
-        },
-        {
-          "label": "14",
-          "measurement_mm": 17.2
-        }
-      ]
-    },
-    {
-      "sku": "JN-BG-2006",
-      "name": "Enamelled Silver Bangle",
-      "category": "bangles",
-      "jewellery_type": "bangle",
-      "metal_type": "silver",
-      "purity": "925",
-      "stone_type": "none",
-      "base_price": 24000,
-      "gross_weight_g": 28.0,
-      "net_weight_g": 28.0,
-      "making_charges": 4000,
-      "stock_quantity": 5,
-      "occasions": [
-        "everyday",
-        "festive"
-      ],
-      "tags": [
-        "enamel",
-        "silver",
-        "bangle"
-      ],
-      "style": "traditional",
-      "collections": [
-        "everyday-luxe"
-      ],
-      "short_description": "Sterling silver bangle with a twisted enamelled band.",
-      "photos": [
-        "enamelled-bangle.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "SL",
-          "metal_type": "silver",
-          "stone_type": "none",
-          "purity": "925",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "2.4",
-          "measurement_mm": 57.2,
-          "is_default": true
-        },
-        {
-          "label": "2.6",
-          "measurement_mm": 60.3
-        }
-      ]
-    },
-    {
-      "sku": "JN-BG-2007",
-      "name": "Stacked Gold Bangles (set of 4)",
-      "category": "bangles",
-      "jewellery_type": "bangle",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 262000,
-      "gross_weight_g": 54.0,
-      "net_weight_g": 54.0,
-      "making_charges": 20000,
-      "stock_quantity": 2,
-      "occasions": [
-        "wedding",
-        "festive"
-      ],
-      "tags": [
-        "916",
-        "stack",
-        "bangles"
-      ],
-      "style": "traditional",
-      "is_featured": true,
-      "collections": [
-        "bridal-grandeur",
-        "temple-heritage"
-      ],
-      "short_description": "Four slim textured 22K bangles made to be worn together.",
-      "photos": [
-        "stacked-gold-bangles.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "YG",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "2.4",
-          "measurement_mm": 57.2
-        },
-        {
-          "label": "2.6",
-          "measurement_mm": 60.3,
-          "is_default": true
-        },
-        {
-          "label": "2.8",
-          "measurement_mm": 63.5
-        }
-      ]
-    },
-    {
-      "sku": "JN-NK-2101",
-      "name": "Garnet Cluster Festoon Necklace",
-      "category": "necklaces",
-      "jewellery_type": "necklace",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "ruby",
-      "base_price": 265000,
-      "gross_weight_g": 46.0,
-      "net_weight_g": 41.0,
-      "making_charges": 24000,
-      "stock_quantity": 1,
-      "gender": "women",
-      "occasions": [
-        "wedding",
-        "reception"
-      ],
-      "tags": [
-        "garnet",
-        "festoon",
-        "antique"
-      ],
-      "style": "traditional",
-      "is_featured": true,
-      "is_new": false,
-      "collections": [
-        "temple-heritage",
-        "bridal-grandeur"
-      ],
-      "short_description": "Festoon necklace set with deep-red garnet clusters and a pendant drop.",
-      "photos": [
-        "garnet-cluster-necklace.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "ruby",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "16\"",
-          "measurement_mm": 406,
-          "is_default": true
-        },
-        {
-          "label": "18\"",
-          "measurement_mm": 457
-        }
-      ],
-      "stone_weight_ct": 18.0
-    },
-    {
-      "sku": "JN-NK-2102",
-      "name": "Cameo Tassel Necklace",
-      "category": "necklaces",
-      "jewellery_type": "necklace",
-      "metal_type": "gold",
-      "purity": "18K",
-      "stone_type": "none",
-      "base_price": 148000,
-      "gross_weight_g": 28.0,
-      "net_weight_g": 28.0,
-      "making_charges": 15000,
-      "stock_quantity": 1,
-      "gender": "women",
-      "occasions": [
-        "reception",
-        "cocktail"
-      ],
-      "tags": [
-        "cameo",
-        "tassel"
-      ],
-      "style": "contemporary",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "temple-heritage"
-      ],
-      "short_description": "A fine gold cord necklace with a framed cameo and two silk-like gold tassels.",
-      "photos": [
-        "cameo-tassel-necklace.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "18K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "16\"",
-          "measurement_mm": 406,
-          "is_default": true
-        },
-        {
-          "label": "18\"",
-          "measurement_mm": 457
-        }
-      ]
-    },
-    {
-      "sku": "JN-NK-2103",
-      "name": "Gem-set Gold Collar",
-      "category": "chokers",
-      "jewellery_type": "choker",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "emerald",
-      "base_price": 198000,
-      "gross_weight_g": 34.0,
-      "net_weight_g": 30.0,
-      "making_charges": 19000,
-      "stock_quantity": 1,
-      "gender": "women",
-      "occasions": [
-        "wedding",
-        "festive"
-      ],
-      "tags": [
-        "collar",
-        "gem-set",
-        "granulation"
-      ],
-      "style": "traditional",
-      "is_featured": true,
-      "is_new": false,
-      "collections": [
-        "temple-heritage",
-        "bridal-grandeur"
-      ],
-      "short_description": "A close collar of granulated gold plaques set with coloured stones.",
-      "photos": [
-        "gem-set-gold-collar.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "emerald",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "14\"",
-          "measurement_mm": 356,
-          "is_default": true
-        },
-        {
-          "label": "15\"",
-          "measurement_mm": 381
-        }
-      ],
-      "stone_weight_ct": 9.0
-    },
-    {
-      "sku": "JN-NK-2104",
-      "name": "Twisted Gold Torque",
-      "category": "chokers",
-      "jewellery_type": "choker",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 134000,
-      "gross_weight_g": 30.0,
-      "net_weight_g": 30.0,
-      "making_charges": 11000,
-      "stock_quantity": 2,
-      "gender": "women",
-      "occasions": [
-        "festive",
-        "everyday"
-      ],
-      "tags": [
-        "torque",
-        "twisted",
-        "minimal"
-      ],
-      "style": "minimal",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "everyday-luxe"
-      ],
-      "short_description": "A rigid twisted-rope torque that sits at the base of the neck.",
-      "photos": [
-        "gold-torque-collar.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "14\"",
-          "measurement_mm": 356,
-          "is_default": true
-        },
-        {
-          "label": "15\"",
-          "measurement_mm": 381
-        }
-      ]
-    },
-    {
-      "sku": "JN-NK-2105",
-      "name": "Coin Pendant Necklace",
-      "category": "necklaces",
-      "jewellery_type": "necklace",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 172000,
-      "gross_weight_g": 33.0,
-      "net_weight_g": 33.0,
-      "making_charges": 16000,
-      "stock_quantity": 2,
-      "gender": "women",
-      "occasions": [
-        "wedding",
-        "festive"
-      ],
-      "tags": [
-        "coin",
-        "kasu",
-        "pendant"
-      ],
-      "style": "traditional",
-      "is_featured": true,
-      "is_new": false,
-      "collections": [
-        "temple-heritage"
-      ],
-      "short_description": "Three stamped gold coins and crescents on a woven chain.",
-      "photos": [
-        "coin-pendant-necklace.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "16\"",
-          "measurement_mm": 406,
-          "is_default": true
-        },
-        {
-          "label": "18\"",
-          "measurement_mm": 457
-        }
-      ]
-    },
-    {
-      "sku": "JN-NK-2106",
-      "name": "Pearl Lattice Necklace",
-      "category": "necklaces",
-      "jewellery_type": "necklace",
-      "metal_type": "white_gold",
-      "purity": "18K",
-      "stone_type": "pearl",
-      "base_price": 96000,
-      "gross_weight_g": 22.0,
-      "net_weight_g": 15.0,
-      "making_charges": 12000,
-      "stock_quantity": 2,
-      "gender": "women",
-      "occasions": [
-        "reception",
-        "wedding"
-      ],
-      "tags": [
-        "pearl",
-        "lattice",
-        "seed pearl"
-      ],
-      "style": "traditional",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "bridal-grandeur",
-        "diamond-edit"
-      ],
-      "short_description": "Seed-pearl lattice with gold floral stations and a pearl pendant.",
-      "photos": [
-        "pearl-lattice-necklace.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "WH",
-          "metal_type": "white_gold",
-          "stone_type": "pearl",
-          "purity": "18K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "16\"",
-          "measurement_mm": 406,
-          "is_default": true
-        },
-        {
-          "label": "18\"",
-          "measurement_mm": 457
-        }
-      ]
-    },
-    {
-      "sku": "JN-HR-2107",
-      "name": "Long Tassel Pendant Haram",
-      "category": "harams",
-      "jewellery_type": "haram",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "sapphire",
-      "base_price": 228000,
-      "gross_weight_g": 38.0,
-      "net_weight_g": 35.0,
-      "making_charges": 21000,
-      "stock_quantity": 1,
-      "gender": "women",
-      "occasions": [
-        "wedding",
-        "reception"
-      ],
-      "tags": [
-        "haram",
-        "long",
-        "tassel"
-      ],
-      "style": "traditional",
-      "is_featured": true,
-      "is_new": false,
-      "collections": [
-        "bridal-grandeur"
-      ],
-      "short_description": "A long chain with blue stone stations ending in a fringed tassel pendant.",
-      "photos": [
-        "long-tassel-pendant-necklace.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "sapphire",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "24\"",
-          "measurement_mm": 610,
-          "is_default": true
-        },
-        {
-          "label": "28\"",
-          "measurement_mm": 711,
-          "price_delta": 12000
-        }
-      ],
-      "stone_weight_ct": 6.0
-    },
-    {
-      "sku": "JN-CN-2108",
-      "name": "Emerald Bead Chain",
-      "category": "chains",
-      "jewellery_type": "chain",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "emerald",
-      "base_price": 88000,
-      "gross_weight_g": 14.0,
-      "net_weight_g": 12.0,
-      "making_charges": 7000,
-      "stock_quantity": 3,
-      "gender": "women",
-      "occasions": [
-        "everyday",
-        "festive"
-      ],
-      "tags": [
-        "chain",
-        "emerald",
-        "beads"
-      ],
-      "style": "minimal",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "everyday-luxe"
-      ],
-      "short_description": "Fine gold links alternating with emerald and variscite beads.",
-      "photos": [
-        "emerald-bead-chain.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "emerald",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "16\"",
-          "measurement_mm": 406,
-          "is_default": true
-        },
-        {
-          "label": "18\"",
-          "measurement_mm": 457
-        }
-      ],
-      "stone_weight_ct": 4.0
-    },
-    {
-      "sku": "JN-ER-2109",
-      "name": "Gold Crescent Drop Earrings",
-      "category": "earrings",
-      "jewellery_type": "earrings",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 64000,
-      "gross_weight_g": 10.0,
-      "net_weight_g": 10.0,
-      "making_charges": 6500,
-      "stock_quantity": 3,
-      "gender": "women",
-      "occasions": [
-        "everyday",
-        "festive"
-      ],
-      "tags": [
-        "crescent",
-        "drop"
-      ],
-      "style": "traditional",
-      "is_featured": true,
-      "is_new": false,
-      "collections": [
-        "everyday-luxe",
-        "temple-heritage"
-      ],
-      "short_description": "Crescent hoops with small hanging charms.",
-      "photos": [
-        "gold-crescent-drop-earrings.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ]
-    },
-    {
-      "sku": "JN-PD-2110",
-      "name": "Gold Sphinx Pendant",
-      "category": "pendants",
-      "jewellery_type": "pendant",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 72000,
-      "gross_weight_g": 9.0,
-      "net_weight_g": 9.0,
-      "making_charges": 8000,
-      "stock_quantity": 2,
-      "gender": "women",
-      "occasions": [
-        "gifting",
-        "festive"
-      ],
-      "tags": [
-        "pendant",
-        "sphinx",
-        "figural"
-      ],
-      "style": "traditional",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "temple-heritage"
-      ],
-      "short_description": "A sculpted gold sphinx pendant on a fine chain.",
-      "photos": [
-        "gold-sphinx-pendant.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "16\"",
-          "measurement_mm": 406,
-          "is_default": true
-        },
-        {
-          "label": "18\"",
-          "measurement_mm": 457
-        }
-      ]
-    },
-    {
-      "sku": "JN-ER-2111",
-      "name": "Gold Bell Cluster Earrings",
-      "category": "earrings",
-      "jewellery_type": "earrings",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 58000,
-      "gross_weight_g": 9.0,
-      "net_weight_g": 9.0,
-      "making_charges": 6000,
-      "stock_quantity": 3,
-      "gender": "women",
-      "occasions": [
-        "wedding",
-        "festive"
-      ],
-      "tags": [
-        "bell",
-        "cluster",
-        "jhumka"
-      ],
-      "style": "traditional",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "bridal-grandeur"
-      ],
-      "short_description": "Clusters of tiny gold bells on a hoop, in the spirit of a jhumka.",
-      "photos": [
-        "gold-bell-cluster-earring.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ]
-    },
-    {
-      "sku": "JN-ER-2112",
-      "name": "Gold Disc Fringe Earrings",
-      "category": "earrings",
-      "jewellery_type": "earrings",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 84000,
-      "gross_weight_g": 14.0,
-      "net_weight_g": 14.0,
-      "making_charges": 8500,
-      "stock_quantity": 2,
-      "gender": "women",
-      "occasions": [
-        "wedding",
-        "reception"
-      ],
-      "tags": [
-        "fringe",
-        "disc",
-        "chandbali"
-      ],
-      "style": "traditional",
-      "is_featured": true,
-      "is_new": false,
-      "collections": [
-        "bridal-grandeur",
-        "temple-heritage"
-      ],
-      "short_description": "Hoops hung with embossed discs and a conical gold fringe.",
-      "photos": [
-        "gold-disc-fringe-earring.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ]
-    },
-    {
-      "sku": "JN-ER-2113",
-      "name": "Grape Cluster Drop Earrings",
-      "category": "earrings",
-      "jewellery_type": "earrings",
-      "metal_type": "gold",
-      "purity": "18K",
-      "stone_type": "none",
-      "base_price": 52000,
-      "gross_weight_g": 8.0,
-      "net_weight_g": 8.0,
-      "making_charges": 5500,
-      "stock_quantity": 4,
-      "gender": "women",
-      "occasions": [
-        "everyday",
-        "gifting"
-      ],
-      "tags": [
-        "grape",
-        "cluster",
-        "drop"
-      ],
-      "style": "contemporary",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "everyday-luxe"
-      ],
-      "short_description": "Granulated gold grape clusters on slender hooks.",
-      "photos": [
-        "gold-grape-cluster-earring.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "18K",
-          "is_default": true
-        }
-      ]
-    },
-    {
-      "sku": "JN-ER-2114",
-      "name": "Sphinx Drop Earrings",
-      "category": "earrings",
-      "jewellery_type": "earrings",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 76000,
-      "gross_weight_g": 12.0,
-      "net_weight_g": 12.0,
-      "making_charges": 7500,
-      "stock_quantity": 2,
-      "gender": "women",
-      "occasions": [
-        "reception",
-        "festive"
-      ],
-      "tags": [
-        "sphinx",
-        "drop",
-        "figural"
-      ],
-      "style": "traditional",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "temple-heritage"
-      ],
-      "short_description": "A winged sphinx above a cascade of tapered gold drops.",
-      "photos": [
-        "gold-sphinx-drop-earring.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ]
-    },
-    {
-      "sku": "JN-RG-2115",
-      "name": "Engraved Gold Plaque Ring",
-      "category": "rings",
-      "jewellery_type": "ring",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 48000,
-      "gross_weight_g": 6.0,
-      "net_weight_g": 6.0,
-      "making_charges": 4500,
-      "stock_quantity": 3,
-      "gender": "unisex",
-      "occasions": [
-        "everyday",
-        "gifting"
-      ],
-      "tags": [
-        "signet",
-        "plaque",
-        "engraved"
-      ],
-      "style": "traditional",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "everyday-luxe"
-      ],
-      "short_description": "A rectangular engraved gold plaque on a plain band.",
-      "photos": [
-        "gold-plaque-ring.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "11",
-          "measurement_mm": 16.2
-        },
-        {
-          "label": "12",
-          "measurement_mm": 16.5,
-          "is_default": true
-        },
-        {
-          "label": "13",
-          "measurement_mm": 16.9
-        },
-        {
-          "label": "14",
-          "measurement_mm": 17.2
-        }
-      ]
-    },
-    {
-      "sku": "JN-RG-2116",
-      "name": "Chalcedony Intaglio Ring",
-      "category": "rings",
-      "jewellery_type": "ring",
-      "metal_type": "gold",
-      "purity": "18K",
-      "stone_type": "none",
-      "base_price": 92000,
-      "gross_weight_g": 7.0,
-      "net_weight_g": 6.0,
-      "making_charges": 7000,
-      "stock_quantity": 1,
-      "gender": "women",
-      "occasions": [
-        "engagement",
-        "anniversary"
-      ],
-      "tags": [
-        "intaglio",
-        "chalcedony",
-        "swivel"
-      ],
-      "style": "contemporary",
-      "is_featured": false,
-      "is_new": true,
-      "collections": [
-        "diamond-edit"
-      ],
-      "short_description": "A pale chalcedony intaglio set to swivel in a gold hoop.",
-      "photos": [
-        "gold-intaglio-ring.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "18K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "11",
-          "measurement_mm": 16.2
-        },
-        {
-          "label": "12",
-          "measurement_mm": 16.5,
-          "is_default": true
-        },
-        {
-          "label": "13",
-          "measurement_mm": 16.9
-        },
-        {
-          "label": "14",
-          "measurement_mm": 17.2
-        }
-      ]
-    },
-    {
-      "sku": "JN-BR-2117",
-      "name": "Gem-set Link Bracelet",
-      "category": "bracelets",
-      "jewellery_type": "bracelet",
-      "metal_type": "gold",
-      "purity": "18K",
-      "stone_type": "emerald",
-      "base_price": 118000,
-      "gross_weight_g": 16.0,
-      "net_weight_g": 13.0,
-      "making_charges": 11000,
-      "stock_quantity": 2,
-      "gender": "women",
-      "occasions": [
-        "reception",
-        "cocktail"
-      ],
-      "tags": [
-        "link",
-        "gem-set",
-        "bracelet"
-      ],
-      "style": "contemporary",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "diamond-edit"
-      ],
-      "short_description": "Oval gem stations linked by granulated gold bars.",
-      "photos": [
-        "gem-set-link-bracelet.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "emerald",
-          "purity": "18K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "Small",
-          "measurement_mm": 165
-        },
-        {
-          "label": "Medium",
-          "measurement_mm": 178,
-          "is_default": true
-        }
-      ],
-      "stone_weight_ct": 5.0
-    },
-    {
-      "sku": "JN-BG-2118",
-      "name": "Engraved Silver Cuff",
-      "category": "bangles",
-      "jewellery_type": "bangle",
-      "metal_type": "silver",
-      "purity": "925",
-      "stone_type": "none",
-      "base_price": 28000,
-      "gross_weight_g": 62.0,
-      "net_weight_g": 62.0,
-      "making_charges": 5000,
-      "stock_quantity": 3,
-      "gender": "women",
-      "occasions": [
-        "everyday",
-        "festive"
-      ],
-      "tags": [
-        "cuff",
-        "engraved",
-        "silver"
-      ],
-      "style": "traditional",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "everyday-luxe"
-      ],
-      "short_description": "A heavy engraved silver cuff with an open back.",
-      "photos": [
-        "engraved-silver-cuff.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "SI",
-          "metal_type": "silver",
-          "stone_type": "none",
-          "purity": "925",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "2.4",
-          "measurement_mm": 57.2,
-          "is_default": true
-        },
-        {
-          "label": "2.6",
-          "measurement_mm": 60.3
-        }
-      ]
-    },
-    {
-      "sku": "JN-AK-2119",
-      "name": "Beaded Strap Anklet",
-      "category": "anklets",
-      "jewellery_type": "anklet",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 36000,
-      "gross_weight_g": 12.0,
-      "net_weight_g": 10.0,
-      "making_charges": 4000,
-      "stock_quantity": 4,
-      "gender": "women",
-      "occasions": [
-        "festive",
-        "wedding"
-      ],
-      "tags": [
-        "anklet",
-        "beads",
-        "strap"
-      ],
-      "style": "traditional",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "bridal-grandeur"
-      ],
-      "short_description": "Rows of gold and turquoise beads on a flexible strap.",
-      "photos": [
-        "beaded-strap-anklet.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "9\"",
-          "measurement_mm": 229
-        },
-        {
-          "label": "10\"",
-          "measurement_mm": 254,
-          "is_default": true
-        }
-      ]
-    },
-    {
-      "sku": "JN-ER-2120",
-      "name": "Gold and Bead Fringe Earrings",
-      "category": "earrings",
-      "jewellery_type": "earrings",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "emerald",
-      "base_price": 68000,
-      "gross_weight_g": 11.0,
-      "net_weight_g": 10.0,
-      "making_charges": 7000,
-      "stock_quantity": 2,
-      "gender": "women",
-      "occasions": [
-        "wedding",
-        "festive"
-      ],
-      "tags": [
-        "fringe",
-        "beads",
-        "earrings"
-      ],
-      "style": "traditional",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "bridal-grandeur"
-      ],
-      "short_description": "Gold hooks with a green bead and pearl fringe.",
-      "photos": [
-        "gold-and-bead-fringe-earrings.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "emerald",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "stone_weight_ct": 3.0
-    },
-    {
-      "sku": "JN-MT-2121",
-      "name": "Gold Band Maang Tikka",
-      "category": "maang-tikka",
-      "jewellery_type": "maang_tikka",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 54000,
-      "gross_weight_g": 8.0,
-      "net_weight_g": 8.0,
-      "making_charges": 5500,
-      "stock_quantity": 2,
-      "gender": "women",
-      "occasions": [
-        "wedding"
-      ],
-      "tags": [
-        "tikka",
-        "band",
-        "diadem"
-      ],
-      "style": "traditional",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "bridal-grandeur"
-      ],
-      "short_description": "A slim embossed gold band worn along the parting.",
-      "photos": [
-        "gold-band-diadem.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ]
-    },
-    {
-      "sku": "JN-WC-2122",
-      "name": "Coin Medallion Waist Chain",
-      "category": "waist-chains",
-      "jewellery_type": "waist_chain",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 385000,
-      "gross_weight_g": 78.0,
-      "net_weight_g": 78.0,
-      "making_charges": 36000,
-      "stock_quantity": 1,
-      "gender": "women",
-      "occasions": [
-        "wedding"
-      ],
-      "tags": [
-        "vaddanam",
-        "coin",
-        "medallion"
-      ],
-      "style": "traditional",
-      "is_featured": true,
-      "is_new": false,
-      "collections": [
-        "bridal-grandeur",
-        "temple-heritage"
-      ],
-      "short_description": "A waist chain of stamped coins and medallions on a woven band.",
-      "photos": [
-        "coin-medallion-girdle.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "30\"",
-          "measurement_mm": 762,
-          "is_default": true
-        },
-        {
-          "label": "34\"",
-          "measurement_mm": 864,
-          "price_delta": 30000
-        }
-      ]
-    },
-    {
-      "sku": "JN-WC-2123",
-      "name": "Lapis and Gold Bead Waist Chain",
-      "category": "waist-chains",
-      "jewellery_type": "waist_chain",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "sapphire",
-      "base_price": 212000,
-      "gross_weight_g": 40.0,
-      "net_weight_g": 36.0,
-      "making_charges": 20000,
-      "stock_quantity": 1,
-      "gender": "women",
-      "occasions": [
-        "wedding",
-        "festive"
-      ],
-      "tags": [
-        "waist",
-        "lapis",
-        "beads"
-      ],
-      "style": "traditional",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "bridal-grandeur"
-      ],
-      "short_description": "Alternating lapis and gold wallet-shaped beads on a long strand.",
-      "photos": [
-        "lapis-gold-bead-girdle.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "sapphire",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "30\"",
-          "measurement_mm": 762,
-          "is_default": true
-        },
-        {
-          "label": "34\"",
-          "measurement_mm": 864,
-          "price_delta": 30000
-        }
-      ],
-      "stone_weight_ct": 20.0
-    },
-    {
-      "sku": "JN-NK-2124",
-      "name": "Emerald, Pearl and Coin Necklace",
-      "category": "necklaces",
-      "jewellery_type": "necklace",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "emerald",
-      "base_price": 186000,
-      "gross_weight_g": 30.0,
-      "net_weight_g": 25.0,
-      "making_charges": 18000,
-      "stock_quantity": 1,
-      "gender": "women",
-      "occasions": [
-        "wedding",
-        "festive"
-      ],
-      "tags": [
-        "emerald",
-        "pearl",
-        "coin"
-      ],
-      "style": "traditional",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "temple-heritage",
-        "bridal-grandeur"
-      ],
-      "short_description": "Emerald prisms and pearls with two stamped gold coins at the clasp.",
-      "photos": [
-        "emerald-pearl-coin-necklace.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "emerald",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "16\"",
-          "measurement_mm": 406,
-          "is_default": true
-        },
-        {
-          "label": "18\"",
-          "measurement_mm": 457
-        }
-      ],
-      "stone_weight_ct": 12.0
-    },
-    {
-      "sku": "JN-NK-2125",
-      "name": "Gold Bead Strand",
-      "category": "necklaces",
-      "jewellery_type": "necklace",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 124000,
-      "gross_weight_g": 24.0,
-      "net_weight_g": 24.0,
-      "making_charges": 10000,
-      "stock_quantity": 2,
-      "gender": "women",
-      "occasions": [
-        "everyday",
-        "festive"
-      ],
-      "tags": [
-        "beads",
-        "strand",
-        "minimal"
-      ],
-      "style": "minimal",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "everyday-luxe"
-      ],
-      "short_description": "Graduated gold beads on a single strand.",
-      "photos": [
-        "gold-bead-strand.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ],
-      "sizes": [
-        {
-          "label": "16\"",
-          "measurement_mm": 406,
-          "is_default": true
-        },
-        {
-          "label": "18\"",
-          "measurement_mm": 457
-        }
-      ]
-    },
-    {
-      "sku": "JN-NR-2126",
-      "name": "Gold Crescent Nath",
-      "category": "nose-rings",
-      "jewellery_type": "nose_ring",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 18000,
-      "gross_weight_g": 1.2,
-      "net_weight_g": 1.2,
-      "making_charges": 2000,
-      "stock_quantity": 6,
-      "gender": "women",
-      "occasions": [
-        "wedding",
-        "festive"
-      ],
-      "tags": [
-        "nath",
-        "crescent",
-        "nose ring"
-      ],
-      "style": "traditional",
-      "is_featured": false,
-      "is_new": false,
-      "collections": [
-        "bridal-grandeur"
-      ],
-      "short_description": "A crescent-shaped gold nose ornament.",
-      "photos": [
-        "gold-crescent-nath.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ]
-    },
-    {
-      "sku": "JN-MT-2127",
-      "name": "Gold Pendant Tikka",
-      "category": "maang-tikka",
-      "jewellery_type": "maang_tikka",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "none",
-      "base_price": 62000,
-      "gross_weight_g": 9.0,
-      "net_weight_g": 9.0,
-      "making_charges": 6000,
-      "stock_quantity": 2,
-      "gender": "women",
-      "occasions": [
-        "wedding",
-        "reception"
-      ],
-      "tags": [
-        "tikka",
-        "pendant",
-        "drops"
-      ],
-      "style": "traditional",
-      "is_featured": true,
-      "is_new": false,
-      "collections": [
-        "bridal-grandeur",
-        "temple-heritage"
-      ],
-      "short_description": "A delicate gold chain head ornament with hanging drops.",
-      "photos": [
-        "gold-pendant-tikka.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "GO",
-          "metal_type": "gold",
-          "stone_type": "none",
-          "purity": "22K",
-          "is_default": true
-        }
-      ]
-    },
-    {
-      "sku": "JN-ST-2130",
-      "name": "Heritage Bridal Set",
-      "category": "bridal-sets",
-      "jewellery_type": "set",
-      "metal_type": "gold",
-      "purity": "22K",
-      "stone_type": "ruby",
-      "base_price": 612000,
-      "discount_percent": 5,
-      "gross_weight_g": 120.0,
-      "net_weight_g": 110.0,
-      "making_charges": 56000,
-      "stock_quantity": 1,
-      "gender": "women",
-      "occasions": [
-        "wedding"
-      ],
-      "tags": [
-        "set",
-        "bridal",
-        "heritage"
-      ],
-      "style": "traditional",
-      "is_featured": true,
-      "collections": [
-        "bridal-grandeur"
-      ],
-      "short_description": "Garnet festoon necklace, disc fringe earrings, pendant tikka and coin waist chain, styled together with a set saving.",
-      "set_items": [
-        "JN-NK-2101",
-        "JN-ER-2112",
-        "JN-MT-2127",
-        "JN-WC-2122"
-      ],
-      "photos": [
-        "garnet-cluster-necklace.jpg"
-      ],
-      "variants": [
-        {
-          "sku_suffix": "SET",
-          "metal_type": "gold",
-          "stone_type": "ruby",
-          "purity": "22K",
-          "is_default": true
-        }
-      ]
+     "sku_suffix": "WG",
+     "metal_type": "white_gold",
+     "stone_type": "ruby",
+     "purity": "18K",
+     "is_default": true
     }
-  ]
+   ],
+   "stone_weight_ct": 1.2,
+   "sizes": [
+    {
+     "label": "11",
+     "measurement_mm": 16.2
+    },
+    {
+     "label": "12",
+     "measurement_mm": 16.5,
+     "is_default": true
+    },
+    {
+     "label": "13",
+     "measurement_mm": 16.9
+    },
+    {
+     "label": "14",
+     "measurement_mm": 17.2
+    },
+    {
+     "label": "15",
+     "measurement_mm": 17.5
+    }
+   ]
+  },
+  {
+   "sku": "JM-RG-2303",
+   "name": "Blue Topaz Duo Ring",
+   "category": "rings",
+   "jewellery_type": "ring",
+   "metal_type": "silver",
+   "purity": "925",
+   "stone_type": "cz",
+   "base_price": 24000,
+   "discount_percent": 0,
+   "gross_weight_g": 6.0,
+   "net_weight_g": 5.5,
+   "making_charges": 3000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "everyday",
+    "party"
+   ],
+   "tags": [
+    "topaz",
+    "modern",
+    "open-band"
+   ],
+   "style": "modern",
+   "is_featured": false,
+   "is_new": true,
+   "collections": [
+    "silver-studio",
+    "coloured-gems"
+   ],
+   "short_description": "Two faceted Swiss blue topaz cubes meet across an open architectural band.",
+   "photos": [
+    "blue-topaz-duo-ring.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "SV",
+     "metal_type": "silver",
+     "stone_type": "cz",
+     "purity": "925",
+     "is_default": true
+    }
+   ],
+   "stone_weight_ct": 3.0,
+   "sizes": [
+    {
+     "label": "11",
+     "measurement_mm": 16.2
+    },
+    {
+     "label": "12",
+     "measurement_mm": 16.5,
+     "is_default": true
+    },
+    {
+     "label": "13",
+     "measurement_mm": 16.9
+    },
+    {
+     "label": "14",
+     "measurement_mm": 17.2
+    },
+    {
+     "label": "15",
+     "measurement_mm": 17.5
+    }
+   ]
+  },
+  {
+   "sku": "JM-RG-2304",
+   "name": "Rhodochrosite Cabochon Ring",
+   "category": "rings",
+   "jewellery_type": "ring",
+   "metal_type": "gold",
+   "purity": "18K",
+   "stone_type": "none",
+   "base_price": 74000,
+   "discount_percent": 0,
+   "gross_weight_g": 7.2,
+   "net_weight_g": 7.2,
+   "making_charges": 7000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "party",
+    "everyday"
+   ],
+   "tags": [
+    "cabochon",
+    "cocktail",
+    "pink"
+   ],
+   "style": "cocktail",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "coloured-gems",
+    "everyday-luxe"
+   ],
+   "short_description": "A smooth salmon-pink rhodochrosite cabochon bezel-set in warm 18K gold.",
+   "photos": [
+    "rhodochrosite-cabochon-ring.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "YG",
+     "metal_type": "gold",
+     "stone_type": "none",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "11",
+     "measurement_mm": 16.2
+    },
+    {
+     "label": "12",
+     "measurement_mm": 16.5,
+     "is_default": true
+    },
+    {
+     "label": "13",
+     "measurement_mm": 16.9
+    },
+    {
+     "label": "14",
+     "measurement_mm": 17.2
+    },
+    {
+     "label": "15",
+     "measurement_mm": 17.5
+    }
+   ]
+  },
+  {
+   "sku": "JM-RG-2305",
+   "name": "Swiss Topaz Cube Ring",
+   "category": "rings",
+   "jewellery_type": "ring",
+   "metal_type": "silver",
+   "purity": "925",
+   "stone_type": "cz",
+   "base_price": 21000,
+   "discount_percent": 0,
+   "gross_weight_g": 5.6,
+   "net_weight_g": 5.2,
+   "making_charges": 2800,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "party"
+   ],
+   "tags": [
+    "topaz",
+    "square",
+    "cocktail"
+   ],
+   "style": "modern",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "silver-studio",
+    "coloured-gems"
+   ],
+   "short_description": "A deep-blue square-cut topaz raised on a sculpted silver shank.",
+   "photos": [
+    "swiss-topaz-cube-ring.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "SV",
+     "metal_type": "silver",
+     "stone_type": "cz",
+     "purity": "925",
+     "is_default": true
+    }
+   ],
+   "stone_weight_ct": 4.0,
+   "sizes": [
+    {
+     "label": "11",
+     "measurement_mm": 16.2
+    },
+    {
+     "label": "12",
+     "measurement_mm": 16.5,
+     "is_default": true
+    },
+    {
+     "label": "13",
+     "measurement_mm": 16.9
+    },
+    {
+     "label": "14",
+     "measurement_mm": 17.2
+    },
+    {
+     "label": "15",
+     "measurement_mm": 17.5
+    }
+   ]
+  },
+  {
+   "sku": "JM-RG-2306",
+   "name": "Ruby & Diamond Eternity Band",
+   "category": "rings",
+   "jewellery_type": "ring",
+   "metal_type": "gold",
+   "purity": "18K",
+   "stone_type": "ruby",
+   "base_price": 142000,
+   "discount_percent": 0,
+   "gross_weight_g": 5.8,
+   "net_weight_g": 5.3,
+   "making_charges": 12000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "anniversary",
+    "wedding"
+   ],
+   "tags": [
+    "eternity",
+    "band",
+    "ruby",
+    "diamond"
+   ],
+   "style": "classic",
+   "is_featured": true,
+   "is_new": false,
+   "collections": [
+    "diamond-edit",
+    "coloured-gems"
+   ],
+   "short_description": "Channel-set rubies frame a row of round diamonds in a wide 18K band.",
+   "photos": [
+    "ruby-diamond-eternity-band.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "YG",
+     "metal_type": "gold",
+     "stone_type": "ruby",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "stone_weight_ct": 1.8,
+   "sizes": [
+    {
+     "label": "11",
+     "measurement_mm": 16.2
+    },
+    {
+     "label": "12",
+     "measurement_mm": 16.5,
+     "is_default": true
+    },
+    {
+     "label": "13",
+     "measurement_mm": 16.9
+    },
+    {
+     "label": "14",
+     "measurement_mm": 17.2
+    },
+    {
+     "label": "15",
+     "measurement_mm": 17.5
+    }
+   ]
+  },
+  {
+   "sku": "JM-ER-2307",
+   "name": "Aquamarine Pavé Drop Earrings",
+   "category": "earrings",
+   "jewellery_type": "earrings",
+   "metal_type": "white_gold",
+   "purity": "18K",
+   "stone_type": "diamond",
+   "base_price": 164000,
+   "discount_percent": 0,
+   "gross_weight_g": 6.4,
+   "net_weight_g": 5.9,
+   "making_charges": 12000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "reception",
+    "party"
+   ],
+   "tags": [
+    "drop",
+    "aquamarine",
+    "pave"
+   ],
+   "style": "statement",
+   "is_featured": true,
+   "is_new": true,
+   "collections": [
+    "diamond-edit",
+    "coloured-gems"
+   ],
+   "short_description": "Pear-cut aquamarines swing beneath pavé diamond discs.",
+   "photos": [
+    "aquamarine-pave-drop-earrings.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "WG",
+     "metal_type": "white_gold",
+     "stone_type": "diamond",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "stone_weight_ct": 6.2
+  },
+  {
+   "sku": "JM-ER-2308",
+   "name": "Blue Topaz Teardrop Earrings",
+   "category": "earrings",
+   "jewellery_type": "earrings",
+   "metal_type": "gold",
+   "purity": "18K",
+   "stone_type": "cz",
+   "base_price": 58000,
+   "discount_percent": 0,
+   "gross_weight_g": 5.0,
+   "net_weight_g": 4.6,
+   "making_charges": 6000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "party",
+    "festive"
+   ],
+   "tags": [
+    "teardrop",
+    "topaz",
+    "hammered"
+   ],
+   "style": "modern",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "coloured-gems"
+   ],
+   "short_description": "Hammered gold teardrops hold pear-shaped London blue topaz.",
+   "photos": [
+    {
+     "file": "blue-topaz-teardrop-earrings.jpg",
+     "crop": [
+      0,
+      0.26,
+      1,
+      1
+     ]
+    }
+   ],
+   "variants": [
+    {
+     "sku_suffix": "YG",
+     "metal_type": "gold",
+     "stone_type": "cz",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "stone_weight_ct": 3.4
+  },
+  {
+   "sku": "JM-ER-2309",
+   "name": "Pearl Cascade Earrings",
+   "category": "earrings",
+   "jewellery_type": "earrings",
+   "metal_type": "gold",
+   "purity": "18K",
+   "stone_type": "pearl",
+   "base_price": 46000,
+   "discount_percent": 0,
+   "gross_weight_g": 6.8,
+   "net_weight_g": 6.3,
+   "making_charges": 7000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "wedding",
+    "reception"
+   ],
+   "tags": [
+    "pearl",
+    "cascade",
+    "bridal"
+   ],
+   "style": "romantic",
+   "is_featured": true,
+   "is_new": false,
+   "collections": [
+    "pearl-atelier",
+    "bridal-grandeur"
+   ],
+   "short_description": "Strands of seed pearls tumble from polished gold domes.",
+   "photos": [
+    "pearl-cascade-earrings.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "YG",
+     "metal_type": "gold",
+     "stone_type": "pearl",
+     "purity": "18K",
+     "is_default": true
+    }
+   ]
+  },
+  {
+   "sku": "JM-ER-2310",
+   "name": "Quartz Cube Studs",
+   "category": "earrings",
+   "jewellery_type": "earrings",
+   "metal_type": "gold",
+   "purity": "18K",
+   "stone_type": "none",
+   "base_price": 28000,
+   "discount_percent": 0,
+   "gross_weight_g": 3.2,
+   "net_weight_g": 3.2,
+   "making_charges": 4000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "everyday",
+    "work"
+   ],
+   "tags": [
+    "stud",
+    "quartz",
+    "minimal"
+   ],
+   "style": "minimal",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "everyday-luxe"
+   ],
+   "short_description": "Clear rock-crystal cubes on 18K gold posts: the everyday stud, upgraded.",
+   "photos": [
+    "quartz-cube-studs.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "YG",
+     "metal_type": "gold",
+     "stone_type": "none",
+     "purity": "18K",
+     "is_default": true
+    }
+   ]
+  },
+  {
+   "sku": "JM-ER-2311",
+   "name": "Keshi Pearl Drop Earrings",
+   "category": "earrings",
+   "jewellery_type": "earrings",
+   "metal_type": "gold",
+   "purity": "18K",
+   "stone_type": "pearl",
+   "base_price": 34000,
+   "discount_percent": 0,
+   "gross_weight_g": 2.6,
+   "net_weight_g": 2.4,
+   "making_charges": 3500,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "everyday",
+    "party"
+   ],
+   "tags": [
+    "keshi",
+    "pearl",
+    "drop"
+   ],
+   "style": "organic",
+   "is_featured": false,
+   "is_new": true,
+   "collections": [
+    "pearl-atelier",
+    "everyday-luxe"
+   ],
+   "short_description": "Long organic keshi pearls on slender gold hooks.",
+   "photos": [
+    "keshi-pearl-drop-earrings.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "YG",
+     "metal_type": "gold",
+     "stone_type": "pearl",
+     "purity": "18K",
+     "is_default": true
+    }
+   ]
+  },
+  {
+   "sku": "JM-ER-2312",
+   "name": "Diamond Trio Drop Earrings",
+   "category": "earrings",
+   "jewellery_type": "earrings",
+   "metal_type": "white_gold",
+   "purity": "18K",
+   "stone_type": "diamond",
+   "base_price": 238000,
+   "discount_percent": 0,
+   "gross_weight_g": 4.2,
+   "net_weight_g": 3.9,
+   "making_charges": 16000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "wedding",
+    "reception"
+   ],
+   "tags": [
+    "diamond",
+    "drop",
+    "graduated"
+   ],
+   "style": "classic",
+   "is_featured": true,
+   "is_new": false,
+   "collections": [
+    "diamond-edit",
+    "bridal-grandeur"
+   ],
+   "short_description": "Three graduated round brilliants, articulated to catch every movement.",
+   "photos": [
+    "diamond-trio-drop-earrings.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "WG",
+     "metal_type": "white_gold",
+     "stone_type": "diamond",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "stone_weight_ct": 2.4
+  },
+  {
+   "sku": "JM-ER-2313",
+   "name": "Diamond Bezel Drops",
+   "category": "earrings",
+   "jewellery_type": "earrings",
+   "metal_type": "white_gold",
+   "purity": "18K",
+   "stone_type": "diamond",
+   "base_price": 88000,
+   "discount_percent": 0,
+   "gross_weight_g": 2.4,
+   "net_weight_g": 2.2,
+   "making_charges": 7000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "everyday",
+    "work"
+   ],
+   "tags": [
+    "diamond",
+    "bezel",
+    "minimal"
+   ],
+   "style": "minimal",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "diamond-edit",
+    "everyday-luxe"
+   ],
+   "short_description": "A single bezel-set diamond on a fine white gold hook.",
+   "photos": [
+    "diamond-bezel-drop-earrings.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "WG",
+     "metal_type": "white_gold",
+     "stone_type": "diamond",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "stone_weight_ct": 0.6
+  },
+  {
+   "sku": "JM-ER-2314",
+   "name": "Emerald Drop Earrings",
+   "category": "earrings",
+   "jewellery_type": "earrings",
+   "metal_type": "silver",
+   "purity": "925",
+   "stone_type": "emerald",
+   "base_price": 42000,
+   "discount_percent": 0,
+   "gross_weight_g": 7.6,
+   "net_weight_g": 7.0,
+   "making_charges": 5000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "party"
+   ],
+   "tags": [
+    "emerald",
+    "drop",
+    "silver"
+   ],
+   "style": "modern",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "silver-studio",
+    "coloured-gems"
+   ],
+   "short_description": "Polished silver drops set with square-cut emeralds.",
+   "photos": [
+    "emerald-drop-earrings.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "SV",
+     "metal_type": "silver",
+     "stone_type": "emerald",
+     "purity": "925",
+     "is_default": true
+    }
+   ],
+   "stone_weight_ct": 2.0
+  },
+  {
+   "sku": "JM-ER-2315",
+   "name": "Aquamarine & Sapphire Drop Earrings",
+   "category": "earrings",
+   "jewellery_type": "earrings",
+   "metal_type": "white_gold",
+   "purity": "18K",
+   "stone_type": "sapphire",
+   "base_price": 212000,
+   "discount_percent": 0,
+   "gross_weight_g": 7.0,
+   "net_weight_g": 6.4,
+   "making_charges": 15000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "wedding",
+    "reception"
+   ],
+   "tags": [
+    "aquamarine",
+    "sapphire",
+    "bridal"
+   ],
+   "style": "statement",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "bridal-grandeur",
+    "coloured-gems"
+   ],
+   "short_description": "Oval aquamarines framed in diamonds, suspended from sapphire tops.",
+   "photos": [
+    {
+     "file": "aquamarine-sapphire-bridal-set.jpg",
+     "crop": [
+      0.05,
+      0.08,
+      0.95,
+      0.36
+     ]
+    }
+   ],
+   "variants": [
+    {
+     "sku_suffix": "WG",
+     "metal_type": "white_gold",
+     "stone_type": "sapphire",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "stone_weight_ct": 5.0
+  },
+  {
+   "sku": "JM-NK-2316",
+   "name": "Amethyst & Diamond Statement Necklace",
+   "category": "necklaces",
+   "jewellery_type": "necklace",
+   "metal_type": "white_gold",
+   "purity": "18K",
+   "stone_type": "diamond",
+   "base_price": 486000,
+   "discount_percent": 0,
+   "gross_weight_g": 48.0,
+   "net_weight_g": 44.2,
+   "making_charges": 42000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "reception",
+    "party"
+   ],
+   "tags": [
+    "amethyst",
+    "statement",
+    "diamond"
+   ],
+   "style": "statement",
+   "is_featured": true,
+   "is_new": true,
+   "collections": [
+    "diamond-edit",
+    "coloured-gems"
+   ],
+   "short_description": "Pear-cut amethyst drops hang from a lace of pavé diamonds.",
+   "photos": [
+    "amethyst-diamond-statement-necklace.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "WG",
+     "metal_type": "white_gold",
+     "stone_type": "diamond",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "stone_weight_ct": 38.0,
+   "sizes": [
+    {
+     "label": "16\"",
+     "measurement_mm": 406,
+     "is_default": true
+    },
+    {
+     "label": "18\"",
+     "measurement_mm": 457,
+     "price_delta": 6000
+    }
+   ]
+  },
+  {
+   "sku": "JM-NK-2317",
+   "name": "Garnet & Diamond Festoon Necklace",
+   "category": "necklaces",
+   "jewellery_type": "necklace",
+   "metal_type": "gold",
+   "purity": "18K",
+   "stone_type": "diamond",
+   "base_price": 398000,
+   "discount_percent": 0,
+   "gross_weight_g": 36.0,
+   "net_weight_g": 33.1,
+   "making_charges": 34000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "wedding",
+    "reception"
+   ],
+   "tags": [
+    "garnet",
+    "festoon",
+    "diamond"
+   ],
+   "style": "statement",
+   "is_featured": true,
+   "is_new": false,
+   "collections": [
+    "bridal-grandeur",
+    "coloured-gems"
+   ],
+   "short_description": "Garnet and citrine drops on diamond-set scrollwork, in warm gold.",
+   "photos": [
+    "garnet-diamond-festoon-necklace.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "YG",
+     "metal_type": "gold",
+     "stone_type": "diamond",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "stone_weight_ct": 22.0,
+   "sizes": [
+    {
+     "label": "16\"",
+     "measurement_mm": 406,
+     "is_default": true
+    },
+    {
+     "label": "18\"",
+     "measurement_mm": 457,
+     "price_delta": 6000
+    }
+   ]
+  },
+  {
+   "sku": "JM-NK-2318",
+   "name": "Aquamarine & Sapphire Rivière",
+   "category": "necklaces",
+   "jewellery_type": "necklace",
+   "metal_type": "white_gold",
+   "purity": "18K",
+   "stone_type": "sapphire",
+   "base_price": 640000,
+   "discount_percent": 0,
+   "gross_weight_g": 58.0,
+   "net_weight_g": 53.4,
+   "making_charges": 52000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "wedding",
+    "reception"
+   ],
+   "tags": [
+    "aquamarine",
+    "sapphire",
+    "riviere"
+   ],
+   "style": "statement",
+   "is_featured": true,
+   "is_new": false,
+   "collections": [
+    "bridal-grandeur",
+    "diamond-edit"
+   ],
+   "short_description": "Oval aquamarines and blue sapphires alternate in diamond frames with a single drop.",
+   "photos": [
+    {
+     "file": "aquamarine-sapphire-bridal-set.jpg",
+     "crop": [
+      0,
+      0.28,
+      1,
+      1
+     ]
+    }
+   ],
+   "variants": [
+    {
+     "sku_suffix": "WG",
+     "metal_type": "white_gold",
+     "stone_type": "sapphire",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "stone_weight_ct": 46.0,
+   "sizes": [
+    {
+     "label": "16\"",
+     "measurement_mm": 406,
+     "is_default": true
+    },
+    {
+     "label": "18\"",
+     "measurement_mm": 457,
+     "price_delta": 6000
+    }
+   ]
+  },
+  {
+   "sku": "JM-CK-2319",
+   "name": "Pearl Lattice Choker",
+   "category": "chokers",
+   "jewellery_type": "choker",
+   "metal_type": "gold",
+   "purity": "18K",
+   "stone_type": "pearl",
+   "base_price": 128000,
+   "discount_percent": 0,
+   "gross_weight_g": 32.0,
+   "net_weight_g": 29.4,
+   "making_charges": 14000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "wedding",
+    "reception"
+   ],
+   "tags": [
+    "pearl",
+    "choker",
+    "lattice"
+   ],
+   "style": "romantic",
+   "is_featured": true,
+   "is_new": false,
+   "collections": [
+    "pearl-atelier",
+    "bridal-grandeur"
+   ],
+   "short_description": "Four rows of seed pearls meet at a cameo-set gold clasp.",
+   "photos": [
+    "pearl-lattice-choker.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "YG",
+     "metal_type": "gold",
+     "stone_type": "pearl",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "14\"",
+     "measurement_mm": 356,
+     "is_default": true
+    },
+    {
+     "label": "15\"",
+     "measurement_mm": 381
+    }
+   ]
+  },
+  {
+   "sku": "JM-CK-2320",
+   "name": "Citrine Torque Collar",
+   "category": "chokers",
+   "jewellery_type": "choker",
+   "metal_type": "silver",
+   "purity": "925",
+   "stone_type": "none",
+   "base_price": 36000,
+   "discount_percent": 0,
+   "gross_weight_g": 28.0,
+   "net_weight_g": 28.0,
+   "making_charges": 4000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "everyday",
+    "party"
+   ],
+   "tags": [
+    "torque",
+    "citrine",
+    "silver"
+   ],
+   "style": "modern",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "silver-studio"
+   ],
+   "short_description": "A sculpted silver torque on leather with a honey citrine cabochon.",
+   "photos": [
+    "citrine-torque-collar.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "SV",
+     "metal_type": "silver",
+     "stone_type": "none",
+     "purity": "925",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "14\"",
+     "measurement_mm": 356,
+     "is_default": true
+    },
+    {
+     "label": "15\"",
+     "measurement_mm": 381
+    }
+   ]
+  },
+  {
+   "sku": "JM-CN-2321",
+   "name": "Rope Chain",
+   "category": "chains",
+   "jewellery_type": "chain",
+   "metal_type": "gold",
+   "purity": "18K",
+   "stone_type": "none",
+   "base_price": 96000,
+   "discount_percent": 0,
+   "gross_weight_g": 14.0,
+   "net_weight_g": 14.0,
+   "making_charges": 8000,
+   "stock_quantity": 3,
+   "gender": "unisex",
+   "occasions": [
+    "everyday"
+   ],
+   "tags": [
+    "rope",
+    "chain",
+    "unisex"
+   ],
+   "style": "classic",
+   "is_featured": false,
+   "is_new": true,
+   "collections": [
+    "everyday-luxe"
+   ],
+   "short_description": "A hollow twisted-rope chain in bright 18K yellow gold.",
+   "photos": [
+    "rope-chain.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "YG",
+     "metal_type": "gold",
+     "stone_type": "none",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "18\"",
+     "measurement_mm": 457,
+     "is_default": true
+    },
+    {
+     "label": "20\"",
+     "measurement_mm": 508,
+     "price_delta": 9000
+    },
+    {
+     "label": "22\"",
+     "measurement_mm": 559,
+     "price_delta": 18000
+    }
+   ]
+  },
+  {
+   "sku": "JM-CN-2322",
+   "name": "Script Name Pendant",
+   "category": "chains",
+   "jewellery_type": "chain",
+   "metal_type": "gold",
+   "purity": "18K",
+   "stone_type": "none",
+   "base_price": 42000,
+   "discount_percent": 0,
+   "gross_weight_g": 4.6,
+   "net_weight_g": 4.6,
+   "making_charges": 6000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "everyday",
+    "gift"
+   ],
+   "tags": [
+    "name",
+    "script",
+    "personalised"
+   ],
+   "style": "minimal",
+   "is_featured": true,
+   "is_new": false,
+   "collections": [
+    "everyday-luxe"
+   ],
+   "short_description": "Your name in flowing script on a fine curb chain: made to order in 2 weeks.",
+   "photos": [
+    "script-name-pendant.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "YG",
+     "metal_type": "gold",
+     "stone_type": "none",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "18\"",
+     "measurement_mm": 457,
+     "is_default": true
+    },
+    {
+     "label": "20\"",
+     "measurement_mm": 508,
+     "price_delta": 9000
+    },
+    {
+     "label": "22\"",
+     "measurement_mm": 559,
+     "price_delta": 18000
+    }
+   ]
+  },
+  {
+   "sku": "JM-PD-2323",
+   "name": "Topaz Nugget Pendant",
+   "category": "pendants",
+   "jewellery_type": "pendant",
+   "metal_type": "silver",
+   "purity": "925",
+   "stone_type": "cz",
+   "base_price": 18000,
+   "discount_percent": 0,
+   "gross_weight_g": 6.0,
+   "net_weight_g": 5.5,
+   "making_charges": 2500,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "everyday"
+   ],
+   "tags": [
+    "pendant",
+    "topaz",
+    "cord"
+   ],
+   "style": "organic",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "silver-studio",
+    "everyday-luxe"
+   ],
+   "short_description": "A hammered silver nugget set with a blue topaz on a cobalt silk cord.",
+   "photos": [
+    "topaz-nugget-pendant.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "SV",
+     "metal_type": "silver",
+     "stone_type": "cz",
+     "purity": "925",
+     "is_default": true
+    }
+   ],
+   "stone_weight_ct": 0.8,
+   "sizes": [
+    {
+     "label": "18\"",
+     "measurement_mm": 457,
+     "is_default": true
+    },
+    {
+     "label": "20\"",
+     "measurement_mm": 508,
+     "price_delta": 9000
+    },
+    {
+     "label": "22\"",
+     "measurement_mm": 559,
+     "price_delta": 18000
+    }
+   ]
+  },
+  {
+   "sku": "JM-PD-2324",
+   "name": "Mokume Gane Pendant",
+   "category": "pendants",
+   "jewellery_type": "pendant",
+   "metal_type": "silver",
+   "purity": "925",
+   "stone_type": "none",
+   "base_price": 54000,
+   "discount_percent": 0,
+   "gross_weight_g": 22.0,
+   "net_weight_g": 22.0,
+   "making_charges": 9000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "party",
+    "everyday"
+   ],
+   "tags": [
+    "mokume",
+    "artisan",
+    "collar"
+   ],
+   "style": "artisan",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "silver-studio"
+   ],
+   "short_description": "Wood-grain mokume gane in silver and copper on a rigid collar.",
+   "photos": [
+    "mokume-gane-pendant.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "SV",
+     "metal_type": "silver",
+     "stone_type": "none",
+     "purity": "925",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "18\"",
+     "measurement_mm": 457,
+     "is_default": true
+    },
+    {
+     "label": "20\"",
+     "measurement_mm": 508,
+     "price_delta": 9000
+    },
+    {
+     "label": "22\"",
+     "measurement_mm": 559,
+     "price_delta": 18000
+    }
+   ]
+  },
+  {
+   "sku": "JM-BR-2325",
+   "name": "Diamond Tennis Bracelet",
+   "category": "bracelets",
+   "jewellery_type": "bracelet",
+   "metal_type": "gold",
+   "purity": "18K",
+   "stone_type": "diamond",
+   "base_price": 356000,
+   "discount_percent": 0,
+   "gross_weight_g": 18.0,
+   "net_weight_g": 16.6,
+   "making_charges": 28000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "anniversary",
+    "reception"
+   ],
+   "tags": [
+    "tennis",
+    "diamond",
+    "line"
+   ],
+   "style": "classic",
+   "is_featured": true,
+   "is_new": true,
+   "collections": [
+    "diamond-edit"
+   ],
+   "short_description": "Bezel-set round diamonds in a flexible line of 18K yellow gold.",
+   "photos": [
+    "diamond-tennis-bracelet.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "YG",
+     "metal_type": "gold",
+     "stone_type": "diamond",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "stone_weight_ct": 4.0,
+   "sizes": [
+    {
+     "label": "S · 6.5\"",
+     "measurement_mm": 165
+    },
+    {
+     "label": "M · 7\"",
+     "measurement_mm": 178,
+     "is_default": true
+    },
+    {
+     "label": "L · 7.5\"",
+     "measurement_mm": 190
+    }
+   ]
+  },
+  {
+   "sku": "JM-BR-2326",
+   "name": "Rivière Diamond Bracelet",
+   "category": "bracelets",
+   "jewellery_type": "bracelet",
+   "metal_type": "rose_gold",
+   "purity": "18K",
+   "stone_type": "diamond",
+   "base_price": 298000,
+   "discount_percent": 0,
+   "gross_weight_g": 12.0,
+   "net_weight_g": 11.0,
+   "making_charges": 24000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "anniversary",
+    "everyday"
+   ],
+   "tags": [
+    "riviere",
+    "diamond",
+    "rose-gold"
+   ],
+   "style": "minimal",
+   "is_featured": true,
+   "is_new": false,
+   "collections": [
+    "diamond-edit",
+    "everyday-luxe"
+   ],
+   "short_description": "A whisper-thin rivière of diamonds in rose gold.",
+   "photos": [
+    "riviere-diamond-bracelet.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "RG",
+     "metal_type": "rose_gold",
+     "stone_type": "diamond",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "stone_weight_ct": 3.0,
+   "sizes": [
+    {
+     "label": "S · 6.5\"",
+     "measurement_mm": 165
+    },
+    {
+     "label": "M · 7\"",
+     "measurement_mm": 178,
+     "is_default": true
+    },
+    {
+     "label": "L · 7.5\"",
+     "measurement_mm": 190
+    }
+   ]
+  },
+  {
+   "sku": "JM-BR-2327",
+   "name": "Rose Quartz Bead Bracelet",
+   "category": "bracelets",
+   "jewellery_type": "bracelet",
+   "metal_type": "silver",
+   "purity": "925",
+   "stone_type": "none",
+   "base_price": 26000,
+   "discount_percent": 0,
+   "gross_weight_g": 24.0,
+   "net_weight_g": 24.0,
+   "making_charges": 3000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "everyday"
+   ],
+   "tags": [
+    "beads",
+    "rose-quartz",
+    "silver"
+   ],
+   "style": "boho",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "silver-studio",
+    "coloured-gems"
+   ],
+   "short_description": "Rows of rose quartz beads with amethyst and silver at the centre.",
+   "photos": [
+    {
+     "file": "rose-quartz-bead-bracelet.jpg",
+     "punch_holes": true
+    }
+   ],
+   "variants": [
+    {
+     "sku_suffix": "SV",
+     "metal_type": "silver",
+     "stone_type": "none",
+     "purity": "925",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "S · 6.5\"",
+     "measurement_mm": 165
+    },
+    {
+     "label": "M · 7\"",
+     "measurement_mm": 178,
+     "is_default": true
+    },
+    {
+     "label": "L · 7.5\"",
+     "measurement_mm": 190
+    }
+   ]
+  },
+  {
+   "sku": "JM-BR-2328",
+   "name": "Seed Pearl Cuff",
+   "category": "bracelets",
+   "jewellery_type": "bracelet",
+   "metal_type": "gold",
+   "purity": "18K",
+   "stone_type": "pearl",
+   "base_price": 84000,
+   "discount_percent": 0,
+   "gross_weight_g": 30.0,
+   "net_weight_g": 27.6,
+   "making_charges": 10000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "wedding",
+    "reception"
+   ],
+   "tags": [
+    "pearl",
+    "cuff",
+    "woven"
+   ],
+   "style": "romantic",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "pearl-atelier",
+    "bridal-grandeur"
+   ],
+   "short_description": "A wide woven cuff of seed pearls with gold bars and clasp.",
+   "photos": [
+    "seed-pearl-cuff-bracelet.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "YG",
+     "metal_type": "gold",
+     "stone_type": "pearl",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "S · 6.5\"",
+     "measurement_mm": 165
+    },
+    {
+     "label": "M · 7\"",
+     "measurement_mm": 178,
+     "is_default": true
+    },
+    {
+     "label": "L · 7.5\"",
+     "measurement_mm": 190
+    }
+   ]
+  },
+  {
+   "sku": "JM-BG-2329",
+   "name": "Wave Silver Bangle",
+   "category": "bangles",
+   "jewellery_type": "bangle",
+   "metal_type": "silver",
+   "purity": "925",
+   "stone_type": "none",
+   "base_price": 32000,
+   "discount_percent": 0,
+   "gross_weight_g": 42.0,
+   "net_weight_g": 42.0,
+   "making_charges": 4000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "everyday",
+    "party"
+   ],
+   "tags": [
+    "bangle",
+    "wave",
+    "silver"
+   ],
+   "style": "modern",
+   "is_featured": false,
+   "is_new": true,
+   "collections": [
+    "silver-studio",
+    "everyday-luxe"
+   ],
+   "short_description": "A hinged sterling bangle with a sculpted wave profile.",
+   "photos": [
+    "wave-silver-bangle.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "SV",
+     "metal_type": "silver",
+     "stone_type": "none",
+     "purity": "925",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "2.4",
+     "measurement_mm": 57.2
+    },
+    {
+     "label": "2.6",
+     "measurement_mm": 60.3,
+     "is_default": true
+    },
+    {
+     "label": "2.8",
+     "measurement_mm": 63.5
+    }
+   ]
+  },
+  {
+   "sku": "JM-BG-2330",
+   "name": "Twin Gold Bangles",
+   "category": "bangles",
+   "jewellery_type": "bangle",
+   "metal_type": "gold",
+   "purity": "22K",
+   "stone_type": "none",
+   "base_price": 148000,
+   "discount_percent": 0,
+   "gross_weight_g": 26.0,
+   "net_weight_g": 26.0,
+   "making_charges": 12000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "festive",
+    "everyday"
+   ],
+   "tags": [
+    "bangle",
+    "pair",
+    "22K"
+   ],
+   "style": "classic",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "everyday-luxe",
+    "bridal-grandeur"
+   ],
+   "short_description": "A pair of slim textured 22K bangles, sold together.",
+   "photos": [
+    {
+     "file": "twin-gold-bangles.jpg",
+     "single_piece": false
+    }
+   ],
+   "variants": [
+    {
+     "sku_suffix": "YG",
+     "metal_type": "gold",
+     "stone_type": "none",
+     "purity": "22K",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "2.4",
+     "measurement_mm": 57.2
+    },
+    {
+     "label": "2.6",
+     "measurement_mm": 60.3,
+     "is_default": true
+    },
+    {
+     "label": "2.8",
+     "measurement_mm": 63.5
+    }
+   ]
+  },
+  {
+   "sku": "JM-NR-2331",
+   "name": "Peacock Nath",
+   "category": "nose-rings",
+   "jewellery_type": "nose_ring",
+   "metal_type": "gold",
+   "purity": "22K",
+   "stone_type": "kundan",
+   "base_price": 58000,
+   "discount_percent": 0,
+   "gross_weight_g": 9.0,
+   "net_weight_g": 8.3,
+   "making_charges": 7000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "wedding"
+   ],
+   "tags": [
+    "nath",
+    "peacock",
+    "enamel"
+   ],
+   "style": "traditional",
+   "is_featured": true,
+   "is_new": false,
+   "collections": [
+    "bridal-grandeur"
+   ],
+   "short_description": "An enamelled peacock nath with pearl drops, worn on the left.",
+   "photos": [
+    "peacock-nath.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "YG",
+     "metal_type": "gold",
+     "stone_type": "kundan",
+     "purity": "22K",
+     "is_default": true
+    }
+   ]
+  },
+  {
+   "sku": "JM-NR-2332",
+   "name": "Filigree Crescent Nath",
+   "category": "nose-rings",
+   "jewellery_type": "nose_ring",
+   "metal_type": "gold",
+   "purity": "22K",
+   "stone_type": "none",
+   "base_price": 46000,
+   "discount_percent": 0,
+   "gross_weight_g": 7.0,
+   "net_weight_g": 7.0,
+   "making_charges": 6000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "wedding",
+    "festive"
+   ],
+   "tags": [
+    "nath",
+    "filigree",
+    "crescent"
+   ],
+   "style": "traditional",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "bridal-grandeur"
+   ],
+   "short_description": "A crescent nath in fine granulated filigree.",
+   "photos": [
+    "filigree-crescent-nath.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "YG",
+     "metal_type": "gold",
+     "stone_type": "none",
+     "purity": "22K",
+     "is_default": true
+    }
+   ]
+  },
+  {
+   "sku": "JM-AK-2333",
+   "name": "Silver Chain Payal",
+   "category": "anklets",
+   "jewellery_type": "anklet",
+   "metal_type": "silver",
+   "purity": "925",
+   "stone_type": "none",
+   "base_price": 14000,
+   "discount_percent": 0,
+   "gross_weight_g": 38.0,
+   "net_weight_g": 38.0,
+   "making_charges": 2000,
+   "stock_quantity": 3,
+   "gender": "women",
+   "occasions": [
+    "festive",
+    "wedding"
+   ],
+   "tags": [
+    "payal",
+    "anklet",
+    "bells"
+   ],
+   "style": "traditional",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "silver-studio",
+    "bridal-grandeur"
+   ],
+   "short_description": "A lattice-link payal with ghungroo bells; sold as a pair.",
+   "photos": [
+    {
+     "file": "silver-chain-payal.jpg",
+     "single_piece": true,
+     "rotate": 90
+    }
+   ],
+   "variants": [
+    {
+     "sku_suffix": "SV",
+     "metal_type": "silver",
+     "stone_type": "none",
+     "purity": "925",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "9\"",
+     "measurement_mm": 229
+    },
+    {
+     "label": "10\"",
+     "measurement_mm": 254,
+     "is_default": true
+    }
+   ]
+  },
+  {
+   "sku": "JM-ST-2334",
+   "name": "Aquamarine & Sapphire Bridal Set",
+   "category": "bridal-sets",
+   "jewellery_type": "set",
+   "metal_type": "white_gold",
+   "purity": "18K",
+   "stone_type": "sapphire",
+   "base_price": 810000,
+   "discount_percent": 5,
+   "gross_weight_g": 65.0,
+   "net_weight_g": 59.8,
+   "making_charges": 60000,
+   "stock_quantity": 1,
+   "gender": "women",
+   "occasions": [
+    "wedding"
+   ],
+   "tags": [
+    "set",
+    "bridal",
+    "aquamarine"
+   ],
+   "style": "statement",
+   "is_featured": true,
+   "is_new": false,
+   "collections": [
+    "bridal-grandeur"
+   ],
+   "short_description": "The rivière necklace and matching drop earrings, styled together with a set saving.",
+   "photos": [
+    "aquamarine-sapphire-bridal-set.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "WG",
+     "metal_type": "white_gold",
+     "stone_type": "sapphire",
+     "purity": "18K",
+     "is_default": true
+    }
+   ],
+   "stone_weight_ct": 51.0,
+   "set_items": [
+    "JM-NK-2318",
+    "JM-ER-2315"
+   ]
+  },
+  {
+   "sku": "JN-BG-2007",
+   "name": "Stacked Gold Bangles (set of 4)",
+   "category": "bangles",
+   "jewellery_type": "bangle",
+   "metal_type": "gold",
+   "purity": "22K",
+   "stone_type": "none",
+   "base_price": 262000,
+   "gross_weight_g": 54.0,
+   "net_weight_g": 54.0,
+   "making_charges": 20000,
+   "stock_quantity": 2,
+   "occasions": [
+    "wedding",
+    "festive"
+   ],
+   "tags": [
+    "916",
+    "stack",
+    "bangles"
+   ],
+   "style": "traditional",
+   "is_featured": true,
+   "collections": [
+    "bridal-grandeur",
+    "heritage-revival"
+   ],
+   "short_description": "Four slim textured 22K bangles made to be worn together.",
+   "photos": [
+    "stacked-gold-bangles.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "YG",
+     "metal_type": "gold",
+     "stone_type": "none",
+     "purity": "22K",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "2.4",
+     "measurement_mm": 57.2
+    },
+    {
+     "label": "2.6",
+     "measurement_mm": 60.3,
+     "is_default": true
+    },
+    {
+     "label": "2.8",
+     "measurement_mm": 63.5
+    }
+   ],
+   "is_new": false
+  },
+  {
+   "sku": "JN-NK-2104",
+   "name": "Twisted Gold Torque",
+   "category": "chokers",
+   "jewellery_type": "choker",
+   "metal_type": "gold",
+   "purity": "22K",
+   "stone_type": "none",
+   "base_price": 134000,
+   "gross_weight_g": 30.0,
+   "net_weight_g": 30.0,
+   "making_charges": 11000,
+   "stock_quantity": 2,
+   "gender": "women",
+   "occasions": [
+    "festive",
+    "everyday"
+   ],
+   "tags": [
+    "torque",
+    "twisted",
+    "minimal"
+   ],
+   "style": "minimal",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "everyday-luxe",
+    "heritage-revival"
+   ],
+   "short_description": "A rigid twisted-rope torque that sits at the base of the neck.",
+   "photos": [
+    "gold-torque-collar.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "GO",
+     "metal_type": "gold",
+     "stone_type": "none",
+     "purity": "22K",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "14\"",
+     "measurement_mm": 356,
+     "is_default": true
+    },
+    {
+     "label": "15\"",
+     "measurement_mm": 381
+    }
+   ]
+  },
+  {
+   "sku": "JN-HR-2107",
+   "name": "Long Tassel Pendant Haram",
+   "category": "harams",
+   "jewellery_type": "haram",
+   "metal_type": "gold",
+   "purity": "22K",
+   "stone_type": "sapphire",
+   "base_price": 228000,
+   "gross_weight_g": 38.0,
+   "net_weight_g": 35.0,
+   "making_charges": 21000,
+   "stock_quantity": 1,
+   "gender": "women",
+   "occasions": [
+    "wedding",
+    "reception"
+   ],
+   "tags": [
+    "haram",
+    "long",
+    "tassel"
+   ],
+   "style": "traditional",
+   "is_featured": true,
+   "is_new": false,
+   "collections": [
+    "bridal-grandeur",
+    "heritage-revival"
+   ],
+   "short_description": "A long chain with blue stone stations ending in a fringed tassel pendant.",
+   "photos": [
+    "long-tassel-pendant-necklace.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "GO",
+     "metal_type": "gold",
+     "stone_type": "sapphire",
+     "purity": "22K",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "24\"",
+     "measurement_mm": 610,
+     "is_default": true
+    },
+    {
+     "label": "28\"",
+     "measurement_mm": 711,
+     "price_delta": 12000
+    }
+   ],
+   "stone_weight_ct": 6.0
+  },
+  {
+   "sku": "JN-AK-2119",
+   "name": "Beaded Strap Anklet",
+   "category": "anklets",
+   "jewellery_type": "anklet",
+   "metal_type": "gold",
+   "purity": "22K",
+   "stone_type": "none",
+   "base_price": 36000,
+   "gross_weight_g": 12.0,
+   "net_weight_g": 10.0,
+   "making_charges": 4000,
+   "stock_quantity": 4,
+   "gender": "women",
+   "occasions": [
+    "festive",
+    "wedding"
+   ],
+   "tags": [
+    "anklet",
+    "beads",
+    "strap"
+   ],
+   "style": "traditional",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "bridal-grandeur",
+    "heritage-revival"
+   ],
+   "short_description": "Rows of gold and turquoise beads on a flexible strap.",
+   "photos": [
+    "beaded-strap-anklet.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "GO",
+     "metal_type": "gold",
+     "stone_type": "none",
+     "purity": "22K",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "9\"",
+     "measurement_mm": 229
+    },
+    {
+     "label": "10\"",
+     "measurement_mm": 254,
+     "is_default": true
+    }
+   ]
+  },
+  {
+   "sku": "JN-MT-2121",
+   "name": "Gold Band Maang Tikka",
+   "category": "maang-tikka",
+   "jewellery_type": "maang_tikka",
+   "metal_type": "gold",
+   "purity": "22K",
+   "stone_type": "none",
+   "base_price": 54000,
+   "gross_weight_g": 8.0,
+   "net_weight_g": 8.0,
+   "making_charges": 5500,
+   "stock_quantity": 2,
+   "gender": "women",
+   "occasions": [
+    "wedding"
+   ],
+   "tags": [
+    "tikka",
+    "band",
+    "diadem"
+   ],
+   "style": "traditional",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "bridal-grandeur",
+    "heritage-revival"
+   ],
+   "short_description": "A slim embossed gold band worn along the parting.",
+   "photos": [
+    "gold-band-diadem.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "GO",
+     "metal_type": "gold",
+     "stone_type": "none",
+     "purity": "22K",
+     "is_default": true
+    }
+   ]
+  },
+  {
+   "sku": "JN-WC-2122",
+   "name": "Coin Medallion Waist Chain",
+   "category": "waist-chains",
+   "jewellery_type": "waist_chain",
+   "metal_type": "gold",
+   "purity": "22K",
+   "stone_type": "none",
+   "base_price": 385000,
+   "gross_weight_g": 78.0,
+   "net_weight_g": 78.0,
+   "making_charges": 36000,
+   "stock_quantity": 1,
+   "gender": "women",
+   "occasions": [
+    "wedding"
+   ],
+   "tags": [
+    "vaddanam",
+    "coin",
+    "medallion"
+   ],
+   "style": "traditional",
+   "is_featured": true,
+   "is_new": false,
+   "collections": [
+    "bridal-grandeur",
+    "heritage-revival"
+   ],
+   "short_description": "A waist chain of stamped coins and medallions on a woven band.",
+   "photos": [
+    "coin-medallion-girdle.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "GO",
+     "metal_type": "gold",
+     "stone_type": "none",
+     "purity": "22K",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "30\"",
+     "measurement_mm": 762,
+     "is_default": true
+    },
+    {
+     "label": "34\"",
+     "measurement_mm": 864,
+     "price_delta": 30000
+    }
+   ]
+  },
+  {
+   "sku": "JN-WC-2123",
+   "name": "Lapis and Gold Bead Waist Chain",
+   "category": "waist-chains",
+   "jewellery_type": "waist_chain",
+   "metal_type": "gold",
+   "purity": "22K",
+   "stone_type": "sapphire",
+   "base_price": 212000,
+   "gross_weight_g": 40.0,
+   "net_weight_g": 36.0,
+   "making_charges": 20000,
+   "stock_quantity": 1,
+   "gender": "women",
+   "occasions": [
+    "wedding",
+    "festive"
+   ],
+   "tags": [
+    "waist",
+    "lapis",
+    "beads"
+   ],
+   "style": "traditional",
+   "is_featured": false,
+   "is_new": false,
+   "collections": [
+    "bridal-grandeur",
+    "heritage-revival"
+   ],
+   "short_description": "Alternating lapis and gold wallet-shaped beads on a long strand.",
+   "photos": [
+    "lapis-gold-bead-girdle.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "GO",
+     "metal_type": "gold",
+     "stone_type": "sapphire",
+     "purity": "22K",
+     "is_default": true
+    }
+   ],
+   "sizes": [
+    {
+     "label": "30\"",
+     "measurement_mm": 762,
+     "is_default": true
+    },
+    {
+     "label": "34\"",
+     "measurement_mm": 864,
+     "price_delta": 30000
+    }
+   ],
+   "stone_weight_ct": 20.0
+  },
+  {
+   "sku": "JN-MT-2127",
+   "name": "Gold Pendant Tikka",
+   "category": "maang-tikka",
+   "jewellery_type": "maang_tikka",
+   "metal_type": "gold",
+   "purity": "22K",
+   "stone_type": "none",
+   "base_price": 62000,
+   "gross_weight_g": 9.0,
+   "net_weight_g": 9.0,
+   "making_charges": 6000,
+   "stock_quantity": 2,
+   "gender": "women",
+   "occasions": [
+    "wedding",
+    "reception"
+   ],
+   "tags": [
+    "tikka",
+    "pendant",
+    "drops"
+   ],
+   "style": "traditional",
+   "is_featured": true,
+   "is_new": false,
+   "collections": [
+    "bridal-grandeur",
+    "heritage-revival"
+   ],
+   "short_description": "A delicate gold chain head ornament with hanging drops.",
+   "photos": [
+    "gold-pendant-tikka.jpg"
+   ],
+   "variants": [
+    {
+     "sku_suffix": "GO",
+     "metal_type": "gold",
+     "stone_type": "none",
+     "purity": "22K",
+     "is_default": true
+    }
+   ]
+  }
+ ]
 }

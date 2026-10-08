@@ -8,7 +8,7 @@ import { expect, test, type APIRequestContext } from "@playwright/test";
  * viewer, and removes the model again. Headless browsers may lack WebGL; the canvas
  * assertion degrades to an annotation while the chrome and network assertions always run.
  */
-const PRODUCT_SLUG = "rose-cut-diamond-cluster-ring";
+const PRODUCT_SLUG = "solitaire-diamond-ring";
 const GLB = readFileSync(join(__dirname, "..", "fixtures", "demo-ring.glb"));
 
 async function staffContext(request: APIRequestContext): Promise<APIRequestContext> {
@@ -43,7 +43,7 @@ test.describe("3D jewellery viewer", () => {
       page.on("pageerror", (e) => errors.push(e.message));
 
       await page.goto(`/products/${PRODUCT_SLUG}`);
-      await expect(page.getByRole("heading", { level: 1 })).toContainText("Rose-cut");
+      await expect(page.getByRole("heading", { level: 1 })).toContainText("Solitaire");
       // three.js is not loaded until asked for: no canvas on the page yet.
       expect(await page.locator("canvas").count()).toBe(0);
 
@@ -69,7 +69,7 @@ test.describe("3D jewellery viewer", () => {
 
       await page.getByRole("button", { name: "Photos" }).click();
       await expect(viewer).toHaveCount(0);
-      await expect(page.getByRole("img", { name: /Rose-cut/ }).first()).toBeVisible();
+      await expect(page.getByRole("img", { name: /Solitaire/ }).first()).toBeVisible();
 
       const hasCanvas = (await viewer.locator("canvas").count()) > 0;
       test.info().annotations.push({ type: "webgl", description: hasCanvas ? "canvas rendered" : "no WebGL in this browser" });

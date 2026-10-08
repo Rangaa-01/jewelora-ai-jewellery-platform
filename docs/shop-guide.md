@@ -44,6 +44,9 @@ Save, then open the **Assets** tab.
    optimised automatically and indexed for visual search.
 2. **Try-on cut-out** — upload the front-view photo and tick **Auto cut-out from a normal
    product photo**. The system removes the background and estimates the anchor points.
+   Two options help with tricky photos: **Keep only the largest piece** (a pair of earrings,
+   a loose stone beside a ring) and **Re-open holes filled with backdrop** (the inside of a
+   ring or the loop of a chain photographed on fabric; on black backdrops this is automatic).
    Check the anchors in the preview (click to move them), enter the real width in mm, and
    upload. If you already have a transparent PNG from your photographer, upload it directly
    and place the anchors yourself.

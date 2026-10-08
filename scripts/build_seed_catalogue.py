@@ -1,0 +1,272 @@
+"""Generates database/seeds/catalogue.json for the modern demo catalogue.
+
+Photos are real studio photographs with free licences (see database/seeds/photos/ATTRIBUTION.md).
+Prices are indicative INR list prices for the demo shop only.
+
+    python scripts/build_seed_catalogue.py
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+SEEDS = ROOT / "database" / "seeds"
+
+RING_SIZES = [
+    {"label": "11", "measurement_mm": 16.2},
+    {"label": "12", "measurement_mm": 16.5, "is_default": True},
+    {"label": "13", "measurement_mm": 16.9},
+    {"label": "14", "measurement_mm": 17.2},
+    {"label": "15", "measurement_mm": 17.5},
+]
+NECK_SIZES = [
+    {"label": '16"', "measurement_mm": 406, "is_default": True},
+    {"label": '18"', "measurement_mm": 457, "price_delta": 6000},
+]
+CHOKER_SIZES = [{"label": '14"', "measurement_mm": 356, "is_default": True}, {"label": '15"', "measurement_mm": 381}]
+CHAIN_SIZES = [
+    {"label": '18"', "measurement_mm": 457, "is_default": True},
+    {"label": '20"', "measurement_mm": 508, "price_delta": 9000},
+    {"label": '22"', "measurement_mm": 559, "price_delta": 18000},
+]
+BANGLE_SIZES = [
+    {"label": "2.4", "measurement_mm": 57.2},
+    {"label": "2.6", "measurement_mm": 60.3, "is_default": True},
+    {"label": "2.8", "measurement_mm": 63.5},
+]
+BRACELET_SIZES = [{"label": "S · 6.5\"", "measurement_mm": 165}, {"label": "M · 7\"", "measurement_mm": 178, "is_default": True}, {"label": "L · 7.5\"", "measurement_mm": 190}]
+ANKLET_SIZES = [{"label": '9"', "measurement_mm": 229}, {"label": '10"', "measurement_mm": 254, "is_default": True}]
+
+CATEGORY_BY_TYPE = {
+    "necklace": "necklaces", "choker": "chokers", "haram": "harams", "chain": "chains", "pendant": "pendants",
+    "earrings": "earrings", "ring": "rings", "bangle": "bangles", "bracelet": "bracelets", "nose_ring": "nose-rings",
+    "maang_tikka": "maang-tikka", "waist_chain": "waist-chains", "anklet": "anklets", "set": "bridal-sets",
+}
+SIZES_BY_TYPE = {
+    "ring": RING_SIZES, "necklace": NECK_SIZES, "choker": CHOKER_SIZES, "chain": CHAIN_SIZES, "pendant": CHAIN_SIZES,
+    "bangle": BANGLE_SIZES, "bracelet": BRACELET_SIZES, "anklet": ANKLET_SIZES,
+}
+PREFIX = {
+    "necklace": "NK", "choker": "CK", "haram": "HR", "chain": "CN", "pendant": "PD", "earrings": "ER", "ring": "RG",
+    "bangle": "BG", "bracelet": "BR", "nose_ring": "NR", "maang_tikka": "MT", "waist_chain": "WC", "anklet": "AK", "set": "ST",
+}
+SUFFIX = {"gold": "YG", "white_gold": "WG", "rose_gold": "RG", "platinum": "PT", "silver": "SV"}
+
+
+def product(
+    name: str, jtype: str, metal: str, stone: str, price: int, *, purity: str | None = None, weight: float,
+    making: int, photos: list[Any], desc: str, tags: list[str], occasions: list[str], style: str,
+    collections: list[str], stock: int = 3, featured: bool = False, new: bool = False, stone_ct: float | None = None,
+    discount: int = 0, gender: str = "women", sizes: list[dict[str, Any]] | None = None, set_items: list[str] | None = None,
+    variants: list[dict[str, Any]] | None = None, seq: list[int] = [2300],
+) -> dict[str, Any]:
+    seq[0] += 1
+    purity = purity or {"gold": "18K", "white_gold": "18K", "rose_gold": "18K", "platinum": "950", "silver": "925"}[metal]
+    data: dict[str, Any] = {
+        "sku": f"JM-{PREFIX[jtype]}-{seq[0]}",
+        "name": name,
+        "category": CATEGORY_BY_TYPE[jtype],
+        "jewellery_type": jtype,
+        "metal_type": metal,
+        "purity": purity,
+        "stone_type": stone,
+        "base_price": price,
+        "discount_percent": discount,
+        "gross_weight_g": weight,
+        "net_weight_g": round(weight * (0.92 if stone != "none" else 1.0), 1),
+        "making_charges": making,
+        "stock_quantity": stock,
+        "gender": gender,
+        "occasions": occasions,
+        "tags": tags,
+        "style": style,
+        "is_featured": featured,
+        "is_new": new,
+        "collections": collections,
+        "short_description": desc,
+        "photos": photos,
+        "variants": variants
+        or [{"sku_suffix": SUFFIX[metal], "metal_type": metal, "stone_type": stone, "purity": purity, "is_default": True}],
+    }
+    if stone_ct:
+        data["stone_weight_ct"] = stone_ct
+    sizes = sizes if sizes is not None else SIZES_BY_TYPE.get(jtype)
+    if sizes:
+        data["sizes"] = sizes
+    if set_items:
+        data["set_items"] = set_items
+    return data
+
+
+P = product
+products: list[dict[str, Any]] = [
+    # ---- Rings
+    P("Solitaire Diamond Ring", "ring", "white_gold", "diamond", 186000, weight=3.4, making=14000, stone_ct=0.5,
+      photos=[{"file": "solitaire-diamond-ring.jpg", "punch_holes": True}], featured=True, new=True,
+      desc="A single round brilliant held high in a four-claw white gold setting.", tags=["solitaire", "engagement", "classic"],
+      occasions=["engagement", "anniversary"], style="classic", collections=["diamond-edit", "bridal-grandeur"]),
+    P("Ruby Flower Cluster Ring", "ring", "white_gold", "ruby", 98000, weight=4.1, making=9000, stone_ct=1.2,
+      photos=["ruby-flower-cluster-ring.jpg"], featured=True,
+      desc="Five marquise rubies around a diamond centre on a wide polished shank.", tags=["cluster", "flower", "ruby"],
+      occasions=["festive", "party"], style="statement", collections=["coloured-gems"]),
+    P("Blue Topaz Duo Ring", "ring", "silver", "cz", 24000, weight=6.0, making=3000, stone_ct=3.0,
+      photos=["blue-topaz-duo-ring.jpg"], new=True,
+      desc="Two faceted Swiss blue topaz cubes meet across an open architectural band.", tags=["topaz", "modern", "open-band"],
+      occasions=["everyday", "party"], style="modern", collections=["silver-studio", "coloured-gems"]),
+    P("Rhodochrosite Cabochon Ring", "ring", "gold", "none", 74000, weight=7.2, making=7000,
+      photos=["rhodochrosite-cabochon-ring.jpg"],
+      desc="A smooth salmon-pink rhodochrosite cabochon bezel-set in warm 18K gold.", tags=["cabochon", "cocktail", "pink"],
+      occasions=["party", "everyday"], style="cocktail", collections=["coloured-gems", "everyday-luxe"]),
+    P("Swiss Topaz Cube Ring", "ring", "silver", "cz", 21000, weight=5.6, making=2800, stone_ct=4.0,
+      photos=["swiss-topaz-cube-ring.jpg"],
+      desc="A deep-blue square-cut topaz raised on a sculpted silver shank.", tags=["topaz", "square", "cocktail"],
+      occasions=["party"], style="modern", collections=["silver-studio", "coloured-gems"]),
+    P("Ruby & Diamond Eternity Band", "ring", "gold", "ruby", 142000, weight=5.8, making=12000, stone_ct=1.8,
+      photos=["ruby-diamond-eternity-band.jpg"], featured=True,
+      desc="Channel-set rubies frame a row of round diamonds in a wide 18K band.", tags=["eternity", "band", "ruby", "diamond"],
+      occasions=["anniversary", "wedding"], style="classic", collections=["diamond-edit", "coloured-gems"]),
+    # ---- Earrings
+    P("Aquamarine Pavé Drop Earrings", "earrings", "white_gold", "diamond", 164000, weight=6.4, making=12000, stone_ct=6.2,
+      photos=["aquamarine-pave-drop-earrings.jpg"], featured=True, new=True,
+      desc="Pear-cut aquamarines swing beneath pavé diamond discs.", tags=["drop", "aquamarine", "pave"],
+      occasions=["reception", "party"], style="statement", collections=["diamond-edit", "coloured-gems"]),
+    P("Blue Topaz Teardrop Earrings", "earrings", "gold", "cz", 58000, weight=5.0, making=6000, stone_ct=3.4,
+      photos=[{"file": "blue-topaz-teardrop-earrings.jpg", "crop": [0, 0.26, 1, 1]}],
+      desc="Hammered gold teardrops hold pear-shaped London blue topaz.", tags=["teardrop", "topaz", "hammered"],
+      occasions=["party", "festive"], style="modern", collections=["coloured-gems"]),
+    P("Pearl Cascade Earrings", "earrings", "gold", "pearl", 46000, weight=6.8, making=7000,
+      photos=["pearl-cascade-earrings.jpg"], featured=True,
+      desc="Strands of seed pearls tumble from polished gold domes.", tags=["pearl", "cascade", "bridal"],
+      occasions=["wedding", "reception"], style="romantic", collections=["pearl-atelier", "bridal-grandeur"]),
+    P("Quartz Cube Studs", "earrings", "gold", "none", 28000, weight=3.2, making=4000,
+      photos=["quartz-cube-studs.jpg"],
+      desc="Clear rock-crystal cubes on 18K gold posts: the everyday stud, upgraded.", tags=["stud", "quartz", "minimal"],
+      occasions=["everyday", "work"], style="minimal", collections=["everyday-luxe"]),
+    P("Keshi Pearl Drop Earrings", "earrings", "gold", "pearl", 34000, weight=2.6, making=3500,
+      photos=["keshi-pearl-drop-earrings.jpg"], new=True,
+      desc="Long organic keshi pearls on slender gold hooks.", tags=["keshi", "pearl", "drop"],
+      occasions=["everyday", "party"], style="organic", collections=["pearl-atelier", "everyday-luxe"]),
+    P("Diamond Trio Drop Earrings", "earrings", "white_gold", "diamond", 238000, weight=4.2, making=16000, stone_ct=2.4,
+      photos=["diamond-trio-drop-earrings.jpg"], featured=True,
+      desc="Three graduated round brilliants, articulated to catch every movement.", tags=["diamond", "drop", "graduated"],
+      occasions=["wedding", "reception"], style="classic", collections=["diamond-edit", "bridal-grandeur"]),
+    P("Diamond Bezel Drops", "earrings", "white_gold", "diamond", 88000, weight=2.4, making=7000, stone_ct=0.6,
+      photos=["diamond-bezel-drop-earrings.jpg"],
+      desc="A single bezel-set diamond on a fine white gold hook.", tags=["diamond", "bezel", "minimal"],
+      occasions=["everyday", "work"], style="minimal", collections=["diamond-edit", "everyday-luxe"]),
+    P("Emerald Drop Earrings", "earrings", "silver", "emerald", 42000, weight=7.6, making=5000, stone_ct=2.0,
+      photos=["emerald-drop-earrings.jpg"],
+      desc="Polished silver drops set with square-cut emeralds.", tags=["emerald", "drop", "silver"],
+      occasions=["party"], style="modern", collections=["silver-studio", "coloured-gems"]),
+    P("Aquamarine & Sapphire Drop Earrings", "earrings", "white_gold", "sapphire", 212000, weight=7.0, making=15000, stone_ct=5.0,
+      photos=[{"file": "aquamarine-sapphire-bridal-set.jpg", "crop": [0.05, 0.08, 0.95, 0.36]}],
+      desc="Oval aquamarines framed in diamonds, suspended from sapphire tops.", tags=["aquamarine", "sapphire", "bridal"],
+      occasions=["wedding", "reception"], style="statement", collections=["bridal-grandeur", "coloured-gems"]),
+    # ---- Necklaces, chokers, chains, pendants
+    P("Amethyst & Diamond Statement Necklace", "necklace", "white_gold", "diamond", 486000, weight=48.0, making=42000, stone_ct=38.0,
+      photos=["amethyst-diamond-statement-necklace.jpg"], featured=True, new=True,
+      desc="Pear-cut amethyst drops hang from a lace of pavé diamonds.", tags=["amethyst", "statement", "diamond"],
+      occasions=["reception", "party"], style="statement", collections=["diamond-edit", "coloured-gems"]),
+    P("Garnet & Diamond Festoon Necklace", "necklace", "gold", "diamond", 398000, weight=36.0, making=34000, stone_ct=22.0,
+      photos=["garnet-diamond-festoon-necklace.jpg"], featured=True,
+      desc="Garnet and citrine drops on diamond-set scrollwork, in warm gold.", tags=["garnet", "festoon", "diamond"],
+      occasions=["wedding", "reception"], style="statement", collections=["bridal-grandeur", "coloured-gems"]),
+    P("Aquamarine & Sapphire Rivière", "necklace", "white_gold", "sapphire", 640000, weight=58.0, making=52000, stone_ct=46.0,
+      photos=[{"file": "aquamarine-sapphire-bridal-set.jpg", "crop": [0, 0.28, 1, 1]}], featured=True,
+      desc="Oval aquamarines and blue sapphires alternate in diamond frames with a single drop.", tags=["aquamarine", "sapphire", "riviere"],
+      occasions=["wedding", "reception"], style="statement", collections=["bridal-grandeur", "diamond-edit"]),
+    P("Pearl Lattice Choker", "choker", "gold", "pearl", 128000, weight=32.0, making=14000,
+      photos=["pearl-lattice-choker.jpg"], featured=True,
+      desc="Four rows of seed pearls meet at a cameo-set gold clasp.", tags=["pearl", "choker", "lattice"],
+      occasions=["wedding", "reception"], style="romantic", collections=["pearl-atelier", "bridal-grandeur"]),
+    P("Citrine Torque Collar", "choker", "silver", "none", 36000, weight=28.0, making=4000,
+      photos=["citrine-torque-collar.jpg"],
+      desc="A sculpted silver torque on leather with a honey citrine cabochon.", tags=["torque", "citrine", "silver"],
+      occasions=["everyday", "party"], style="modern", collections=["silver-studio"]),
+    P("Rope Chain", "chain", "gold", "none", 96000, weight=14.0, making=8000,
+      photos=["rope-chain.jpg"], new=True,
+      desc="A hollow twisted-rope chain in bright 18K yellow gold.", tags=["rope", "chain", "unisex"],
+      occasions=["everyday"], style="classic", collections=["everyday-luxe"], gender="unisex"),
+    P("Script Name Pendant", "chain", "gold", "none", 42000, weight=4.6, making=6000,
+      photos=["script-name-pendant.jpg"], featured=True,
+      desc="Your name in flowing script on a fine curb chain: made to order in 2 weeks.", tags=["name", "script", "personalised"],
+      occasions=["everyday", "gift"], style="minimal", collections=["everyday-luxe"], sizes=CHAIN_SIZES),
+    P("Topaz Nugget Pendant", "pendant", "silver", "cz", 18000, weight=6.0, making=2500, stone_ct=0.8,
+      photos=["topaz-nugget-pendant.jpg"],
+      desc="A hammered silver nugget set with a blue topaz on a cobalt silk cord.", tags=["pendant", "topaz", "cord"],
+      occasions=["everyday"], style="organic", collections=["silver-studio", "everyday-luxe"]),
+    P("Mokume Gane Pendant", "pendant", "silver", "none", 54000, weight=22.0, making=9000,
+      photos=["mokume-gane-pendant.jpg"],
+      desc="Wood-grain mokume gane in silver and copper on a rigid collar.", tags=["mokume", "artisan", "collar"],
+      occasions=["party", "everyday"], style="artisan", collections=["silver-studio"]),
+    # ---- Bracelets & bangles
+    P("Diamond Tennis Bracelet", "bracelet", "gold", "diamond", 356000, weight=18.0, making=28000, stone_ct=4.0,
+      photos=["diamond-tennis-bracelet.jpg"], featured=True, new=True,
+      desc="Bezel-set round diamonds in a flexible line of 18K yellow gold.", tags=["tennis", "diamond", "line"],
+      occasions=["anniversary", "reception"], style="classic", collections=["diamond-edit"]),
+    P("Rivière Diamond Bracelet", "bracelet", "rose_gold", "diamond", 298000, weight=12.0, making=24000, stone_ct=3.0,
+      photos=["riviere-diamond-bracelet.jpg"], featured=True,
+      desc="A whisper-thin rivière of diamonds in rose gold.", tags=["riviere", "diamond", "rose-gold"],
+      occasions=["anniversary", "everyday"], style="minimal", collections=["diamond-edit", "everyday-luxe"]),
+    P("Rose Quartz Bead Bracelet", "bracelet", "silver", "none", 26000, weight=24.0, making=3000,
+      photos=[{"file": "rose-quartz-bead-bracelet.jpg", "punch_holes": True}],
+      desc="Rows of rose quartz beads with amethyst and silver at the centre.", tags=["beads", "rose-quartz", "silver"],
+      occasions=["everyday"], style="boho", collections=["silver-studio", "coloured-gems"]),
+    P("Seed Pearl Cuff", "bracelet", "gold", "pearl", 84000, weight=30.0, making=10000,
+      photos=["seed-pearl-cuff-bracelet.jpg"],
+      desc="A wide woven cuff of seed pearls with gold bars and clasp.", tags=["pearl", "cuff", "woven"],
+      occasions=["wedding", "reception"], style="romantic", collections=["pearl-atelier", "bridal-grandeur"]),
+    P("Wave Silver Bangle", "bangle", "silver", "none", 32000, weight=42.0, making=4000,
+      photos=["wave-silver-bangle.jpg"], new=True,
+      desc="A hinged sterling bangle with a sculpted wave profile.", tags=["bangle", "wave", "silver"],
+      occasions=["everyday", "party"], style="modern", collections=["silver-studio", "everyday-luxe"]),
+    P("Twin Gold Bangles", "bangle", "gold", "none", 148000, weight=26.0, making=12000, purity="22K",
+      photos=[{"file": "twin-gold-bangles.jpg", "single_piece": False}],
+      desc="A pair of slim textured 22K bangles, sold together.", tags=["bangle", "pair", "22K"],
+      occasions=["festive", "everyday"], style="classic", collections=["everyday-luxe", "bridal-grandeur"]),
+    # ---- Indian bridal
+    P("Peacock Nath", "nose_ring", "gold", "kundan", 58000, weight=9.0, making=7000, purity="22K",
+      photos=["peacock-nath.jpg"], featured=True,
+      desc="An enamelled peacock nath with pearl drops, worn on the left.", tags=["nath", "peacock", "enamel"],
+      occasions=["wedding"], style="traditional", collections=["bridal-grandeur"]),
+    P("Filigree Crescent Nath", "nose_ring", "gold", "none", 46000, weight=7.0, making=6000, purity="22K",
+      photos=["filigree-crescent-nath.jpg"],
+      desc="A crescent nath in fine granulated filigree.", tags=["nath", "filigree", "crescent"],
+      occasions=["wedding", "festive"], style="traditional", collections=["bridal-grandeur"]),
+    P("Silver Chain Payal", "anklet", "silver", "none", 14000, weight=38.0, making=2000,
+      photos=[{"file": "silver-chain-payal.jpg", "single_piece": True, "rotate": 90}],
+      desc="A lattice-link payal with ghungroo bells; sold as a pair.", tags=["payal", "anklet", "bells"],
+      occasions=["festive", "wedding"], style="traditional", collections=["silver-studio", "bridal-grandeur"]),
+]
+set_entry = product(
+    "Aquamarine & Sapphire Bridal Set", "set", "white_gold", "sapphire", 810000, weight=65.0, making=60000, stone_ct=51.0,
+    photos=["aquamarine-sapphire-bridal-set.jpg"], featured=True, discount=5, stock=1,
+    desc="The rivière necklace and matching drop earrings, styled together with a set saving.", tags=["set", "bridal", "aquamarine"],
+    occasions=["wedding"], style="statement", collections=["bridal-grandeur"], sizes=[],
+)
+set_entry["set_items"] = [
+    next(p["sku"] for p in products if p["name"] == "Aquamarine & Sapphire Rivière"),
+    next(p["sku"] for p in products if p["name"] == "Aquamarine & Sapphire Drop Earrings"),
+]
+products.append(set_entry)
+
+# Heritage pieces carried over from the museum catalogue (CC0, Met Open Access).
+heritage = json.loads((SEEDS / "heritage.json").read_text())
+products.extend(heritage)
+
+existing = json.loads((SEEDS / "catalogue.json").read_text())
+collections = [
+    {"name": "Diamond Edit", "slug": "diamond-edit", "tagline": "Certified brilliance", "description": "Solitaires, rivières and diamond drops in 18K white, yellow and rose gold.", "is_featured": True, "sort_order": 1},
+    {"name": "Bridal Grandeur", "slug": "bridal-grandeur", "tagline": "Everything for the big day", "description": "Statement necklaces, naths, tikkas and sets designed to be worn together.", "is_bridal": True, "is_featured": True, "sort_order": 2},
+    {"name": "Coloured Gems", "slug": "coloured-gems", "tagline": "Topaz, amethyst, emerald, ruby", "description": "Vivid stones in modern settings.", "is_featured": True, "sort_order": 3},
+    {"name": "Pearl Atelier", "slug": "pearl-atelier", "tagline": "Soft light, every day", "description": "Seed pearls, keshi pearls and cascades in warm gold.", "is_featured": True, "sort_order": 4},
+    {"name": "Everyday Luxe", "slug": "everyday-luxe", "tagline": "Light, wearable, yours", "description": "Chains, studs and slim bangles for every day.", "is_featured": True, "sort_order": 5},
+    {"name": "Silver Studio", "slug": "silver-studio", "tagline": "Sculptural sterling", "description": "Contemporary silver with topaz, citrine and emerald.", "is_featured": False, "sort_order": 6},
+    {"name": "Heritage Revival", "slug": "heritage-revival", "tagline": "Antique forms, 22K gold", "description": "Harams, waist chains and tikkas inspired by museum pieces.", "is_featured": False, "sort_order": 7},
+]
+out = {"stores": existing["stores"], "categories": existing["categories"], "collections": collections, "products": products}
+(SEEDS / "catalogue.json").write_text(json.dumps(out, indent=1, ensure_ascii=False) + "\n")
+print(f"wrote {len(products)} products, {len(collections)} collections")

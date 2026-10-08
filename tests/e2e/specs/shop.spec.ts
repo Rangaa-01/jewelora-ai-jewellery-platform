@@ -5,8 +5,8 @@ import {
   type Page,
 } from "@playwright/test";
 
-const PRODUCT_SLUG = "gold-crescent-drop-earrings"; // no sizes, try-on enabled
-const RING_SLUG = "rose-cut-diamond-cluster-ring"; // sized product
+const PRODUCT_SLUG = "quartz-cube-studs"; // no sizes, try-on enabled
+const RING_SLUG = "solitaire-diamond-ring"; // sized product
 
 /**
  * Every run of this spec places an order, which reserves a unit of stock. So that the
@@ -103,7 +103,7 @@ test.describe("shop", () => {
       page.getByRole("heading", { level: 1, name: "Shopping bag" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Gold Crescent Drop Earrings" }).first(),
+      page.getByRole("link", { name: "Quartz Cube Studs" }).first(),
     ).toBeVisible();
     await expect(page.getByText("GST (3%)")).toBeVisible();
 
@@ -121,10 +121,10 @@ test.describe("shop", () => {
       page.getByRole("heading", { level: 1, name: "Saved jewellery" }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Gold Crescent Drop Earrings" }).first(),
+      page.getByRole("link", { name: "Quartz Cube Studs" }).first(),
     ).toBeVisible();
     await page
-      .getByRole("button", { name: /Remove Gold Crescent Drop Earrings/ })
+      .getByRole("button", { name: /Remove Quartz Cube Studs/ })
       .click();
     await expect(page.getByText("Nothing saved yet")).toBeVisible();
 

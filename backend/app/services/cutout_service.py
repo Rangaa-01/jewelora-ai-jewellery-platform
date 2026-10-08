@@ -43,6 +43,32 @@ DEFAULT_REAL_WIDTH_MM: dict[str, float] = {
 
 
 @dataclass(frozen=True)
+class CutoutOptions:
+    """Per-photo hints for the pipeline (seed files and the admin uploader expose them)."""
+
+    # Fraction of the photo to keep, (x0, y0, x1, y1) in 0..1, applied before everything else.
+    crop: tuple[float, float, float, float] | None = None
+    # Rotate the photo clockwise by 90/180/270 degrees (e.g. an anklet photographed upright).
+    rotate: int = 0
+    # Keep only the largest piece (None = default per jewellery type).
+    single_piece: bool | None = None
+    # Re-open holes the matting filled with background (inside a ring or a loop of chain).
+    # None = automatic: on when the photo background is near black.
+    punch_holes: bool | None = None
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any] | None) -> CutoutOptions:
+        data = data or {}
+        crop = data.get("crop")
+        return cls(
+            crop=tuple(float(v) for v in crop) if crop else None,  # type: ignore[arg-type]
+            rotate=int(data.get("rotate", 0) or 0),
+            single_piece=data.get("single_piece"),
+            punch_holes=data.get("punch_holes"),
+        )
+
+
+@dataclass(frozen=True)
 class CutoutResult:
     png: bytes
     width: int
@@ -75,22 +101,105 @@ class _Remover:
             return cls._session
 
 
-def remove_background(data: bytes, settings: Settings) -> np.ndarray:
-    """RGBA uint8 array with the background made transparent."""
-    from rembg import remove
-
+def _open_photo(data: bytes, options: CutoutOptions) -> Image.Image:
     try:
         with Image.open(io.BytesIO(data)) as img:
             img.load()
             rgb = img.convert("RGB")
     except OSError as exc:
         raise UploadError() from exc
+    if options.crop:
+        x0, y0, x1, y1 = options.crop
+        w, h = rgb.size
+        box = (int(x0 * w), int(y0 * h), int(x1 * w), int(y1 * h))
+        if box[2] - box[0] < 8 or box[3] - box[1] < 8:
+            raise UploadError("The crop region is too small.")
+        rgb = rgb.crop(box)
+    if options.rotate % 360:
+        rgb = rgb.rotate(-(options.rotate % 360), expand=True)
     if max(rgb.size) > 2048:
         rgb.thumbnail((2048, 2048), Image.Resampling.LANCZOS)
+    return rgb
+
+
+def crop_photo(data: bytes, crop: tuple[float, float, float, float]) -> bytes:
+    """The same fractional crop as the cut-out, for the catalogue photo itself."""
+    rgb = _open_photo(data, CutoutOptions(crop=crop))
+    buf = io.BytesIO()
+    rgb.save(buf, format="JPEG", quality=92)
+    return buf.getvalue()
+
+
+def remove_background(
+    data: bytes, settings: Settings, options: CutoutOptions | None = None
+) -> np.ndarray:
+    """RGBA uint8 array with the background made transparent."""
+    from rembg import remove
+
+    rgb = _open_photo(data, options or CutoutOptions())
     out = remove(
         rgb, session=_Remover.session(settings), alpha_matting=False, post_process_mask=True
     )
-    return np.asarray(out.convert("RGBA"), dtype=np.uint8)
+    rgba = np.asarray(out.convert("RGBA"), dtype=np.uint8).copy()
+    # rembg blacks out the background's colour; keep the photo's own pixels so hole
+    # punching can compare against the real backdrop and edges keep their true colour.
+    rgba[..., :3] = np.asarray(rgb, dtype=np.uint8)
+    return rgba
+
+
+def _border_colour(rgb: np.ndarray) -> np.ndarray:
+    """Median colour of a thin frame around the photo: the backdrop."""
+    h, w = rgb.shape[:2]
+    t = max(2, min(h, w) // 40)
+    frame = np.concatenate(
+        [
+            rgb[:t].reshape(-1, 3),
+            rgb[-t:].reshape(-1, 3),
+            rgb[:, :t].reshape(-1, 3),
+            rgb[:, -t:].reshape(-1, 3),
+        ]
+    )
+    return np.asarray(np.median(frame, axis=0), dtype=np.float32)
+
+
+def _punch_background_holes(
+    rgba: np.ndarray, mask: np.ndarray, tolerance: float = 0.12
+) -> np.ndarray:
+    """Matting fills enclosed holes (the inside of a ring, the loop of a necklace) with
+    backdrop. Pixels inside the mask that share the backdrop's colour are released again,
+    then dust is removed. Only call this when the backdrop is unlike the jewellery."""
+    rgb = rgba[..., :3].astype(np.float32)
+    bg = _border_colour(rgb)
+    luma = rgb.mean(axis=2)
+    if float(bg.mean()) < 40.0:
+        near = np.linalg.norm(rgb - bg, axis=2) < 38.0
+    else:
+        # Chromaticity ignores the shading inside a hole (shadows, folds in fabric).
+        total = rgb.sum(axis=2, keepdims=True) + 1e-3
+        chroma = rgb / total
+        bg_chroma = bg / (bg.sum() + 1e-3)
+        near = (np.linalg.norm(chroma - bg_chroma, axis=2) < tolerance) & (
+            np.abs(luma - float(bg.mean())) < 110.0
+        )
+    # Textured backdrops (fabric, paper) leave speckles: close them before releasing.
+    near_u8 = np.asarray(near, dtype=np.uint8)
+    close_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
+    near_u8 = np.asarray(cv2.morphologyEx(near_u8, cv2.MORPH_CLOSE, close_kernel), dtype=np.uint8)
+    kept = (mask.astype(np.uint8) & (1 - near_u8)).astype(np.uint8)
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    kept = np.asarray(cv2.morphologyEx(kept, cv2.MORPH_OPEN, kernel), dtype=np.uint8)
+    # Re-close pinholes inside gems and metal (small isolated background specks).
+    holes = (mask.astype(np.uint8) - kept).astype(np.uint8)
+    count, labels, stats, _ = cv2.connectedComponentsWithStats(holes, connectivity=4)
+    small = [i for i in range(1, count) if stats[i, cv2.CC_STAT_AREA] < 0.0005 * mask.size]
+    if small:
+        kept[np.isin(labels, small)] = 1
+    return kept
+
+
+def _is_dark_backdrop(rgba: np.ndarray) -> bool:
+    bg = _border_colour(rgba[..., :3].astype(np.float32))
+    return float(bg.mean()) < 40.0
 
 
 def _largest_components(alpha: np.ndarray, keep: int) -> np.ndarray:
@@ -193,16 +302,33 @@ def estimate_anchors(mask: np.ndarray, jewellery_type: str) -> dict[str, list[fl
 
 
 def make_tryon_asset(
-    data: bytes, jewellery_type: str, settings: Settings, *, single_piece: bool | None = None
+    data: bytes,
+    jewellery_type: str,
+    settings: Settings,
+    *,
+    single_piece: bool | None = None,
+    options: CutoutOptions | None = None,
 ) -> CutoutResult:
     """Full pipeline: photo bytes → transparent PNG + anchors for the given jewellery type."""
-    rgba = remove_background(data, settings)
+    options = options or CutoutOptions()
+    if single_piece is not None:
+        options = CutoutOptions(
+            crop=options.crop,
+            rotate=options.rotate,
+            single_piece=single_piece,
+            punch_holes=options.punch_holes,
+        )
+    rgba = remove_background(data, settings, options)
     keep_single = (
-        single_piece
-        if single_piece is not None
+        options.single_piece
+        if options.single_piece is not None
         else jewellery_type in {"earrings", "bangle", "bracelet", "ring", "nose_ring"}
     )
-    mask = _largest_components(rgba[..., 3], keep=1 if keep_single else 6)
+    mask = (rgba[..., 3] > 16).astype(np.uint8)
+    punch = options.punch_holes if options.punch_holes is not None else _is_dark_backdrop(rgba)
+    if punch:
+        mask = _punch_background_holes(rgba, mask)
+    mask = _largest_components(mask * 255, keep=1 if keep_single else 6)
     cropped, cropped_mask = _trim(rgba, mask)
     anchors = estimate_anchors(cropped_mask, jewellery_type)
     real_w = DEFAULT_REAL_WIDTH_MM.get(jewellery_type, 50.0)

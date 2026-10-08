@@ -340,18 +340,32 @@ async def _seed_real_photos(
     photos: list[str],
     jewellery_type: str,
 ) -> None:
-    """Real product photographs: upload as images and derive the try-on cut-out automatically."""
-    from app.services.cutout_service import make_tryon_asset
+    """Real product photographs: upload as images and derive the try-on cut-out automatically.
+    A photo entry is a file name or a dict with ``file`` plus cut-out options (``crop``,
+    ``rotate``, ``single_piece``, ``punch_holes``)."""
+    from app.services.cutout_service import CutoutOptions, make_tryon_asset
     from app.services.upload_service import process_image
 
     photo_dir = REPO_DIR / "database" / "seeds" / "photos"
-    for index, name in enumerate(photos):
-        path = photo_dir / name
+    for index, entry in enumerate(photos):
+        spec = {"file": entry} if isinstance(entry, str) else dict(entry)
+        path = photo_dir / str(spec["file"])
+        options = CutoutOptions.from_dict(spec)
         await _upload_image(
-            service, storage, settings, product, path, None, primary=index == 0, sort=index
+            service,
+            storage,
+            settings,
+            product,
+            path,
+            None,
+            primary=index == 0,
+            sort=index,
+            crop=options.crop,
         )
         if index == 0 and jewellery_type != "set":
-            cut = make_tryon_asset(path.read_bytes(), jewellery_type, settings)
+            cut = await asyncio.to_thread(
+                make_tryon_asset, path.read_bytes(), jewellery_type, settings, options=options
+            )
             processed = process_image(
                 cut.png,
                 settings,
@@ -387,12 +401,16 @@ async def _upload_image(
     primary: bool,
     sort: int,
     view: str = "front",
+    crop: tuple[float, float, float, float] | None = None,
 ) -> None:
     from app.services.upload_service import process_image
 
-    processed = process_image(
-        await asyncio.to_thread(path.read_bytes), settings, max_dimension=1600
-    )
+    data = await asyncio.to_thread(path.read_bytes)
+    if crop:
+        from app.services.cutout_service import crop_photo
+
+        data = await asyncio.to_thread(crop_photo, data, crop)
+    processed = process_image(data, settings, max_dimension=1600)
     key = product_image_key(str(product.id), processed.extension)
     await storage.put(key, processed.data, processed.content_type)
     await service.add_image(

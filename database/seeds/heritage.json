@@ -1,0 +1,426 @@
+[
+ {
+  "sku": "JN-BG-2007",
+  "name": "Stacked Gold Bangles (set of 4)",
+  "category": "bangles",
+  "jewellery_type": "bangle",
+  "metal_type": "gold",
+  "purity": "22K",
+  "stone_type": "none",
+  "base_price": 262000,
+  "gross_weight_g": 54.0,
+  "net_weight_g": 54.0,
+  "making_charges": 20000,
+  "stock_quantity": 2,
+  "occasions": [
+   "wedding",
+   "festive"
+  ],
+  "tags": [
+   "916",
+   "stack",
+   "bangles"
+  ],
+  "style": "traditional",
+  "is_featured": true,
+  "collections": [
+   "bridal-grandeur",
+   "heritage-revival"
+  ],
+  "short_description": "Four slim textured 22K bangles made to be worn together.",
+  "photos": [
+   "stacked-gold-bangles.jpg"
+  ],
+  "variants": [
+   {
+    "sku_suffix": "YG",
+    "metal_type": "gold",
+    "stone_type": "none",
+    "purity": "22K",
+    "is_default": true
+   }
+  ],
+  "sizes": [
+   {
+    "label": "2.4",
+    "measurement_mm": 57.2
+   },
+   {
+    "label": "2.6",
+    "measurement_mm": 60.3,
+    "is_default": true
+   },
+   {
+    "label": "2.8",
+    "measurement_mm": 63.5
+   }
+  ],
+  "is_new": false
+ },
+ {
+  "sku": "JN-NK-2104",
+  "name": "Twisted Gold Torque",
+  "category": "chokers",
+  "jewellery_type": "choker",
+  "metal_type": "gold",
+  "purity": "22K",
+  "stone_type": "none",
+  "base_price": 134000,
+  "gross_weight_g": 30.0,
+  "net_weight_g": 30.0,
+  "making_charges": 11000,
+  "stock_quantity": 2,
+  "gender": "women",
+  "occasions": [
+   "festive",
+   "everyday"
+  ],
+  "tags": [
+   "torque",
+   "twisted",
+   "minimal"
+  ],
+  "style": "minimal",
+  "is_featured": false,
+  "is_new": false,
+  "collections": [
+   "everyday-luxe",
+   "heritage-revival"
+  ],
+  "short_description": "A rigid twisted-rope torque that sits at the base of the neck.",
+  "photos": [
+   "gold-torque-collar.jpg"
+  ],
+  "variants": [
+   {
+    "sku_suffix": "GO",
+    "metal_type": "gold",
+    "stone_type": "none",
+    "purity": "22K",
+    "is_default": true
+   }
+  ],
+  "sizes": [
+   {
+    "label": "14\"",
+    "measurement_mm": 356,
+    "is_default": true
+   },
+   {
+    "label": "15\"",
+    "measurement_mm": 381
+   }
+  ]
+ },
+ {
+  "sku": "JN-HR-2107",
+  "name": "Long Tassel Pendant Haram",
+  "category": "harams",
+  "jewellery_type": "haram",
+  "metal_type": "gold",
+  "purity": "22K",
+  "stone_type": "sapphire",
+  "base_price": 228000,
+  "gross_weight_g": 38.0,
+  "net_weight_g": 35.0,
+  "making_charges": 21000,
+  "stock_quantity": 1,
+  "gender": "women",
+  "occasions": [
+   "wedding",
+   "reception"
+  ],
+  "tags": [
+   "haram",
+   "long",
+   "tassel"
+  ],
+  "style": "traditional",
+  "is_featured": true,
+  "is_new": false,
+  "collections": [
+   "bridal-grandeur",
+   "heritage-revival"
+  ],
+  "short_description": "A long chain with blue stone stations ending in a fringed tassel pendant.",
+  "photos": [
+   "long-tassel-pendant-necklace.jpg"
+  ],
+  "variants": [
+   {
+    "sku_suffix": "GO",
+    "metal_type": "gold",
+    "stone_type": "sapphire",
+    "purity": "22K",
+    "is_default": true
+   }
+  ],
+  "sizes": [
+   {
+    "label": "24\"",
+    "measurement_mm": 610,
+    "is_default": true
+   },
+   {
+    "label": "28\"",
+    "measurement_mm": 711,
+    "price_delta": 12000
+   }
+  ],
+  "stone_weight_ct": 6.0
+ },
+ {
+  "sku": "JN-AK-2119",
+  "name": "Beaded Strap Anklet",
+  "category": "anklets",
+  "jewellery_type": "anklet",
+  "metal_type": "gold",
+  "purity": "22K",
+  "stone_type": "none",
+  "base_price": 36000,
+  "gross_weight_g": 12.0,
+  "net_weight_g": 10.0,
+  "making_charges": 4000,
+  "stock_quantity": 4,
+  "gender": "women",
+  "occasions": [
+   "festive",
+   "wedding"
+  ],
+  "tags": [
+   "anklet",
+   "beads",
+   "strap"
+  ],
+  "style": "traditional",
+  "is_featured": false,
+  "is_new": false,
+  "collections": [
+   "bridal-grandeur",
+   "heritage-revival"
+  ],
+  "short_description": "Rows of gold and turquoise beads on a flexible strap.",
+  "photos": [
+   "beaded-strap-anklet.jpg"
+  ],
+  "variants": [
+   {
+    "sku_suffix": "GO",
+    "metal_type": "gold",
+    "stone_type": "none",
+    "purity": "22K",
+    "is_default": true
+   }
+  ],
+  "sizes": [
+   {
+    "label": "9\"",
+    "measurement_mm": 229
+   },
+   {
+    "label": "10\"",
+    "measurement_mm": 254,
+    "is_default": true
+   }
+  ]
+ },
+ {
+  "sku": "JN-MT-2121",
+  "name": "Gold Band Maang Tikka",
+  "category": "maang-tikka",
+  "jewellery_type": "maang_tikka",
+  "metal_type": "gold",
+  "purity": "22K",
+  "stone_type": "none",
+  "base_price": 54000,
+  "gross_weight_g": 8.0,
+  "net_weight_g": 8.0,
+  "making_charges": 5500,
+  "stock_quantity": 2,
+  "gender": "women",
+  "occasions": [
+   "wedding"
+  ],
+  "tags": [
+   "tikka",
+   "band",
+   "diadem"
+  ],
+  "style": "traditional",
+  "is_featured": false,
+  "is_new": false,
+  "collections": [
+   "bridal-grandeur",
+   "heritage-revival"
+  ],
+  "short_description": "A slim embossed gold band worn along the parting.",
+  "photos": [
+   "gold-band-diadem.jpg"
+  ],
+  "variants": [
+   {
+    "sku_suffix": "GO",
+    "metal_type": "gold",
+    "stone_type": "none",
+    "purity": "22K",
+    "is_default": true
+   }
+  ]
+ },
+ {
+  "sku": "JN-WC-2122",
+  "name": "Coin Medallion Waist Chain",
+  "category": "waist-chains",
+  "jewellery_type": "waist_chain",
+  "metal_type": "gold",
+  "purity": "22K",
+  "stone_type": "none",
+  "base_price": 385000,
+  "gross_weight_g": 78.0,
+  "net_weight_g": 78.0,
+  "making_charges": 36000,
+  "stock_quantity": 1,
+  "gender": "women",
+  "occasions": [
+   "wedding"
+  ],
+  "tags": [
+   "vaddanam",
+   "coin",
+   "medallion"
+  ],
+  "style": "traditional",
+  "is_featured": true,
+  "is_new": false,
+  "collections": [
+   "bridal-grandeur",
+   "heritage-revival"
+  ],
+  "short_description": "A waist chain of stamped coins and medallions on a woven band.",
+  "photos": [
+   "coin-medallion-girdle.jpg"
+  ],
+  "variants": [
+   {
+    "sku_suffix": "GO",
+    "metal_type": "gold",
+    "stone_type": "none",
+    "purity": "22K",
+    "is_default": true
+   }
+  ],
+  "sizes": [
+   {
+    "label": "30\"",
+    "measurement_mm": 762,
+    "is_default": true
+   },
+   {
+    "label": "34\"",
+    "measurement_mm": 864,
+    "price_delta": 30000
+   }
+  ]
+ },
+ {
+  "sku": "JN-WC-2123",
+  "name": "Lapis and Gold Bead Waist Chain",
+  "category": "waist-chains",
+  "jewellery_type": "waist_chain",
+  "metal_type": "gold",
+  "purity": "22K",
+  "stone_type": "sapphire",
+  "base_price": 212000,
+  "gross_weight_g": 40.0,
+  "net_weight_g": 36.0,
+  "making_charges": 20000,
+  "stock_quantity": 1,
+  "gender": "women",
+  "occasions": [
+   "wedding",
+   "festive"
+  ],
+  "tags": [
+   "waist",
+   "lapis",
+   "beads"
+  ],
+  "style": "traditional",
+  "is_featured": false,
+  "is_new": false,
+  "collections": [
+   "bridal-grandeur",
+   "heritage-revival"
+  ],
+  "short_description": "Alternating lapis and gold wallet-shaped beads on a long strand.",
+  "photos": [
+   "lapis-gold-bead-girdle.jpg"
+  ],
+  "variants": [
+   {
+    "sku_suffix": "GO",
+    "metal_type": "gold",
+    "stone_type": "sapphire",
+    "purity": "22K",
+    "is_default": true
+   }
+  ],
+  "sizes": [
+   {
+    "label": "30\"",
+    "measurement_mm": 762,
+    "is_default": true
+   },
+   {
+    "label": "34\"",
+    "measurement_mm": 864,
+    "price_delta": 30000
+   }
+  ],
+  "stone_weight_ct": 20.0
+ },
+ {
+  "sku": "JN-MT-2127",
+  "name": "Gold Pendant Tikka",
+  "category": "maang-tikka",
+  "jewellery_type": "maang_tikka",
+  "metal_type": "gold",
+  "purity": "22K",
+  "stone_type": "none",
+  "base_price": 62000,
+  "gross_weight_g": 9.0,
+  "net_weight_g": 9.0,
+  "making_charges": 6000,
+  "stock_quantity": 2,
+  "gender": "women",
+  "occasions": [
+   "wedding",
+   "reception"
+  ],
+  "tags": [
+   "tikka",
+   "pendant",
+   "drops"
+  ],
+  "style": "traditional",
+  "is_featured": true,
+  "is_new": false,
+  "collections": [
+   "bridal-grandeur",
+   "heritage-revival"
+  ],
+  "short_description": "A delicate gold chain head ornament with hanging drops.",
+  "photos": [
+   "gold-pendant-tikka.jpg"
+  ],
+  "variants": [
+   {
+    "sku_suffix": "GO",
+    "metal_type": "gold",
+    "stone_type": "none",
+    "purity": "22K",
+    "is_default": true
+   }
+  ]
+ }
+]

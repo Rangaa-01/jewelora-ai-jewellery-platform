@@ -223,12 +223,16 @@ async def admin_upload_tryon_asset(
     file: UploadFile = File(...),
     meta: str | None = Form(default=None),
     auto_cutout: bool = Form(default=False),
+    single_piece: bool | None = Form(default=None),
+    punch_holes: bool | None = Form(default=None),
 ) -> TryOnAssetOut:
     """Upload a try-on cut-out.
 
     With ``auto_cutout=true`` an ordinary product photo is accepted: the background is
     removed automatically and anchors are estimated from the jewellery's outline (any
-    anchors supplied in ``meta`` override the estimates).
+    anchors supplied in ``meta`` override the estimates). ``single_piece`` keeps only the
+    largest piece (pairs, loose stones); ``punch_holes`` re-opens the inside of rings and
+    loops that the matting filled with backdrop (automatic on dark backdrops).
     """
     service = CatalogueService(db)
     product = await service.get_product(product_id)
@@ -236,9 +240,12 @@ async def admin_upload_tryon_asset(
     data = await _read_upload(file, settings.product_asset_max_bytes)
     meta_dict = parsed.model_dump()
     if auto_cutout:
-        from app.services.cutout_service import make_tryon_asset
+        from app.services.cutout_service import CutoutOptions, make_tryon_asset
 
-        cut = await asyncio.to_thread(make_tryon_asset, data, product.jewellery_type, settings)
+        options = CutoutOptions(single_piece=single_piece, punch_holes=punch_holes)
+        cut = await asyncio.to_thread(
+            make_tryon_asset, data, product.jewellery_type, settings, options=options
+        )
         data = cut.png
         meta_dict["anchors"] = {**cut.anchors, **(parsed.anchors or {})}
         meta_dict["real_width_mm"] = parsed.real_width_mm or Decimal(str(cut.real_width_mm))
