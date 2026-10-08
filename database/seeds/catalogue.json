@@ -1094,7 +1094,8 @@
      "measurement_mm": 457,
      "price_delta": 6000
     }
-   ]
+   ],
+   "tryon": false
   },
   {
    "sku": "JM-NK-2317",
@@ -1191,7 +1192,7 @@
      "file": "aquamarine-sapphire-bridal-set.jpg",
      "crop": [
       0,
-      0.28,
+      0.37,
       1,
       1
      ]
@@ -1218,7 +1219,8 @@
      "measurement_mm": 457,
      "price_delta": 6000
     }
-   ]
+   ],
+   "tryon": false
   },
   {
    "sku": "JM-CK-2319",

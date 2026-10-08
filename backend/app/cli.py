@@ -222,11 +222,11 @@ async def _seed_products(
         payload = {
             k: v
             for k, v in data.items()
-            if k not in {"category", "collections", "render", "with_3d", "set_items"}
+            if k not in {"category", "collections", "render", "with_3d", "set_items", "tryon"}
         }
         payload["category_id"] = categories[data["category"]].id
         payload["collection_ids"] = [collections[s].id for s in data.get("collections", [])]
-        payload["tryon_enabled"] = data["jewellery_type"] != "set"
+        payload["tryon_enabled"] = data["jewellery_type"] != "set" and data.get("tryon", True)
         product = await service.create_product(ProductIn.model_validate(payload))
         created[data["sku"]] = product
         if set_items:
@@ -236,7 +236,13 @@ async def _seed_products(
 
         if data.get("photos"):
             await _seed_real_photos(
-                service, storage, settings, product, data["photos"], data["jewellery_type"]
+                service,
+                storage,
+                settings,
+                product,
+                data["photos"],
+                data["jewellery_type"],
+                tryon=data.get("tryon", True),
             )
             log.info("seed_product_created", sku=product.sku, name=product.name, source="photo")
             continue
@@ -339,6 +345,7 @@ async def _seed_real_photos(
     product: Product,
     photos: list[str],
     jewellery_type: str,
+    tryon: bool = True,
 ) -> None:
     """Real product photographs: upload as images and derive the try-on cut-out automatically.
     A photo entry is a file name or a dict with ``file`` plus cut-out options (``crop``,
@@ -362,7 +369,7 @@ async def _seed_real_photos(
             sort=index,
             crop=options.crop,
         )
-        if index == 0 and jewellery_type != "set":
+        if index == 0 and jewellery_type != "set" and tryon:
             cut = await asyncio.to_thread(
                 make_tryon_asset, path.read_bytes(), jewellery_type, settings, options=options
             )

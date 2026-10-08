@@ -334,7 +334,7 @@ export function TryOnAssetsPanel({ product }: { product: ProductDetail }) {
                     onChange={(e) => setSinglePiece(e.target.checked)}
                   />
                   <Checkbox
-                    label="Re-open holes filled with backdrop (inside rings, loops of chain)"
+                    label="Re-open holes filled with backdrop (inside rings, loops of chain). Not for dark stones on a dark backdrop."
                     checked={punchHoles}
                     onChange={(e) => setPunchHoles(e.target.checked)}
                   />

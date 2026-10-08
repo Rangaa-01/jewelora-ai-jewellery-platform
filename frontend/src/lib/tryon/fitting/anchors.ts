@@ -185,12 +185,12 @@ export function neckAnchors(lm: Landmarks): BodyAnchors {
     const shoulderW = distance(lSh, rSh);
     roll = angleDeg(rSh, lSh);
     neckBase = lerp(chin, shoulderMid, 0.66);
-    halfW = shoulderW * 0.23;
+    halfW = shoulderW * 0.27; // where a necklace rests: just outside the neck base
     pxPerMm = (pxPerMm + shoulderW / AVG_SHOULDER_WIDTH_MM) / 2;
     confidence = 0.9;
   } else {
     neckBase = point(chin.x, chin.y + faceW * 0.55);
-    halfW = faceW * 0.5;
+    halfW = faceW * 0.62;
     confidence = 0.55;
   }
   const rad = (roll * Math.PI) / 180;

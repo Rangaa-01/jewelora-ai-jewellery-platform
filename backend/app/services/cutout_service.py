@@ -53,7 +53,8 @@ class CutoutOptions:
     # Keep only the largest piece (None = default per jewellery type).
     single_piece: bool | None = None
     # Re-open holes the matting filled with background (inside a ring or a loop of chain).
-    # None = automatic: on when the photo background is near black.
+    # None = on dark backdrops, only the large opening inside a loop (safe for dark stones);
+    # True = every backdrop-coloured region; False = never.
     punch_holes: bool | None = None
 
     @classmethod
@@ -163,11 +164,19 @@ def _border_colour(rgb: np.ndarray) -> np.ndarray:
 
 
 def _punch_background_holes(
-    rgba: np.ndarray, mask: np.ndarray, tolerance: float = 0.12
+    rgba: np.ndarray,
+    mask: np.ndarray,
+    tolerance: float = 0.12,
+    *,
+    min_hole_fraction: float = 0.0,
 ) -> np.ndarray:
     """Matting fills enclosed holes (the inside of a ring, the loop of a necklace) with
     backdrop. Pixels inside the mask that share the backdrop's colour are released again,
-    then dust is removed. Only call this when the backdrop is unlike the jewellery."""
+    then dust is removed.
+
+    ``min_hole_fraction`` > 0 releases only backdrop regions at least that fraction of the
+    piece's area: the big opening inside a necklace or ring, never a dark stone, which is
+    always small. Thin bridges between a stone and the opening are cut before measuring."""
     rgb = rgba[..., :3].astype(np.float32)
     bg = _border_colour(rgb)
     luma = rgb.mean(axis=2)
@@ -185,6 +194,20 @@ def _punch_background_holes(
     near_u8 = np.asarray(near, dtype=np.uint8)
     close_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
     near_u8 = np.asarray(cv2.morphologyEx(near_u8, cv2.MORPH_CLOSE, close_kernel), dtype=np.uint8)
+    if min_hole_fraction > 0:
+        candidate = (mask.astype(np.uint8) & near_u8).astype(np.uint8)
+        bridge = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+        cores = np.asarray(cv2.erode(candidate, bridge), dtype=np.uint8)
+        count, labels, stats, _ = cv2.connectedComponentsWithStats(cores, connectivity=4)
+        area = float(mask.sum()) or 1.0
+        big = [i for i in range(1, count) if stats[i, cv2.CC_STAT_AREA] >= min_hole_fraction * area]
+        if not big:
+            return mask.astype(np.uint8)
+        grown = np.asarray(
+            cv2.dilate(np.isin(labels, big).astype(np.uint8), bridge, iterations=2),
+            dtype=np.uint8,
+        )
+        near_u8 = (grown & candidate).astype(np.uint8)
     kept = (mask.astype(np.uint8) & (1 - near_u8)).astype(np.uint8)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     kept = np.asarray(cv2.morphologyEx(kept, cv2.MORPH_OPEN, kernel), dtype=np.uint8)
@@ -195,11 +218,6 @@ def _punch_background_holes(
     if small:
         kept[np.isin(labels, small)] = 1
     return kept
-
-
-def _is_dark_backdrop(rgba: np.ndarray) -> bool:
-    bg = _border_colour(rgba[..., :3].astype(np.float32))
-    return float(bg.mean()) < 40.0
 
 
 def _largest_components(alpha: np.ndarray, keep: int) -> np.ndarray:
@@ -240,10 +258,13 @@ def _edge_points(mask: np.ndarray) -> dict[str, tuple[float, float]]:
     top_y = int(ys.min())
     top_xs = xs[ys <= top_y + max(2, h // 40)]
     left_col, right_col = int(xs.min()), int(xs.max())
-    left_top = int(np.where(mask[:, left_col : left_col + max(1, w // 50)].any(axis=1))[0].min())
-    right_top = int(
-        np.where(mask[:, max(0, right_col - w // 50) : right_col + 1].any(axis=1))[0].min()
-    )
+    band = max(1, w // 50)
+    left_rows = np.where(mask[:, left_col : left_col + band].any(axis=1))[0]
+    right_rows = np.where(mask[:, max(0, right_col - band) : right_col + 1].any(axis=1))[0]
+    left_top, right_top = int(left_rows.min()), int(right_rows.min())
+    # Middle of each side's outermost run of rows: for a necklace laid in a closed loop this is
+    # the widest point on both sides (level), for an open U it is near the clasp ends.
+    left_mid, right_mid = int(np.median(left_rows)), int(np.median(right_rows))
     mid_row = int((ys.min() + ys.max()) / 2)
     row_xs = np.where(mask[mid_row])[0]
     return {
@@ -251,6 +272,8 @@ def _edge_points(mask: np.ndarray) -> dict[str, tuple[float, float]]:
         "bottom": (float(xs[ys == ys.max()].mean()), float(ys.max())),
         "left_top": (float(left_col), float(left_top)),
         "right_top": (float(right_col), float(right_top)),
+        "left_side": (float(left_col), float(left_mid)),
+        "right_side": (float(right_col), float(right_mid)),
         "mid_left": (float(row_xs.min()) if len(row_xs) else float(left_col), float(mid_row)),
         "mid_right": (float(row_xs.max()) if len(row_xs) else float(right_col), float(mid_row)),
         "center": (float(xs.mean()), float(ys.mean())),
@@ -274,8 +297,8 @@ def estimate_anchors(mask: np.ndarray, jewellery_type: str) -> dict[str, list[fl
         "anklet",
     }:
         return {
-            "left_end": n(p["left_top"]),
-            "right_end": n(p["right_top"]),
+            "left_end": n(p["left_side"]),
+            "right_end": n(p["right_side"]),
             "bottom": n(p["bottom"]),
         }
     if jewellery_type == "earrings":
@@ -325,8 +348,13 @@ def make_tryon_asset(
         else jewellery_type in {"earrings", "bangle", "bracelet", "ring", "nose_ring"}
     )
     mask = (rgba[..., 3] > 16).astype(np.uint8)
-    punch = options.punch_holes if options.punch_holes is not None else _is_dark_backdrop(rgba)
-    if punch:
+    # Default: release only the large opening inside a loop or ring. Dark stones on a dark
+    # backdrop look exactly like it, so a full punch is opt-in (punch_holes=True).
+    if options.punch_holes is None:
+        # Only on dark backdrops: on white/cream ones pearls and diamonds share the colour.
+        if float(_border_colour(rgba[..., :3].astype(np.float32)).mean()) < 40.0:
+            mask = _punch_background_holes(rgba, mask, min_hole_fraction=0.08)
+    elif options.punch_holes:
         mask = _punch_background_holes(rgba, mask)
     mask = _largest_components(mask * 255, keep=1 if keep_single else 6)
     cropped, cropped_mask = _trim(rgba, mask)

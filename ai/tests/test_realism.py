@@ -81,3 +81,17 @@ def test_photo_tips_flag_cropped_neckline_and_dark_photo() -> None:
     assert "neckline_cropped" in codes
     half = lm.scaled_to(lm.image_width // 2, lm.image_height // 2)
     assert half.face is not None and abs(half.face[1].x * 2 - lm.face[1].x) < 1e-6  # type: ignore[index]
+
+
+def test_black_and_white_photos_get_muted_jewellery() -> None:
+    grey = np.full((120, 120, 3), 140, dtype=np.uint8)
+    light = realism.analyse_scene(grey, None)
+    assert light.colourfulness == 0.0
+    colour = np.zeros((10, 10, 3), dtype=np.float32)
+    colour[...] = (0.8, 0.2, 0.6)  # an amethyst
+    alpha = np.ones((10, 10), dtype=np.float32)
+    out = realism.relight(colour, alpha, light, (0, 0, 10, 10))
+    spread = float(out[5, 5].max() - out[5, 5].min())
+    assert 0.05 < spread < 0.3, "a hint of colour stays, most of it is muted"
+    vivid, masks = _skin_photo((220, 150, 90))
+    assert realism.analyse_scene(vivid, masks).colourfulness > 0.9

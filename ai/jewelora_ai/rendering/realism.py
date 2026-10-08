@@ -38,6 +38,7 @@ class SceneLight:
     strength: float  # 0 (flat light) .. 1 (hard directional light)
     noise_sigma: float  # sensor noise, in 0..1 units
     softness: float  # 0 (hard shadows) .. 1 (very soft light)
+    colourfulness: float = 1.0  # 0 (black-and-white photo or sketch) .. 1 (normal colour)
 
 
 def _luma(rgb: np.ndarray) -> np.ndarray:
@@ -128,6 +129,9 @@ def analyse_scene(image_rgb: np.ndarray, masks: SegmentationMasks | None) -> Sce
                 direction = (gx / np.hypot(gx, gy), gy / np.hypot(gx, gy))
             strength = float(np.clip(magnitude / 0.35, 0.0, 1.0))
     softness = float(np.clip(1.0 - strength, 0.15, 1.0))
+    # Average channel spread: ~0.02 for a B&W photo or pencil sketch, 0.1+ for colour.
+    spread = float((rgb.max(axis=2) - rgb.min(axis=2)).mean())
+    colourfulness = float(np.clip((spread - 0.02) / 0.06, 0.0, 1.0))
     return SceneLight(
         gain=gain,
         exposure=exposure,
@@ -135,6 +139,7 @@ def analyse_scene(image_rgb: np.ndarray, masks: SegmentationMasks | None) -> Sce
         strength=strength,
         noise_sigma=estimate_noise_sigma(image_rgb),
         softness=softness,
+        colourfulness=colourfulness,
     )
 
 
@@ -165,6 +170,12 @@ def relight(
     piece. Highlights (near-white specular glints) keep their brightness so metal still
     sparkles; only their tint follows the scene."""
     out = colour * light.gain[None, None, :]
+    if light.colourfulness < 1.0:
+        # In a black-and-white photo or a sketch, full-colour metal and stones look pasted
+        # on. Keep a hint of colour (so stones stay recognisable) and match the rest.
+        grey = _luma(out)[..., None]
+        keep = 0.25 + 0.75 * light.colourfulness
+        out = grey + (out - grey) * keep
     # Exposure: pull mid-tones towards the subject's exposure, never crush highlights.
     # Darker photos darken the piece; brighter ones never wash it out beyond the studio shot.
     target = float(np.clip(light.exposure / 0.55, 0.72, 1.0))

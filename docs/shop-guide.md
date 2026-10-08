@@ -16,6 +16,8 @@ For the best try-on and catalogue results, per piece:
 - Know the **real width in millimetres** (e.g. a bangle's outer diameter, a necklace's width
   at the top ends). It makes the piece the right size on the customer.
 
+**Backdrop for try-on photos.** Use a light grey or white backdrop for the try-on photo. On black velvet, dark stones (sapphire, amethyst, garnet) and the velvet are the same colour, so the cut-out either keeps velvet patches or loses stones. The quality score flags this as "Backdrop inside the piece". Dark backgrounds are still fine for catalogue photos.
+
 Camera guidance for try-on cut-outs: shoot straight on, centred, with the whole piece in
 frame. Rings: from above with the stone facing the camera. Earrings: one earring hanging
 freely. Necklaces, harams, chokers: laid flat in their natural curve.
@@ -46,7 +48,7 @@ Save, then open the **Assets** tab.
    product photo**. The system removes the background and estimates the anchor points.
    Two options help with tricky photos: **Keep only the largest piece** (a pair of earrings,
    a loose stone beside a ring) and **Re-open holes filled with backdrop** (the inside of a
-   ring or the loop of a chain photographed on fabric; on black backdrops this is automatic).
+   ring or the loop of a chain photographed on fabric). Leave it off when dark stones sit on a dark backdrop: they would be cut out with it.
    Check the anchors in the preview (click to move them), enter the real width in mm, and
    upload. If you already have a transparent PNG from your photographer, upload it directly
    and place the anchors yourself.

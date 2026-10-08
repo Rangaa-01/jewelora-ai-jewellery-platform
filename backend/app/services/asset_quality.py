@@ -73,6 +73,10 @@ def _metrics(data: bytes) -> dict[str, float]:
     values = small[inside] if inside.sum() > 100 else small.ravel()
     # Only blown highlights count: deep black backdrops are a deliberate luxury style.
     clipped = float((values > 250).mean())
+    opaque = alpha > 200
+    rgb = rgba[..., :3].astype(np.int16)
+    dark_flat = (rgb.max(axis=2) < 40) & ((rgb.max(axis=2) - rgb.min(axis=2)) < 12)
+    backdrop_inside = float(dark_flat[opaque].mean()) if has_alpha and opaque.sum() > 100 else 0.0
     border = np.concatenate(
         [small[:8].ravel(), small[-8:].ravel(), small[:, :8].ravel(), small[:, -8:].ravel()]
     )
@@ -85,6 +89,7 @@ def _metrics(data: bytes) -> dict[str, float]:
         "exposure": float(values.mean()) / 255.0,
         "clipped": clipped,
         "background_spread": float(border.std()) / 255.0,
+        "backdrop_inside": backdrop_inside,
     }
 
 
@@ -230,6 +235,19 @@ async def assess_product(product: Product, storage: ObjectStorage) -> QualityRep
                 1.5,
             )
         )
+        inside = m["backdrop_inside"]
+        checks.append(
+            QualityCheck(
+                "backdrop_inside",
+                "Backdrop inside the piece",
+                "pass" if inside < 0.08 else "warn" if inside < 0.15 else "fail",
+                "No backdrop showing through."
+                if inside < 0.08
+                else f"About {round(inside * 100)}% of the cut-out is dark backdrop (velvet "
+                "between links or under stones). Reshoot on a light grey or white background.",
+                2,
+            )
+        )
         coverage_ok = 0.05 <= m["coverage"] <= 0.85
         checks.append(
             QualityCheck(
@@ -243,7 +261,7 @@ async def assess_product(product: Product, storage: ObjectStorage) -> QualityRep
                 1,
             )
         )
-        tryon_ready = transparent and not missing
+        tryon_ready = transparent and not missing and inside < 0.15
     checks.append(
         QualityCheck(
             "model3d",

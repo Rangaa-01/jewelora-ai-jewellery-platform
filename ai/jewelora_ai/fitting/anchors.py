@@ -178,15 +178,16 @@ def neck_anchors(lm: Landmarks, jewellery_type: JewelleryType) -> BodyAnchors:
         shoulder_mid = midpoint(l_sh, r_sh)
         shoulder_w = l_sh.distance_to(r_sh)
         roll = _angle_deg(r_sh, l_sh)
-        # Neck base lies between chin and the shoulder line; width ≈ 42% of shoulder width.
+        # Neck base lies between chin and the shoulder line; necklaces rest ~54% of shoulder
+        # width apart.
         neck_base = lerp(chin, shoulder_mid, 0.66)
-        half_w = shoulder_w * 0.23
+        half_w = shoulder_w * 0.27  # where a necklace rests: just outside the neck base
         px_per_mm = (px_per_mm + shoulder_w / AVG_SHOULDER_WIDTH_MM) / 2
         confidence = 0.9
     else:
         # Fall back to face proportions when shoulders are not visible.
         neck_base = Point(chin.x, chin.y + face_w * 0.55)
-        half_w = face_w * 0.5
+        half_w = face_w * 0.62
         confidence = 0.55
     rad = math.radians(roll)
     along = Point(math.cos(rad), math.sin(rad))

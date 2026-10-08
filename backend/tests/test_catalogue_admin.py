@@ -95,3 +95,38 @@ async def test_quality_score_rewards_good_assets_and_names_fixes(
     assert good["tryon_ready"] is True and good["score"] >= 80, good
     assert status["resolution"] == "pass" and status["transparency"] == "pass"
     assert status["anchors"] == "pass" and status["model3d"] == "warn"
+
+
+async def test_quality_flags_backdrop_showing_through_a_cutout(
+    client: AsyncClient, db: AsyncSession
+) -> None:
+    category = await make_category(db, "Necklaces", "necklace")
+    product = await make_product(db, category, name="Velvet Necklace", tryon_enabled=True)
+    product_id = product.id
+    cut = np.zeros((600, 600, 4), dtype=np.uint8)
+    cut[100:500, 100:500] = (10, 10, 12, 255)  # opaque velvet left inside the loop
+    cut[100:140, 100:500] = (212, 175, 55, 255)
+    buf = io.BytesIO()
+    Image.fromarray(cut).save(buf, format="PNG")
+    key = product_tryon_asset_key(str(product_id), "png")
+    await get_storage().put(key, buf.getvalue(), "image/png")
+    db.add(
+        ProductTryOnAsset(
+            product_id=product_id,
+            storage_key=key,
+            view="front",
+            width=600,
+            height=600,
+            anchors={"left_end": [0.1, 0.2], "right_end": [0.9, 0.2]},
+            real_width_mm=Decimal("150"),
+            created_at=datetime.now(UTC),
+        )
+    )
+    await db.flush()
+    db.expire_all()
+    email, password = await make_staff(db, Role.MANAGER)
+    await login(client, email, password)
+    report = (await client.get(f"/api/v1/admin/products/{product_id}/quality")).json()
+    check = next(c for c in report["checks"] if c["key"] == "backdrop_inside")
+    assert check["status"] == "fail" and "Reshoot" in check["detail"]
+    assert report["tryon_ready"] is False

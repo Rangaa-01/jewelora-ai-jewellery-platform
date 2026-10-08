@@ -31,7 +31,7 @@ test.describe("photo try-on", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
       /See it on you/,
     );
-    await pickProduct(page, "Garnet & Diamond Festoon Necklace");
+    await pickProduct(page, "Pearl Lattice Choker");
 
     await page
       .getByLabel(/Upload your photo/)
@@ -70,7 +70,7 @@ test.describe("photo try-on", () => {
     page,
   }) => {
     await page.goto("/try-on");
-    await pickProduct(page, "Garnet & Diamond Festoon Necklace");
+    await pickProduct(page, "Pearl Lattice Choker");
     await page
       .getByLabel(/Upload your photo/)
       .setInputFiles(resolve(FIXTURES, "hand_single.jpg"));

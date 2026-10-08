@@ -21,10 +21,12 @@ interface ProductPickerProps {
 export function ProductPicker({ selected, onToggle, types, single = false }: ProductPickerProps) {
   const [q, setQ] = useState("");
   const [type, setType] = useState<JewelleryType | undefined>(types?.[0]);
+  const searching = q.trim().length > 0;
   const query = useProducts({
-    q: q || undefined,
+    q: searching ? q.trim() : undefined,
     tryon_only: true,
-    jewellery_type: type ? [type] : types,
+    // A search looks across every type in this studio; the chips only narrow browsing.
+    jewellery_type: type && !searching ? [type] : types,
     page_size: 24,
   });
   const list = query.data?.items ?? [];
@@ -52,11 +54,13 @@ export function ProductPicker({ selected, onToggle, types, single = false }: Pro
             <button
               key={t}
               type="button"
-              aria-pressed={type === t}
+              aria-pressed={type === t && !searching}
               onClick={() => setType(type === t ? undefined : t)}
               className={cn(
                 "inline-flex min-h-9 items-center rounded-full border px-3 text-xs",
-                type === t ? "border-gold-deep bg-gold/15" : "border-border hover:border-fg",
+                type === t && !searching
+                  ? "border-gold-deep bg-gold/15"
+                  : "border-border hover:border-fg",
               )}
             >
               {JEWELLERY_TYPE_LABELS[t]}

@@ -90,8 +90,14 @@ def target_arc(
     along = Point(math.cos(rad), math.sin(rad))
     down = Point(-along.y, along.x)
     s_left, s_bottom, s_right = _source_arc(asset)
-    chord_px = body_left.distance_to(body_right)
+    body_chord = body_left.distance_to(body_right)
     src_chord = s_left.distance_to(s_right) or 1.0
+    chord_px = body_chord
+    if asset.real_width_mm and anchors.px_per_mm > 0:
+        # The piece's real width at this person's scale. A necklace rests on the
+        # collarbones, so it may sit wider than the neck base but never narrower.
+        physical = src_chord * asset.real_width_mm * anchors.px_per_mm / asset.width
+        chord_px = min(max(0.5 * body_chord + 0.5 * physical, body_chord), 1.5 * body_chord)
     src_depth = s_bottom.y - (s_left.y + s_right.y) / 2
     scale = chord_px / src_chord
     drop_px = max(src_depth, src_chord * 0.12) * scale

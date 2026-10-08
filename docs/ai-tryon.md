@@ -66,6 +66,7 @@ Only jewellery pixels and the soft shadow they cast change; the face, skin and h
 | Sensor noise | Immerkær's estimator on the whole photo | matching luma and chroma grain (deterministic seed) |
 | Studio fringe | semi-transparent edge pixels | replaced by nearby solid colour (no white or black halo) |
 | Contact | segmentation (skin, clothes, hair) | shadow plus faint ambient occlusion only on the body, never on the background |
+| Black-and-white photo or sketch | average channel spread | colour muted to match, a hint kept so stones stay recognisable |
 | Necklace ends | asset anchors | the top ends fade so the chain wraps around the neck |
 | Earrings on a turned head | face yaw | horizontal foreshortening (`BodyAnchors.squash_x`, also in the TS port) |
 

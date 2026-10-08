@@ -93,8 +93,14 @@ export function targetArc(
   const along = point(Math.cos(rad), Math.sin(rad));
   const down = point(-along.y, along.x);
   const [sLeft, sBottom, sRight] = sourceArc(asset);
-  const chordPx = distance(bodyLeft, bodyRight);
+  const bodyChord = distance(bodyLeft, bodyRight);
   const srcChord = distance(sLeft, sRight) || 1;
+  let chordPx = bodyChord;
+  if (asset.real_width_mm && anchors.px_per_mm > 0) {
+    // Real width at this person's scale; may sit wider than the neck base, never narrower.
+    const physical = (srcChord * asset.real_width_mm * anchors.px_per_mm) / asset.width;
+    chordPx = Math.min(Math.max(0.5 * bodyChord + 0.5 * physical, bodyChord), 1.5 * bodyChord);
+  }
   const srcDepth = sBottom.y - (sLeft.y + sRight.y) / 2;
   const scale = chordPx / srcChord;
   let dropPx = Math.max(srcDepth, srcChord * 0.12) * scale;

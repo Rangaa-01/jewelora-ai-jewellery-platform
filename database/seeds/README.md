@@ -8,7 +8,7 @@ pieces). Products reference real, freely licensed photographs in `photos/` (see
 automatically. A photo entry is a file name, or an object with `file` and cut-out options:
 `crop` (fractions `[x0, y0, x1, y1]`, also applied to the catalogue photo), `rotate`
 (90/180/270), `single_piece` (keep only the largest piece) and `punch_holes` (re-open the
-inside of rings and loops the matting filled with backdrop; automatic on dark backdrops).
+inside of rings and loops the matting filled with backdrop; off unless set).
 Products without `photos` fall back to procedurally drawn assets from `scripts/dev_assets`
 (cached in `.generated/`, gitignored). `make seed` is idempotent;
 `python -m app.cli seed --prune` also removes products missing from the file.
