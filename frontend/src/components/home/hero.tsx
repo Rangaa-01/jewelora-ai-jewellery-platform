@@ -1,71 +1,51 @@
 "use client";
 
 import { Camera, ChevronDown, Sparkles } from "lucide-react";
-import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
-import { MagneticButton, Reveal, Sparkle, useReducedMotion } from "@/components/motion";
+import Image from "next/image";
+import Link from "next/link";
+import { MagneticButton, Reveal, Sparkle } from "@/components/motion";
 import { ButtonLink } from "@/components/ui/button";
+import { useProducts } from "@/lib/api/hooks";
 
-const HeroScene = dynamic(() => import("./hero-scene"), { ssr: false, loading: () => null });
-
-function supportsWebGL(): boolean {
-  try {
-    const canvas = document.createElement("canvas");
-    return !!(canvas.getContext("webgl2") ?? canvas.getContext("webgl"));
-  } catch {
-    return false;
+/**
+ * A real piece from the catalogue (the first featured necklace with a photo, else any
+ * featured piece), shown as studio photography. No drawn or computer-generated jewellery.
+ */
+function HeroPiece() {
+  const query = useProducts({ featured: true, page_size: 24 });
+  const items = (query.data?.items ?? []).filter((p) => p.primary_image);
+  const piece =
+    items.find((p) => p.jewellery_type === "necklace") ??
+    items.find((p) => p.jewellery_type !== "set") ??
+    items[0];
+  if (!piece?.primary_image) {
+    return (
+      <div className="bg-bg-muted size-full animate-pulse rounded-lg motion-reduce:animate-none" />
+    );
   }
-}
-
-function StaticRing() {
   return (
-    <svg viewBox="0 0 400 400" className="size-full" aria-hidden>
-      <defs>
-        <linearGradient id="gold" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0" stopColor="#8a6a2b" />
-          <stop offset="0.5" stopColor="#e4c77f" />
-          <stop offset="1" stopColor="#8a6a2b" />
-        </linearGradient>
-      </defs>
-      <ellipse
-        cx="200"
-        cy="230"
-        rx="120"
-        ry="135"
-        fill="none"
-        stroke="url(#gold)"
-        strokeWidth="26"
+    <Link
+      href={`/products/${piece.slug}`}
+      className="group relative block size-full overflow-hidden rounded-lg shadow-lg"
+      aria-label={`${piece.name}, view the piece`}
+    >
+      <Image
+        src={piece.primary_image.url}
+        alt={piece.primary_image.alt_text || piece.name}
+        fill
+        preload
+        sizes="(max-width: 1024px) 90vw, 40vw"
+        className="object-cover transition-transform duration-700 ease-[var(--ease-luxe)] group-hover:scale-[1.03] motion-reduce:transition-none"
       />
-      <polygon
-        points="200,45 240,85 200,135 160,85"
-        fill="#fff"
-        stroke="#c6a15b"
-        strokeWidth="3"
-        opacity=".95"
-      />
-      <path
-        d="M160 85h80M200 45 180 85l20 50 20-50-20-40"
-        fill="none"
-        stroke="#c6a15b"
-        strokeWidth="2"
-      />
-    </svg>
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-5 pt-16">
+        <p className="text-ivory/80 text-[0.7rem] tracking-[0.18em] uppercase">Featured piece</p>
+        <p className="font-display text-ivory text-2xl">{piece.name}</p>
+      </div>
+    </Link>
   );
 }
 
 export function Hero() {
-  const reduced = useReducedMotion();
-  const [webgl, setWebgl] = useState<boolean | null>(null);
-  useEffect(() => {
-    const id = window.requestIdleCallback
-      ? window.requestIdleCallback(() => setWebgl(supportsWebGL()))
-      : window.setTimeout(() => setWebgl(supportsWebGL()), 200);
-    return () =>
-      window.cancelIdleCallback
-        ? window.cancelIdleCallback(id as number)
-        : window.clearTimeout(id as number);
-  }, []);
-
   return (
     <section
       className="relative -mt-[var(--header-h)] flex min-h-[100svh] items-center overflow-hidden bg-[radial-gradient(120%_80%_at_70%_20%,var(--color-ivory-soft),var(--bg)_60%)] pt-[var(--header-h)]"
@@ -126,14 +106,8 @@ export function Hero() {
           </Reveal>
         </div>
 
-        <div className="relative mx-auto aspect-square w-full max-w-md lg:max-w-xl">
-          <div
-            aria-hidden
-            className="absolute inset-[12%] rounded-full bg-[radial-gradient(circle,rgba(228,199,127,0.35),transparent_65%)] blur-2xl"
-          />
-          <div className="relative size-full">
-            {webgl && !reduced ? <HeroScene reduced={reduced} /> : <StaticRing />}
-          </div>
+        <div className="relative mx-auto aspect-[4/5] w-full max-w-sm lg:max-w-md">
+          <HeroPiece />
         </div>
       </div>
       <a

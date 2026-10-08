@@ -156,3 +156,61 @@ async def test_hand_photo_with_necklace_fails_with_friendly_message(
     body = response.json()["error"]
     assert body["code"] == "no_face"
     assert "face" in body["message"] and "Traceback" not in body["message"]
+
+
+@requires_models
+async def test_quality_levels_premium_and_guarded_refinement(
+    client: AsyncClient, db: AsyncSession, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import numpy as np
+
+    product = await _necklace_with_asset(db)
+    EngineRuntime.reset()
+    caps = (await client.get("/api/v1/tryon/capabilities")).json()
+    assert caps["refinement"] is False and caps["quality_levels"] == ["fast", "standard", "premium"]
+    fast = await client.post(
+        "/api/v1/tryon/photo",
+        files={"photo": ("p.jpg", (FIXTURES / "portrait_front.jpg").read_bytes(), "image/jpeg")},
+        data={"items": json.dumps([{"product_id": str(product.id)}]), "quality": "fast"},
+    )
+    assert fast.status_code == 201, fast.text
+    body = fast.json()
+    assert body["quality"] == "fast" and body["refined"] is False
+    assert isinstance(body["photo_tips"], list)
+    assert body["engine_version"].endswith("2.0")
+
+    # Premium without a provider: full-quality deterministic render, honestly not "refined".
+    premium = await client.post(f"/api/v1/tryon/results/{body['id']}/premium")
+    assert premium.status_code == 201, premium.text
+    assert premium.json()["quality"] == "premium" and premium.json()["refined"] is False
+
+    # With a provider configured, its output only lands in the edge band around the piece.
+    calls: list[tuple[int, ...]] = []
+
+    class FakeProvider:
+        name = "fake"
+        available = True
+
+        def refine(self, original, draft, coverage):  # type: ignore[no-untyped-def]
+            calls.append(draft.shape)
+            return np.zeros_like(draft)
+
+    runtime = EngineRuntime.get(client._transport.app.state.settings)  # type: ignore[attr-defined]
+    monkeypatch.setattr(runtime, "_refinement", FakeProvider())
+    refined = await client.post(f"/api/v1/tryon/results/{body['id']}/premium")
+    assert refined.status_code == 201 and refined.json()["refined"] is True and calls
+    assert (await client.get(refined.json()["result_url"])).status_code == 200
+
+
+@requires_models
+async def test_failed_tryon_explains_with_photo_tips(client: AsyncClient, db: AsyncSession) -> None:
+    product = await _necklace_with_asset(db)
+    EngineRuntime.reset()
+    response = await client.post(
+        "/api/v1/tryon/photo",
+        files={"photo": ("h.jpg", (FIXTURES / "hand_single.jpg").read_bytes(), "image/jpeg")},
+        data={"items": json.dumps([{"product_id": str(product.id)}])},
+    )
+    assert response.status_code == 422
+    error = response.json()["error"]
+    assert error["code"] == "no_face" and "photo_tips" in error["details"]

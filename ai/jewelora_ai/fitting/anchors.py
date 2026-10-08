@@ -103,6 +103,7 @@ def earring_anchors(lm: Landmarks) -> list[BodyAnchors]:
                 confidence=max(0.3, min(1.0, vis)),
                 mirror=mirror,
                 occlusion={"hair": 0.55},
+                squash_x=max(0.6, math.sqrt(max(0.0, 1.0 - (0.8 * yaw) ** 2))),
             )
         )
     if not anchors:

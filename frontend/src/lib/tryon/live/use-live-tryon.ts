@@ -2,9 +2,19 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { JewelleryType, ProductDetail } from "@/lib/api/types";
-import { anchorsFor, detectorsNeeded } from "../fitting/anchors";
+import { anchorsFor, detectorsNeeded, faceScale } from "../fitting/anchors";
 import { fitAsset } from "../fitting/fitters";
 import { isStrand, strandPlacement } from "../fitting/strand";
+
+/** px per mm at the wearer (face-based); a typical value when the face is unusable. */
+function scaleOf(landmarks: Landmarks): number {
+  if (!landmarks.face) return 0.4;
+  try {
+    return faceScale(landmarks)[0];
+  } catch {
+    return 0.4;
+  }
+}
 
 /** A nudge made on the mirrored preview, expressed in raw-frame space. */
 function mirrorAdjustments(a: Adjustments): Adjustments {
@@ -19,11 +29,12 @@ function lengthMmFor(product: ProductDetail, sizeId: string | null): number | nu
     product.sizes.find((s) => s.measurement_mm);
   return size?.measurement_mm ? Number(size.measurement_mm) : null;
 }
-import { AnchorError, type Adjustments } from "../fitting/types";
+import { AnchorError, type Adjustments, type Landmarks } from "../fitting/types";
 import type { LookItem } from "../session";
 import { assetGeometry, loadDrawable, selectAsset, tintFor } from "./assets";
 import { LiveDetectors, liveSupport, type Delegate } from "./landmarkers";
 import { captureFrame, drawPlacements } from "./renderer";
+import { EarringSway, PlacementHold, SceneBrightness } from "./motion";
 import { LandmarkSmoother } from "./smoothing";
 import type { Facing, LiveItem, LivePlacement, LiveQuality, LiveStats } from "./types";
 
@@ -61,6 +72,11 @@ export function useLiveTryOn({ items, details, quality }: UseLiveTryOnArgs) {
   const streamRef = useRef<MediaStream | null>(null);
   const detectorsRef = useRef<LiveDetectors | null>(null);
   const smootherRef = useRef(new LandmarkSmoother());
+  const holdRef = useRef(new PlacementHold());
+  const swayRef = useRef(new EarringSway());
+  const brightnessRef = useRef(new SceneBrightness());
+  /** Smoothed per-frame processing time, used as the motion-prediction lead. */
+  const latencyRef = useRef(0);
   const liveItemsRef = useRef<LiveItem[]>([]);
   const placementsRef = useRef<LivePlacement[]>([]);
   const rafRef = useRef<number | null>(null);
@@ -134,6 +150,8 @@ export function useLiveTryOn({ items, details, quality }: UseLiveTryOnArgs) {
     detectorsRef.current?.close();
     detectorsRef.current = null;
     smootherRef.current.reset();
+    holdRef.current.reset();
+    swayRef.current.reset();
     placementsRef.current = [];
     if (videoRef.current) videoRef.current.srcObject = null;
     const ctx = canvasRef.current?.getContext("2d");
@@ -164,7 +182,8 @@ export function useLiveTryOn({ items, details, quality }: UseLiveTryOnArgs) {
       const mirrored = facingRef.current === "user";
       const started = performance.now();
       const raw = detectors.detect(video, now);
-      const landmarks = smootherRef.current.apply(raw, now);
+      // Predict ahead by the detection latency so the piece keeps up with movement.
+      const landmarks = smootherRef.current.apply(raw, now, latencyRef.current);
       const placements: LivePlacement[] = [];
       const missingNow: JewelleryType[] = [];
       for (const item of liveItemsRef.current) {
@@ -198,10 +217,15 @@ export function useLiveTryOn({ items, details, quality }: UseLiveTryOnArgs) {
           else throw error;
         }
       }
-      placementsRef.current = placements;
+      const pxPerMm = scaleOf(landmarks);
+      const swung = swayRef.current.apply(placements, now, pxPerMm);
+      const held = holdRef.current.update(swung, now);
+      placementsRef.current = held;
+      const brightness = brightnessRef.current.sample(video, now);
       const ctx = canvas.getContext("2d");
-      if (ctx) drawPlacements(ctx, placements, { scale: 1, mirrored });
+      if (ctx) drawPlacements(ctx, held, { scale: 1, mirrored, brightness });
       const elapsed = performance.now() - started;
+      latencyRef.current = latencyRef.current * 0.8 + elapsed * 0.2;
       const sample = statsSample.current;
       sample.frames += 1;
       sample.ms += elapsed;
@@ -273,6 +297,8 @@ export function useLiveTryOn({ items, details, quality }: UseLiveTryOnArgs) {
         }
       }
       smootherRef.current.reset();
+      holdRef.current.reset();
+      swayRef.current.reset();
       statsSample.current = { frames: 0, ms: 0, since: performance.now() };
       setStatus("running");
       rafRef.current = requestAnimationFrame(tick);

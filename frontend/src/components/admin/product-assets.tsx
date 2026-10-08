@@ -16,6 +16,13 @@ import { AnchorEditor } from "./anchor-editor";
 import { Card, ConfirmDialog } from "./primitives";
 
 const VIEWS = ["front", "left", "right", "top", "back", "angle"];
+/** Catalogue photo views: angles plus close-up detail and the shop's own on-model shots. */
+const IMAGE_VIEWS = [...VIEWS, "detail", "on_model"];
+const VIEW_LABELS: Record<string, string> = {
+  angle: "45° angle",
+  detail: "detail / close-up",
+  on_model: "on model",
+};
 
 function FilePicker({
   accept,
@@ -136,7 +143,7 @@ export function ImagesPanel({ product }: { product: ProductDetail }) {
                 label="View"
                 value={meta.view}
                 onChange={(e) => setMeta({ ...meta, view: e.target.value })}
-                options={VIEWS.map((v) => ({ value: v, label: v }))}
+                options={IMAGE_VIEWS.map((v) => ({ value: v, label: VIEW_LABELS[v] ?? v }))}
               />
               <Select
                 label="Variant"

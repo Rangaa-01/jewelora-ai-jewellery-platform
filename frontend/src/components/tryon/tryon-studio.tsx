@@ -5,6 +5,8 @@ import { ImagePlus, Sparkles } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useCallback, useMemo, useState } from "react";
 import { LookItemList } from "./look-item-list";
+import { PhotoTips, tipsFromError } from "./photo-tips";
+import { ProcessingStages } from "./processing-stages";
 import { ProductPicker } from "./product-picker";
 import { ResultPanel } from "./result-panel";
 import { FormError } from "@/components/forms/form-error";
@@ -23,6 +25,7 @@ import {
   type LookItem,
   type TryOnCapabilities,
   type TryOnMode,
+  type TryOnQuality,
 } from "@/lib/tryon/session";
 import { useTryOnSession } from "@/lib/tryon/use-tryon-session";
 
@@ -69,6 +72,7 @@ const LOOK_TYPES: JewelleryType[] = [
 export function TryOnStudio({ initialSlugs, initialVariantId, mode }: TryOnStudioProps) {
   const [items, setItems] = useState<LookItem[]>([]);
   const [file, setFile] = useState<File | null>(null);
+  const [quality, setQuality] = useState<TryOnQuality>("standard");
   const [tab, setTab] = useState("photo");
   const { toast } = useToast();
   const session = useTryOnSession(mode);
@@ -154,7 +158,7 @@ export function TryOnStudio({ initialSlugs, initialVariantId, mode }: TryOnStudi
   const runNow = (candidate: File | null = file) => {
     if (!candidate || resolvedItems.length === 0) return;
     session.run.mutate(
-      { file: candidate, items: resolvedItems },
+      { file: candidate, items: resolvedItems, quality },
       {
         onSuccess: (r) => {
           if (r.warnings.length)
@@ -170,7 +174,7 @@ export function TryOnStudio({ initialSlugs, initialVariantId, mode }: TryOnStudi
 
   const tryAnother = () => {
     if (!session.result) return;
-    session.rerun.mutate({ photoId: session.result.photo_id, items: resolvedItems });
+    session.rerun.mutate({ photoId: session.result.photo_id, items: resolvedItems, quality });
   };
 
   const unavailable = capabilities.data ? !capabilities.data.photo_tryon : false;
@@ -246,7 +250,12 @@ export function TryOnStudio({ initialSlugs, initialVariantId, mode }: TryOnStudi
                 originalUrl={session.originalUrl}
                 items={resolvedItems}
                 mode={mode}
-                busy={session.adjust.isPending || session.rerun.isPending}
+                busy={
+                  session.adjust.isPending || session.rerun.isPending || session.premium.isPending
+                }
+                hdPending={session.premium.isPending}
+                refinementAvailable={capabilities.data?.refinement ?? false}
+                onMakeHd={() => session.result && session.premium.mutate(session.result.id)}
                 onAdjust={onAdjust}
                 onChangePhoto={() => {
                   session.reset();
@@ -284,8 +293,13 @@ export function TryOnStudio({ initialSlugs, initialVariantId, mode }: TryOnStudi
                 </TabPanel>
               </Tabs>
             )}
-            {(error || (session.run.isPending && tab === "live")) && (
+            {session.run.isPending && (
               <div className="border-border bg-bg-elevated rounded-lg border p-4">
+                <ProcessingStages active hd={quality === "premium"} />
+              </div>
+            )}
+            {error && !session.run.isPending && (
+              <div className="border-border bg-bg-elevated flex flex-col gap-3 rounded-lg border p-4">
                 {isApiError(error) && error.code === "tryon_unavailable" ? (
                   <p role="alert" className="text-sm">
                     Photo try-on is temporarily unavailable. Please try again shortly or book a
@@ -294,13 +308,41 @@ export function TryOnStudio({ initialSlugs, initialVariantId, mode }: TryOnStudi
                 ) : (
                   <FormError error={error} />
                 )}
-                {session.run.isPending && (
-                  <p className="text-fg-muted text-sm">Rendering your look…</p>
-                )}
+                <PhotoTips tips={tipsFromError(error)} />
+                <div className="flex flex-wrap gap-2">
+                  {file && (
+                    <Button size="md" variant="outline" onClick={() => runNow()}>
+                      Retry
+                    </Button>
+                  )}
+                  <Button
+                    size="md"
+                    variant="outline"
+                    onClick={() => {
+                      session.reset();
+                      session.run.reset();
+                      setFile(null);
+                      setTab("photo");
+                    }}
+                  >
+                    Try another photo
+                  </Button>
+                  <Button
+                    size="md"
+                    variant="ghost"
+                    onClick={() => {
+                      session.run.reset();
+                      setTab("live");
+                    }}
+                  >
+                    Use live camera
+                  </Button>
+                </div>
               </div>
             )}
             {!session.result && tab === "photo" && (
               <div className="border-border bg-bg-elevated flex flex-col gap-3 rounded-lg border p-4">
+                <QualityPicker value={quality} onChange={setQuality} />
                 <div className="flex flex-wrap items-center gap-3">
                   <Button
                     size="lg"
@@ -338,5 +380,49 @@ export function TryOnStudio({ initialSlugs, initialVariantId, mode }: TryOnStudi
         </div>
       </Container>
     </Section>
+  );
+}
+
+const QUALITY_OPTIONS: { value: TryOnQuality; label: string; hint: string }[] = [
+  { value: "fast", label: "Quick preview", hint: "A few seconds; good for comparing pieces" },
+  { value: "standard", label: "Realistic", hint: "Matched to your photo's light, focus and grain" },
+  { value: "premium", label: "HD", hint: "Full resolution, for saving and sharing" },
+];
+
+function QualityPicker({
+  value,
+  onChange,
+}: {
+  value: TryOnQuality;
+  onChange: (value: TryOnQuality) => void;
+}) {
+  const current = QUALITY_OPTIONS.find((o) => o.value === value)!;
+  return (
+    <fieldset className="flex flex-col gap-2">
+      <legend className="text-fg-muted mb-1 text-xs tracking-wider uppercase">Result</legend>
+      <div className="flex flex-wrap gap-2">
+        {QUALITY_OPTIONS.map((o) => (
+          <label
+            key={o.value}
+            className={`has-focus-visible:outline-ring inline-flex h-10 cursor-pointer items-center rounded-full border px-4 text-sm has-focus-visible:outline-2 ${
+              o.value === value
+                ? "border-gold-deep bg-gold/10 text-fg font-medium"
+                : "border-border-strong text-fg-muted hover:border-fg"
+            }`}
+          >
+            <input
+              type="radio"
+              name="tryon-quality"
+              value={o.value}
+              checked={o.value === value}
+              onChange={() => onChange(o.value)}
+              className="sr-only"
+            />
+            {o.label}
+          </label>
+        ))}
+      </div>
+      <p className="text-fg-muted text-xs">{current.hint}</p>
+    </fieldset>
   );
 }

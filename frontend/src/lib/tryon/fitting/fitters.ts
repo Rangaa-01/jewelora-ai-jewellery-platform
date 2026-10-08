@@ -171,9 +171,16 @@ export function fitAsset(
   scale *= adjustments.scale;
   rotation += adjustments.rotation_deg;
   pivotDst = point(pivotDst.x + adjustments.offset_x, pivotDst.y + adjustments.offset_y);
-  const matrix = anchors.mirror
+  let matrix = anchors.mirror
     ? mirrorMatrix(scale, rotation, pivotSrc, pivotDst, asset.width)
     : plainMatrix(scale, rotation, pivotSrc, pivotDst);
+  const q = anchors.squash_x ?? 1;
+  if (q !== 1) {
+    matrix = [
+      [matrix[0][0] * q, matrix[0][1] * q, q * matrix[0][2] + (1 - q) * pivotDst.x],
+      [matrix[1][0], matrix[1][1], matrix[1][2]],
+    ];
+  }
   return {
     region: anchors.region,
     matrix,

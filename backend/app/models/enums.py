@@ -68,6 +68,8 @@ class AssetView(StrEnum):
     TOP = "top"
     BACK = "back"
     ANGLE = "angle"
+    DETAIL = "detail"  # close-up of stones, clasp or craftsmanship
+    ON_MODEL = "on_model"  # the shop's own photo of a person wearing the piece
 
 
 class OrderStatus(StrEnum):

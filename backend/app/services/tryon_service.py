@@ -71,6 +71,7 @@ class EngineRuntime:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
         self._engine: Any = None
+        self._refinement: Any = None
         self._asset_cache: OrderedDict[str, Any] = OrderedDict()
         self._asset_lock = threading.Lock()
         self._cache_bytes = 0
@@ -113,6 +114,19 @@ class EngineRuntime:
             log.info("tryon_engine_loaded", models_dir=str(models_dir))
         return self._engine
 
+    @property
+    def refinement(self) -> Any:
+        """The configured generative refinement provider (``NoRefinement`` by default)."""
+        if self._refinement is None:
+            from jewelora_ai.refinement import provider_from_settings
+
+            self._refinement = provider_from_settings(
+                self.settings.refinement_provider,
+                self.settings.refinement_url,
+                self.settings.refinement_token,
+            )
+        return self._refinement
+
     def cache_get(self, key: str) -> Any | None:
         with self._asset_lock:
             if key in self._asset_cache:
@@ -144,8 +158,13 @@ class TryOnService:
     # --- photos ---------------------------------------------------------------------------
 
     async def store_photo(self, owner: Owner, data: bytes) -> CustomerPhoto:
+        # Stored at premium size; each quality level renders from a resized copy.
         processed = await asyncio.to_thread(
-            process_image, data, self.settings, max_dimension=self.settings.tryon_max_dimension
+            process_image,
+            data,
+            self.settings,
+            max_dimension=self.settings.tryon_premium_dimension,
+            quality=92,
         )
         key = customer_photo_key(owner.key, processed.extension)
         await self.storage.put(key, processed.data, processed.content_type)
@@ -205,22 +224,35 @@ class TryOnService:
     # --- engine helpers ---------------------------------------------------------------------
 
     async def _landmarks_for(self, photo: CustomerPhoto, image: np.ndarray) -> Any:
+        """Detection is done once per photo (at standard size) and rescaled to ``image``."""
         from jewelora_ai.detectors.fixture_detector import landmarks_from_json, landmarks_to_json
 
+        h, w = image.shape[:2]
         if photo.landmarks:
-            return landmarks_from_json(photo.landmarks)
+            return landmarks_from_json(photo.landmarks).scaled_to(w, h)
         engine = self.runtime.engine()
-        landmarks = await asyncio.to_thread(engine.detect, image)
+        standard = image
+        if max(h, w) != min(max(h, w), self.settings.tryon_max_dimension):
+            standard = await self._load_image(photo, self.settings.tryon_max_dimension)
+        landmarks = await asyncio.to_thread(engine.detect, standard)
         photo.landmarks = landmarks_to_json(landmarks)
         photo.detection_summary = landmarks.summary()
-        return landmarks
+        return landmarks.scaled_to(w, h)
 
-    async def _load_image(self, photo: CustomerPhoto) -> np.ndarray:
+    def _dimension_for(self, quality: str) -> int:
+        return {
+            "fast": self.settings.tryon_fast_dimension,
+            "premium": self.settings.tryon_premium_dimension,
+        }.get(quality, self.settings.tryon_max_dimension)
+
+    async def _load_image(
+        self, photo: CustomerPhoto, max_dimension: int | None = None
+    ) -> np.ndarray:
         from jewelora_ai.preprocessing import load_rgb
 
         data = await self.storage.get(photo.storage_key)
         pre = await asyncio.to_thread(
-            load_rgb, data, max_dimension=self.settings.tryon_max_dimension
+            load_rgb, data, max_dimension=max_dimension or self.settings.tryon_max_dimension
         )
         return pre.rgb
 
@@ -331,13 +363,15 @@ class TryOnService:
         device_info: dict[str, Any] | None,
         session: TryOnSession | None = None,
         user_agent: str | None = None,
+        quality: str = "standard",
     ) -> TryOnResult:
-        from jewelora_ai.datatypes import TryOnRequest
+        from jewelora_ai.analysis.photo_quality import analyse_photo
+        from jewelora_ai.datatypes import JewelleryType, TryOnRequest
         from jewelora_ai.engine import TryOnError as EngineError
         from jewelora_ai.preprocessing import encode_image
 
         engine = self.runtime.engine()
-        image = await self._load_image(photo)
+        image = await self._load_image(photo, self._dimension_for(quality))
         landmarks = await self._landmarks_for(photo, image)
         pairs, warnings = await self._build_items(items)
         built = [engine_item for engine_item, _ in pairs]
@@ -362,18 +396,22 @@ class TryOnService:
         )
         self.db.add(result)
         await self.db.flush()
+        types = {item.asset.jewellery_type for item in built} or {JewelleryType.NECKLACE}
+        tips = [f.to_dict() for f in analyse_photo(image, landmarks, types)]
         try:
             outcome = await asyncio.to_thread(
-                engine.run, TryOnRequest(image=image, items=built, landmarks=landmarks)
+                engine.run,
+                TryOnRequest(image=image, items=built, landmarks=landmarks, quality=quality),
             )
         except EngineError as exc:
             result.status = TryOnStatus.FAILED.value
             result.error_code = exc.code
             result.error_detail = exc.message
             result.warnings = warnings
+            result.placements = {"quality": quality, "photo_tips": tips}
             await self.db.flush()
             log.info("tryon_failed", result_id=str(result.id), code=exc.code)
-            raise TryOnError(exc.message, code=exc.code) from exc
+            raise TryOnError(exc.message, code=exc.code, details={"photo_tips": tips}) from exc
         except Exception as exc:  # unexpected engine failure
             result.status = TryOnStatus.FAILED.value
             result.error_code = "engine_error"
@@ -382,7 +420,23 @@ class TryOnService:
             log.exception("tryon_engine_error", result_id=str(result.id))
             raise TryOnError(code="engine_error") from exc
 
-        encoded = await asyncio.to_thread(encode_image, outcome.image, fmt="WEBP", quality=90)
+        final = outcome.image
+        refined = False
+        refiner = self.runtime.refinement
+        if quality == "premium" and refiner.available and outcome.coverage is not None:
+            from jewelora_ai.refinement import RefinementError, apply_guards
+
+            try:
+                candidate = await asyncio.to_thread(
+                    refiner.refine, image, outcome.image, outcome.coverage
+                )
+                final = apply_guards(image, outcome.image, candidate, outcome.coverage)
+                refined = True
+            except RefinementError as exc:
+                # The deterministic render is still a complete result; say so, don't fail.
+                log.warning("tryon_refinement_failed", result_id=str(result.id), error=str(exc))
+        webp_quality = {"fast": 82, "premium": 95}.get(quality, 90)
+        encoded = await asyncio.to_thread(encode_image, final, fmt="WEBP", quality=webp_quality)
         key = tryon_result_key(owner.key, "webp")
         await self.storage.put(key, encoded, "image/webp")
         result.status = TryOnStatus.COMPLETED.value
@@ -400,6 +454,9 @@ class TryOnService:
             ],
             "ring_size_estimate": outcome.ring_size_estimate,
             "detection": landmarks.summary(),
+            "quality": quality,
+            "refined": refined,
+            "photo_tips": tips,
         }
         await self.db.flush()
         for item in items:
@@ -433,7 +490,11 @@ class TryOnService:
         return result
 
     async def adjust_result(
-        self, owner: Owner, result_id: uuid.UUID, items: list[TryOnItemIn]
+        self,
+        owner: Owner,
+        result_id: uuid.UUID,
+        items: list[TryOnItemIn],
+        quality: str = "standard",
     ) -> TryOnResult:
         """Re-render an existing result with new adjustments/items, reusing cached landmarks."""
         previous = await self.get_result(owner, result_id)
@@ -443,7 +504,13 @@ class TryOnService:
         session = await self.db.get(TryOnSession, previous.session_id)
         assert session is not None
         return await self.run_photo_tryon(
-            owner, photo=photo, items=items, mode=session.mode, device_info=None, session=session
+            owner,
+            photo=photo,
+            items=items,
+            mode=session.mode,
+            device_info=None,
+            session=session,
+            quality=quality,
         )
 
 

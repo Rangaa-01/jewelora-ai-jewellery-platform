@@ -33,6 +33,8 @@ export interface BodyAnchors {
   confidence: number;
   mirror: boolean;
   occlusion: Record<string, number>;
+  /** Horizontal foreshortening about the pivot (1 = facing the camera); earrings on a turned head. */
+  squash_x?: number;
 }
 
 /** Geometry of a try-on asset (the bitmap itself is handled by the renderer). */

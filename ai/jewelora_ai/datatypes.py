@@ -87,6 +87,34 @@ class Landmarks:
     pose: list[Point] | None = None  # 33 points
     pose_visibility: list[float] | None = None
 
+    def scaled_to(self, width: int, height: int) -> Landmarks:
+        """The same detection expressed in the pixels of a resized copy of the image."""
+        if width == self.image_width and height == self.image_height:
+            return self
+        sx, sy = width / self.image_width, height / self.image_height
+
+        def pts(points: list[Point] | None) -> list[Point] | None:
+            return None if points is None else [Point(p.x * sx, p.y * sy) for p in points]
+
+        return Landmarks(
+            image_width=width,
+            image_height=height,
+            face=pts(self.face),
+            face_score=self.face_score,
+            face_transform=self.face_transform,
+            hands=[
+                Hand(
+                    points=pts(h.points) or [],
+                    handedness=h.handedness,
+                    score=h.score,
+                    world_points=h.world_points,
+                )
+                for h in self.hands
+            ],
+            pose=pts(self.pose),
+            pose_visibility=self.pose_visibility,
+        )
+
     def summary(self) -> dict[str, Any]:
         return {
             "image": {"width": self.image_width, "height": self.image_height},
@@ -152,6 +180,9 @@ class BodyAnchors:
     confidence: float
     mirror: bool = False  # flip the asset horizontally (e.g. the other ear)
     occlusion: dict[str, float] = field(default_factory=dict)  # mask name -> strength
+    # Horizontal foreshortening about the pivot (1 = facing the camera). Earrings on a
+    # turned head are seen partly edge-on, so they narrow with the head's yaw.
+    squash_x: float = 1.0
 
 
 @dataclass
@@ -194,6 +225,7 @@ class TryOnRequest:
     items: list[TryOnItem]
     landmarks: Landmarks | None = None  # reuse cached detection when provided
     masks: SegmentationMasks | None = None
+    quality: str = "standard"  # "fast" | "standard" | "premium" (see AffineCompositor)
 
 
 @dataclass
@@ -206,3 +238,4 @@ class TryOnResult:
     engine_version: str
     processing_ms: int
     ring_size_estimate: dict[str, Any] | None = None
+    coverage: np.ndarray | None = None  # 0..1 jewellery coverage, for refinement guards

@@ -27,10 +27,12 @@ from app.schemas.common import Message
 from app.schemas.tryon import (
     AdjustmentsIn,
     CustomerPhotoOut,
+    PhotoTipOut,
     PlacementOut,
     RingSizeOut,
     TryOnCapabilitiesOut,
     TryOnItemIn,
+    TryOnQuality,
     TryOnRerunIn,
     TryOnResultOut,
 )
@@ -96,6 +98,9 @@ def result_out(result: TryOnResult, storage: Any) -> TryOnResultOut:
         engine_version=result.engine_version,
         processing_ms=result.processing_ms,
         items=[TryOnItemIn.model_validate(i) for i in result.items],
+        quality=placements_blob.get("quality", "standard"),
+        refined=bool(placements_blob.get("refined", False)),
+        photo_tips=[PhotoTipOut.model_validate(t) for t in placements_blob.get("photo_tips", [])],
     )
 
 
@@ -117,6 +122,7 @@ async def capabilities(settings: SettingsDep) -> TryOnCapabilitiesOut:
     return TryOnCapabilitiesOut(
         photo_tryon=runtime.available,
         live_tryon=True,
+        refinement=runtime.refinement.available,
         supported_types=SUPPORTED_TYPES,
         max_upload_mb=settings.upload_max_bytes // (1024 * 1024),
     )
@@ -136,6 +142,7 @@ async def photo_tryon(
     items: str = Form(...),
     mode: str = Form(default="look"),
     device: str | None = Form(default=None),
+    quality: str = Form(default="standard"),
 ) -> TryOnResultOut:
     owner = await resolve_owner(request, response, user, session_token, db)
     parsed_items = parse_items_json(items)
@@ -159,6 +166,7 @@ async def photo_tryon(
         items=parsed_items,
         mode="bridal" if mode == "bridal" else "look",
         device_info=device_info,
+        quality=quality if quality in {"fast", "standard", "premium"} else "standard",
         user_agent=request.headers.get("user-agent"),
     )
     return result_out(result, storage)
@@ -184,7 +192,12 @@ async def rerun_on_photo(
     service = TryOnService(db, storage, settings)
     photo = await service.get_photo(owner, photo_id)
     result = await service.run_photo_tryon(
-        owner, photo=photo, items=body.items, mode=body.mode, device_info=None
+        owner,
+        photo=photo,
+        items=body.items,
+        mode=body.mode,
+        device_info=None,
+        quality=body.quality,
     )
     return result_out(result, storage)
 
@@ -221,6 +234,7 @@ async def adjust_result(
     settings: SettingsDep,
     user: OptionalUserDep,
     session_token: SessionTokenDep,
+    quality: TryOnQuality = "standard",
 ) -> TryOnResultOut:
     """Re-render with manual adjustments keyed by product id."""
     from app.services.tryon_service import apply_adjustments, result_items
@@ -229,7 +243,36 @@ async def adjust_result(
     service = TryOnService(db, storage, settings)
     previous = await service.get_result(owner, result_id)
     items = apply_adjustments(result_items(previous), body)
-    result = await service.adjust_result(owner, result_id, items)
+    result = await service.adjust_result(owner, result_id, items, quality=quality)
+    return result_out(result, storage)
+
+
+@router.post(
+    "/results/{result_id}/premium",
+    response_model=TryOnResultOut,
+    status_code=status.HTTP_201_CREATED,
+)
+@limiter.limit(AI_LIMIT)
+async def premium_result(
+    request: Request,
+    response: Response,
+    result_id: uuid.UUID,
+    db: DBDep,
+    storage: StorageDep,
+    settings: SettingsDep,
+    user: OptionalUserDep,
+    session_token: SessionTokenDep,
+) -> TryOnResultOut:
+    """Re-render the same look at full resolution (and refined, when configured) for saving,
+    sharing and downloading."""
+    from app.services.tryon_service import result_items
+
+    owner = await resolve_owner(request, response, user, session_token, db)
+    service = TryOnService(db, storage, settings)
+    previous = await service.get_result(owner, result_id)
+    result = await service.adjust_result(
+        owner, result_id, result_items(previous), quality="premium"
+    )
     return result_out(result, storage)
 
 

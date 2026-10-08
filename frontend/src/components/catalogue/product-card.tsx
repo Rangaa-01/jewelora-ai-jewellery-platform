@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Camera, Gem, Heart } from "lucide-react";
+import { ArrowRight, Box, Camera, Gem, Heart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -125,12 +125,23 @@ export function ProductCard({
             {product.name}
           </Link>
         </h3>
-        <Price
-          price={product.price}
-          basePrice={product.base_price}
-          discountPercent={product.discount_percent}
-          size="sm"
-        />
+        <div className="flex items-center justify-between gap-2">
+          <Price
+            price={product.price}
+            basePrice={product.base_price}
+            discountPercent={product.discount_percent}
+            size="sm"
+          />
+          {product.tryon_enabled && (
+            <Link
+              href={`/try-on?product=${product.slug}`}
+              className="text-accent-text hover:text-fg inline-flex min-h-11 shrink-0 items-center gap-1 text-xs font-semibold tracking-wider uppercase"
+              aria-label={`Try on ${product.name}`}
+            >
+              Try on <ArrowRight className="size-3.5" aria-hidden />
+            </Link>
+          )}
+        </div>
       </div>
     </article>
   );

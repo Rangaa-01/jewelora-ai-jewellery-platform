@@ -7,15 +7,38 @@ import { Dashboard } from "./dashboard";
 
 const overview: AnalyticsOverview = {
   range_days: 30,
-  totals: { customers: 12, new_customers: 3, products: 28, orders: 4, appointments: 2, enquiries: 5, open_enquiries: 2, pending_appointments: 1, tryons: 40, looks: 6, wishlist_adds: 9 },
+  totals: {
+    customers: 12,
+    new_customers: 3,
+    products: 28,
+    orders: 4,
+    appointments: 2,
+    enquiries: 5,
+    open_enquiries: 2,
+    pending_appointments: 1,
+    tryons: 40,
+    looks: 6,
+    wishlist_adds: 9,
+  },
   revenue: { paid: "250000.00", pending: "12000.00" },
-  most_tried: [{ product_id: "p1", name: "Lakshmi Temple Necklace", slug: "lakshmi", image_url: null, count: 12 }],
+  most_tried: [
+    {
+      product_id: "p1",
+      name: "Lakshmi Temple Necklace",
+      slug: "lakshmi",
+      image_url: null,
+      count: 12,
+    },
+  ],
   most_viewed: [],
   most_wishlisted: [],
   most_shared: [],
   most_enquired: [],
   most_purchased: [],
-  tryons_per_day: [{ date: "2026-10-01", count: 3 }, { date: "2026-10-02", count: 5 }],
+  tryons_per_day: [
+    { date: "2026-10-01", count: 3 },
+    { date: "2026-10-02", count: 5 },
+  ],
   orders_per_day: [],
   stylist_queries: 7,
   visual_searches: 2,
@@ -59,7 +82,9 @@ describe("Dashboard", () => {
 
   it("shows a retryable error state when the API fails", async () => {
     const { ApiError } = await import("@/lib/api/client");
-    get.mockRejectedValue(new ApiError(500, "internal_error", "Something went wrong on our side. Please try again."));
+    get.mockRejectedValue(
+      new ApiError(500, "internal_error", "Something went wrong on our side. Please try again."),
+    );
     renderDashboard();
     expect(await screen.findByRole("alert")).toHaveTextContent(/Something went wrong/);
     expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();

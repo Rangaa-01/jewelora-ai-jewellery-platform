@@ -38,4 +38,5 @@ class Renderer(Protocol):
         image_rgb: np.ndarray,
         items: list[tuple[TryOnItem, Placement]],
         masks: SegmentationMasks | None,
+        quality: str = "standard",
     ) -> np.ndarray: ...

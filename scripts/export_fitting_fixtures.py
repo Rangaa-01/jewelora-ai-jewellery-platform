@@ -150,6 +150,7 @@ def main() -> None:
                             "rotation_deg": anchors.rotation_deg,
                             "confidence": anchors.confidence,
                             "mirror": anchors.mirror,
+                            "squash_x": anchors.squash_x,
                         },
                         "fits": [
                             {

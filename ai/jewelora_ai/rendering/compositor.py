@@ -119,7 +119,19 @@ def _region_luminance(
     return float((lum * weight).sum() / weight.sum())
 
 
+QUALITY_LEVELS = ("fast", "standard", "premium")
+
+
 class AffineCompositor:
+    """Warp → defringe → relight → focus/grain match → occlusion → body shadow → composite.
+
+    ``quality``:
+    * ``fast``: geometry, occlusion, brightness and a simple shadow (quick previews).
+    * ``standard``: full photographic integration (white balance, light direction, focus
+      and grain matching, shadows that only land on the body, necklace ends that wrap).
+    * ``premium``: as standard, rendered on the full-resolution photo by the service.
+    """
+
     def __init__(self, *, shadow_opacity: float = 0.32, match_lighting: bool = True) -> None:
         self.shadow_opacity = shadow_opacity
         self.match_lighting = match_lighting
@@ -129,47 +141,73 @@ class AffineCompositor:
         image_rgb: np.ndarray,
         items: list[tuple[TryOnItem, Placement]],
         masks: SegmentationMasks | None,
+        quality: str = "standard",
     ) -> np.ndarray:
+        return self.render_layers(image_rgb, items, masks, quality)[0]
+
+    def render_layers(
+        self,
+        image_rgb: np.ndarray,
+        items: list[tuple[TryOnItem, Placement]],
+        masks: SegmentationMasks | None,
+        quality: str = "standard",
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """The composite plus the jewellery coverage (0..1) used by refinement guards."""
+        from jewelora_ai.rendering import realism
+
         h, w = image_rgb.shape[:2]
         out = image_rgb.astype(np.float32) / 255.0
-        for item, placement in items:
+        coverage = np.zeros((h, w), dtype=np.float32)
+        full = quality != "fast"
+        light = realism.analyse_scene(image_rgb, masks) if full and self.match_lighting else None
+        receiver = realism.receiver_mask(masks, (h, w)) if full else None
+        for index, (item, placement) in enumerate(items):
             rgba = item.asset.image
             if item.tint_hex:
                 rgba = tint_metal(rgba, item.tint_hex)
+            if full:
+                rgba = realism.defringe(rgba)
             if placement.strips:
                 rgba = clip_above_chord(rgba, chord_clip_row(item.asset))
+                if full and {"left_end", "right_end"} <= set(item.asset.anchors):
+                    left = item.asset.anchor_px("left_end")
+                    right = item.asset.anchor_px("right_end")
+                    rgba = realism.wrap_strand_ends(rgba, left.x, right.x, min(left.y, right.y))
                 warped = _warp_strips(rgba, placement, (w, h))
             else:
                 warped = _warp(rgba, placement.matrix, (w, h)).astype(np.float32) / 255.0
             colour, alpha = warped[..., :3], warped[..., 3]
             if alpha.max() <= 0:
                 continue
-            # occlusion by segmentation masks (hair in front of earrings etc.)
+            scale = float(np.hypot(placement.matrix[0, 0], placement.matrix[1, 0]))
+            if light is not None:
+                colour = realism.relight(colour, alpha, light, placement.bbox)
+                scene_sharp = realism.local_sharpness(image_rgb, placement.bbox)
+                # The piece's sharpness after scaling: downscaling sharpens, upscaling softens.
+                piece_sharp = realism.asset_sharpness(rgba) * min(1.0 / max(scale, 1e-3), 4.0)
+                colour, alpha = realism.match_focus(colour, alpha, scene_sharp, piece_sharp)
+                colour = realism.add_grain(colour, alpha, light.noise_sigma, seed=17 + index)
+            elif self.match_lighting:
+                lum = _region_luminance(image_rgb, placement.bbox, alpha)
+                gain = float(np.clip(lum / 0.5, 0.72, 1.18))
+                colour = np.clip(colour * gain, 0, 1)
+            # occlusion by segmentation masks (hair in front of earrings and necklaces)
             if masks is not None:
                 for name, strength in placement.occlusion.items():
                     mask = getattr(masks, name, None)
                     if mask is not None:
                         alpha = alpha * (1.0 - np.clip(mask, 0, 1) * strength)
-            # lighting match: scale asset brightness towards the local scene luminance
-            if self.match_lighting:
-                lum = _region_luminance(image_rgb, placement.bbox, alpha)
-                gain = float(np.clip(lum / 0.5, 0.72, 1.18))
-                colour = np.clip(colour * gain, 0, 1)
-                # subtle colour cast from the surroundings
-                x0, y0, x1, y1 = placement.bbox
-                if x1 > x0 and y1 > y0:
-                    cast = out[y0:y1, x0:x1].reshape(-1, 3).mean(axis=0)
-                    cast = cast / (cast.mean() + 1e-6)
-                    colour = np.clip(colour * (0.92 + 0.08 * cast), 0, 1)
-            # contact shadow
-            scale = float(np.hypot(placement.matrix[0, 0], placement.matrix[1, 0]))
-            offset = max(1, round(2.5 * max(scale, 0.4)))
-            blur = max(1.0, 3.0 * max(scale, 0.4))
-            shadow = np.zeros_like(alpha)
-            shadow[offset:, offset // 2 :] = alpha[:-offset, : -(offset // 2) or None]
-            shadow = cv2.GaussianBlur(shadow, (0, 0), blur) * self.shadow_opacity
+            # shadow on the body
+            if light is not None:
+                shadow = realism.body_shadow(alpha, light, scale, receiver, self.shadow_opacity)
+            else:
+                offset = max(1, round(2.5 * max(scale, 0.4)))
+                blur = max(1.0, 3.0 * max(scale, 0.4))
+                shadow = np.zeros_like(alpha)
+                shadow[offset:, offset // 2 :] = alpha[:-offset, : -(offset // 2) or None]
+                shadow = cv2.GaussianBlur(shadow, (0, 0), blur) * self.shadow_opacity
             out = out * (1.0 - shadow[..., None]) + out * 0.35 * shadow[..., None]
-            # composite
             a = alpha[..., None]
             out = out * (1.0 - a) + colour * a
-        return np.asarray(np.clip(out * 255.0 + 0.5, 0, 255), dtype=np.uint8)
+            coverage = np.maximum(coverage, alpha)
+        return np.asarray(np.clip(out * 255.0 + 0.5, 0, 255), dtype=np.uint8), coverage

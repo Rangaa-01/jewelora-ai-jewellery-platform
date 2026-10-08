@@ -114,6 +114,7 @@ export function earringAnchors(lm: Landmarks): BodyAnchors[] {
       confidence: Math.max(0.3, Math.min(1.0, vis)),
       mirror,
       occlusion: { hair: 0.55 },
+      squash_x: Math.max(0.6, Math.sqrt(Math.max(0.0, 1.0 - (0.8 * yaw) ** 2))),
     });
   }
   if (out.length === 0) throw new AnchorError("ears_not_visible");

@@ -25,7 +25,10 @@ upload → process_image (validate, orient, strip metadata, resize ≤ TRYON_MAX
        → fit_asset(asset, anchors, adjustments) → Placement (2×3 affine)
          or, for strand pieces, strand_placement(…) → Placement with 28 strip affines
        → MediaPipeSegmenter (hair/skin/clothes masks; only when a placement needs occlusion)
-       → AffineCompositor.render (tint variant metal, warp, lighting match, occlusion, shadow)
+       → photo checks (analysis/photo_quality.py → photo_tips)
+       → AffineCompositor.render_layers (tint, defringe, warp, relight, focus + grain match,
+         occlusion, body shadow) at the chosen quality level
+       → [premium] optional guarded generative refinement (refinement/)
        → encode WebP → store privately → tryon_results row (+ analytics event, tryon_count)
 ```
 
@@ -48,6 +51,55 @@ Scale uses physical size when the asset declares `real_width_mm`/`real_height_mm
 (converted with average anthropometrics: 90 mm outer-eye distance, 76 mm palm width,
 380 mm shoulder width; yaw-corrected) blended 50/50 with the anchor-pair fit, except
 rings/bangles which always fit the detected body part.
+
+### Photographic integration (why it doesn't look pasted)
+
+`rendering/realism.py` measures the customer's photo once and adapts every piece to it.
+Only jewellery pixels and the soft shadow they cast change; the face, skin and hair never do.
+
+| Cue | How it is measured | What happens to the piece |
+|-----|-------------------|---------------------------|
+| Colour temperature | skin chromaticity vs. a neutral skin reference (grey-world fallback) | per-channel cast at 35 % strength, luminance-neutral |
+| Exposure | mean luminance of the skin | mid-tones darkened in dim photos, never brightened past the studio shot; specular highlights kept |
+| Light direction | least-squares luminance plane over lit skin | ±14 % shading across the piece; the shadow falls away from the light |
+| Focus | Laplacian variance around the placement vs. the cut-out | small Gaussian (≤0.65 px) when the photo is softer; thin chains keep their opacity |
+| Sensor noise | Immerkær's estimator on the whole photo | matching luma and chroma grain (deterministic seed) |
+| Studio fringe | semi-transparent edge pixels | replaced by nearby solid colour (no white or black halo) |
+| Contact | segmentation (skin, clothes, hair) | shadow plus faint ambient occlusion only on the body, never on the background |
+| Necklace ends | asset anchors | the top ends fade so the chain wraps around the neck |
+| Earrings on a turned head | face yaw | horizontal foreshortening (`BodyAnchors.squash_x`, also in the TS port) |
+
+### Quality levels
+
+| Level | Render size | Pipeline | Use |
+|-------|-------------|----------|-----|
+| `fast` | 1024 px | geometry, occlusion, brightness, simple shadow | comparing pieces quickly |
+| `standard` | 1600 px | full photographic integration | the default result |
+| `premium` | 2400 px (photos are stored at this size) | standard + optional generative refinement, WebP q95 | save, share, download (`POST /tryon/results/{id}/premium`) |
+
+Landmarks are detected once per photo at standard size and rescaled (`Landmarks.scaled_to`).
+
+### Photo checks
+
+`analysis/photo_quality.py` returns non-blocking tips with every result (`photo_tips`) and
+in the error details of a failed try-on: low resolution, subject too far, head turned (earrings
+only), soft focus, too dark or bright, neckline cropped (necklaces), hand too far (rings).
+
+### Generative refinement (optional, guarded)
+
+`refinement/` defines `RefinementProvider`. `NoRefinement` is the default, and
+`/tryon/capabilities` reports `refinement: false`. The UI then says HD results are
+"rendered at full resolution" and never claims refinement. To enable it, run any
+inpainting/image-to-image service behind the HTTP contract in `HttpRefinement` and set
+`REFINEMENT_PROVIDER=http`, `REFINEMENT_URL`, `REFINEMENT_TOKEN`. Whatever the model returns, `apply_guards` enforces:
+
+* **Identity:** outside a thin band around the jewellery, pixels come from the deterministic
+  render, which is the customer's photo plus the piece.
+* **Product fidelity:** inside the piece's solid body, pixels come from the shop's
+  photograph, so the model cannot redraw stones, count, colour or shape.
+
+The model only touches the edge and contact band. If it fails, the deterministic HD render
+is returned and `refined` stays false.
 
 ### Strand warp (neck pieces, waist chains, anklets)
 

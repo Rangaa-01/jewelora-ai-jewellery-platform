@@ -90,7 +90,13 @@ class Settings(BaseSettings):
     # --- AI ------------------------------------------------------------------------
     ai_models_dir: Path = REPO_DIR / "ai" / "models"
     ai_enabled: bool = True
-    tryon_max_dimension: int = 1600
+    tryon_max_dimension: int = 1600  # "standard" quality render size (long side, px)
+    tryon_fast_dimension: int = 1024  # "fast" previews
+    tryon_premium_dimension: int = 2400  # "premium" results; photos are stored at this size
+    # Optional generative refinement for premium results (see ai/jewelora_ai/refinement).
+    refinement_provider: Literal["none", "http"] = "none"
+    refinement_url: str | None = None
+    refinement_token: str | None = None
     llm_provider: Literal["none", "anthropic"] = "none"
     anthropic_api_key: str | None = None
     anthropic_model: str = "claude-opus-5-5"

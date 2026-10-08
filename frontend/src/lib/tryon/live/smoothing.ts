@@ -5,6 +5,7 @@
  */
 
 import type { Landmarks, Point } from "../fitting/types";
+import { predict } from "./motion";
 
 export interface OneEuroOptions {
   /** Minimum cutoff frequency (Hz). Lower = smoother when still. */
@@ -35,6 +36,11 @@ export class OneEuroFilter {
     this.t = null;
   }
 
+  /** Smoothed rate of change (units per second), for short-term prediction. */
+  get velocity(): number {
+    return this.dx;
+  }
+
   /** Filter `value` sampled at `timestampMs`. */
   filter(value: number, timestampMs: number): number {
     if (this.x === null || this.t === null) {
@@ -59,13 +65,14 @@ class PointArraySmoother {
 
   constructor(private readonly opts: OneEuroOptions) {}
 
-  apply(points: Point[], timestampMs: number): Point[] {
+  apply(points: Point[], timestampMs: number, leadMs = 0): Point[] {
     if (this.filters.length !== points.length) {
       this.filters = points.map(() => [new OneEuroFilter(this.opts), new OneEuroFilter(this.opts)]);
     }
     return points.map((p, i) => {
       const [fx, fy] = this.filters[i]!;
-      return { x: fx.filter(p.x, timestampMs), y: fy.filter(p.y, timestampMs) };
+      const smoothed = { x: fx.filter(p.x, timestampMs), y: fy.filter(p.y, timestampMs) };
+      return leadMs > 0 ? predict(smoothed, { x: fx.velocity, y: fy.velocity }, leadMs) : smoothed;
     });
   }
 
@@ -86,8 +93,13 @@ export class LandmarkSmoother {
     this.pose = new PointArraySmoother(opts);
   }
 
-  apply(lm: Landmarks, timestampMs: number): Landmarks {
-    const face = lm.face ? this.face.apply(lm.face, timestampMs) : null;
+  /**
+   * `leadMs`: how far the drawn frame is ahead of the detected one (detection latency). The
+   * points are extrapolated along their smoothed velocity so the piece doesn't trail behind
+   * a moving head or hand.
+   */
+  apply(lm: Landmarks, timestampMs: number, leadMs = 0): Landmarks {
+    const face = lm.face ? this.face.apply(lm.face, timestampMs, leadMs) : null;
     if (!lm.face) {
       // Reset after a short absence so a reappearing face doesn't "slide in" from its old spot.
       this.missedFace += 1;
@@ -95,7 +107,7 @@ export class LandmarkSmoother {
     } else {
       this.missedFace = 0;
     }
-    const pose = lm.pose ? this.pose.apply(lm.pose, timestampMs) : null;
+    const pose = lm.pose ? this.pose.apply(lm.pose, timestampMs, leadMs) : null;
     const seen = new Set<string>();
     const hands = lm.hands.map((hand, index) => {
       const key = `${hand.handedness}-${index}`;
@@ -105,7 +117,7 @@ export class LandmarkSmoother {
         smoother = new PointArraySmoother(this.opts);
         this.hands.set(key, smoother);
       }
-      return { ...hand, points: smoother.apply(hand.points, timestampMs) };
+      return { ...hand, points: smoother.apply(hand.points, timestampMs, leadMs) };
     });
     for (const key of this.hands.keys()) if (!seen.has(key)) this.hands.delete(key);
     return { ...lm, face, pose, hands };

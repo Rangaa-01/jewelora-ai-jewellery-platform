@@ -38,6 +38,8 @@ function clippedDrawable(drawable: CanvasImageSource, geometry: AssetGeometry): 
 /** How frame-space placements land on the canvas: scaled, and mirrored for the selfie view. */
 export interface Viewport {
   scale: number;
+  /** CSS brightness() factor matching the room's light (1 = as photographed). */
+  brightness?: number;
   /** Mirror horizontally across the canvas (x' = width − x), like the CSS-mirrored preview. */
   mirrored: boolean;
 }
@@ -51,10 +53,12 @@ function viewport(view: Viewport | number): Viewport {
 /** Draws one placement: a rigid transform, or strip by strip for strand warps. */
 function drawPlacement(
   ctx: CanvasRenderingContext2D,
-  { item, placement }: LivePlacement,
+  live: LivePlacement & { opacity?: number },
   view: Viewport,
 ): void {
+  const { item, placement } = live;
   const { width, height } = item.geometry;
+  ctx.globalAlpha = live.opacity ?? 1;
   if (placement.strips && placement.strips.length > 0) {
     const source = clippedDrawable(item.drawable, item.geometry);
     for (const strip of placement.strips) {
@@ -100,7 +104,11 @@ export function drawPlacements(
   const v = viewport(view);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  ctx.filter =
+    v.brightness && v.brightness < 0.995 ? `brightness(${v.brightness.toFixed(3)})` : "none";
   for (const placement of placements) drawPlacement(ctx, placement, v);
+  ctx.filter = "none";
+  ctx.globalAlpha = 1;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
@@ -125,6 +133,7 @@ export async function captureFrame(
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   // Placements are in raw-frame coordinates; mirror them exactly like the frame above.
   for (const placement of placements) drawPlacement(ctx, placement, { scale: 1, mirrored });
+  ctx.globalAlpha = 1;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   const blob = await new Promise<Blob | null>((resolve) =>
     canvas.toBlob((b) => resolve(b), "image/jpeg", 0.92),

@@ -1,9 +1,11 @@
 "use client";
 
-import { Download, Heart, Save, Share2, SlidersHorizontal } from "lucide-react";
+import { Download, Heart, Save, Share2, SlidersHorizontal, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
 import { AdjustmentControls } from "./adjustment-controls";
+import { PhotoTips } from "./photo-tips";
+import { ProcessingStages } from "./processing-stages";
 import { RingSizeCard } from "./ring-size-card";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
@@ -19,6 +21,11 @@ interface ResultPanelProps {
   items: LookItem[];
   mode?: TryOnMode;
   busy: boolean;
+  /** An HD (premium) render of this look is in progress. */
+  hdPending?: boolean;
+  /** Whether this server refines HD results with a generative model (shown honestly). */
+  refinementAvailable?: boolean;
+  onMakeHd?: () => void;
   onAdjust: (productId: string, adjustments: Adjustments) => void;
   onChangePhoto: () => void;
   onTryAnother: () => void;
@@ -31,6 +38,9 @@ export function ResultPanel({
   items,
   mode = "look",
   busy,
+  hdPending = false,
+  refinementAvailable = false,
+  onMakeHd,
   onAdjust,
   onChangePhoto,
   onTryAnother,
@@ -118,13 +128,27 @@ export function ResultPanel({
             unoptimized
           />
         )}
-        {busy && (
-          <div className="bg-bg/40 absolute inset-0 flex items-center justify-center backdrop-blur-[1px]">
+        {busy && !hdPending && (
+          <div className="bg-bg/40 absolute inset-0 flex items-center justify-center">
             <span className="bg-bg-elevated rounded-full px-3 py-1 text-xs shadow">
               Updating fit…
             </span>
           </div>
         )}
+        {hdPending && (
+          <div className="bg-bg/70 absolute inset-0 flex items-center justify-center p-4">
+            <div className="bg-bg-elevated rounded-lg p-4 shadow">
+              <ProcessingStages active hd />
+            </div>
+          </div>
+        )}
+        <span className="bg-ink/75 text-ivory absolute top-3 left-3 rounded-xs px-2 py-1 text-[0.65rem] font-semibold tracking-wider uppercase">
+          {result.quality === "premium"
+            ? "HD"
+            : result.quality === "fast"
+              ? "Quick preview"
+              : "Realistic"}
+        </span>
         {originalUrl && (
           <button
             type="button"
@@ -155,6 +179,16 @@ export function ResultPanel({
           ))}
         </ul>
       )}
+      <PhotoTips tips={result.photo_tips ?? []} />
+      {result.quality === "premium" && (
+        <p className="text-fg-muted text-xs">
+          {result.refined
+            ? "Rendered at full resolution and refined where the jewellery meets skin. The piece itself is your selected product, unchanged."
+            : refinementAvailable
+              ? "Rendered at full resolution. Edge refinement didn't complete this time; the result is the full deterministic render."
+              : "Rendered at full resolution with light, focus and grain matched to your photo."}
+        </p>
+      )}
       {result.confidence !== null && result.confidence < 0.6 && (
         <p className="text-fg-muted text-sm">
           Detection confidence was low for this photo. A front-facing photo in even light gives a
@@ -184,6 +218,17 @@ export function ResultPanel({
       </div>
 
       <div className="flex flex-wrap gap-2">
+        {onMakeHd && result.quality !== "premium" && (
+          <Button
+            variant="outline"
+            leftIcon={<Sparkles className="size-4" aria-hidden />}
+            loading={hdPending}
+            disabled={busy}
+            onClick={onMakeHd}
+          >
+            Create HD photo
+          </Button>
+        )}
         <Button
           leftIcon={<Save className="size-4" aria-hidden />}
           onClick={() =>

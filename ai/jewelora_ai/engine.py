@@ -25,7 +25,7 @@ from jewelora_ai.interfaces import LandmarkDetector, Renderer, Segmenter
 from jewelora_ai.rendering.compositor import AffineCompositor
 from jewelora_ai.segmentation.mediapipe_segmenter import NullSegmenter
 
-ENGINE_VERSION = "affine-mediapipe-1.0"
+ENGINE_VERSION = "affine-mediapipe-2.0"
 
 # Customer-facing explanations for anchor failures.
 WARNING_MESSAGES = {
@@ -130,7 +130,8 @@ class TryOnEngine:
                 code, warnings[0] if warnings else "We couldn't place this jewellery on your photo."
             )
         masks = request.masks
-        if masks is None and any(p.occlusion for _, p in placed):
+        # Segmentation feeds occlusion and, beyond "fast", lighting and shadow receivers.
+        if masks is None and (request.quality != "fast" or any(p.occlusion for _, p in placed)):
             masks = self.segment(request.image)
         # Draw larger/behind pieces first so rings/earrings sit above necklaces when overlapping.
         order = {
@@ -140,7 +141,14 @@ class TryOnEngine:
             JewelleryType.CHAIN: 2,
         }
         placed.sort(key=lambda ip: order.get(ip[0].asset.jewellery_type, 5))
-        composite = self.renderer.render(request.image, placed, masks)
+        coverage = None
+        render_layers = getattr(self.renderer, "render_layers", None)
+        if render_layers is not None:
+            composite, coverage = render_layers(
+                request.image, placed, masks, quality=request.quality
+            )
+        else:
+            composite = self.renderer.render(request.image, placed, masks, quality=request.quality)
         ring_size = None
         if any(i.asset.jewellery_type == JewelleryType.RING for i, _ in placed) and landmarks.hands:
             ring_item = next(i for i, _ in placed if i.asset.jewellery_type == JewelleryType.RING)
@@ -159,4 +167,5 @@ class TryOnEngine:
             engine_version=ENGINE_VERSION,
             processing_ms=int((time.perf_counter() - started) * 1000),
             ring_size_estimate=ring_size,
+            coverage=coverage,
         )

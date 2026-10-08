@@ -42,6 +42,14 @@ export interface RingSizeEstimate {
   note: string;
 }
 
+export type TryOnQuality = "fast" | "standard" | "premium";
+
+export interface PhotoTip {
+  code: string;
+  severity: "tip" | "warning";
+  message: string;
+}
+
 export interface TryOnResult {
   id: string;
   session_id: string;
@@ -58,11 +66,17 @@ export interface TryOnResult {
   engine_version: string | null;
   processing_ms: number | null;
   items: TryOnItemIn[];
+  quality: TryOnQuality;
+  /** True only when a generative refinement provider actually ran (premium). */
+  refined: boolean;
+  photo_tips: PhotoTip[];
 }
 
 export interface TryOnCapabilities {
   photo_tryon: boolean;
   live_tryon: boolean;
+  refinement: boolean;
+  quality_levels: TryOnQuality[];
   supported_types: string[];
   max_upload_mb: number;
 }

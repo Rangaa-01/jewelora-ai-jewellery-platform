@@ -116,6 +116,38 @@ async def admin_update_product(
     return product_detail_out(product, storage)
 
 
+class QualityCheckOut(BaseModel):
+    key: str
+    label: str
+    status: str
+    detail: str
+
+
+class QualityReportOut(BaseModel):
+    score: int
+    tryon_ready: bool
+    checks: list[QualityCheckOut]
+
+
+@router.get("/products/{product_id}/quality", response_model=QualityReportOut)
+async def admin_product_quality(
+    product_id: uuid.UUID, db: DBDep, storage: StorageDep
+) -> QualityReportOut:
+    """Asset quality score: photos, try-on cut-out and optional assets, with fixes."""
+    from app.services.asset_quality import assess_product
+
+    product = await CatalogueService(db).get_product(product_id)
+    report = await assess_product(product, storage)
+    return QualityReportOut(
+        score=report.score,
+        tryon_ready=report.tryon_ready,
+        checks=[
+            QualityCheckOut(key=c.key, label=c.label, status=c.status, detail=c.detail)
+            for c in report.checks
+        ],
+    )
+
+
 @router.post("/products/{product_id}/deactivate", response_model=ProductDetailOut)
 async def admin_deactivate_product(
     product_id: uuid.UUID, db: DBDep, storage: StorageDep

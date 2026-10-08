@@ -84,6 +84,28 @@ export function useAdminProduct(id: string | null) {
   });
 }
 
+export interface AssetQualityCheck {
+  key: string;
+  label: string;
+  status: "pass" | "warn" | "fail";
+  detail: string;
+}
+
+export interface AssetQualityReport {
+  score: number;
+  tryon_ready: boolean;
+  checks: AssetQualityCheck[];
+}
+
+/** Photo / cut-out / 3D readiness score. Shares the product key prefix, so asset uploads refresh it. */
+export function useAssetQuality(id: string) {
+  return useQuery({
+    queryKey: [...adminKeys.product(id), "quality"] as const,
+    queryFn: ({ signal }) =>
+      api.get<AssetQualityReport>(`/admin/products/${id}/quality`, { signal }),
+  });
+}
+
 export function useCreateProduct() {
   const invalidate = useInvalidate();
   return useMutation({

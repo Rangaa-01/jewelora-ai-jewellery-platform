@@ -53,6 +53,16 @@ Save, then open the **Assets** tab.
 3. **3D model** — upload a `.glb` (optional). Name materials `*_metal` and `*_gem` so the
    viewer applies realistic metal and gem shading and metal switching.
 
+**Asset quality.** The product's Details tab shows a quality score with a checklist and the
+fix for each item:
+
+- Photos: resolution, sharpness, lighting, background and extra angles.
+- Try-on cut-out: transparency, anchor points, detail, real size and cleanliness.
+- Optional 3D model.
+
+"Try-on ready" means customers see the Try It On button. Image views now include **detail /
+close-up** and **on model**, for the shop's own photos of a person wearing the piece.
+
 The product is live immediately when **Active** is on. "Try it on" appears once a cut-out
 exists; "View in 3D" once a model exists.
 

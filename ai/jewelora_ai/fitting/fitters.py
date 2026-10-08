@@ -138,6 +138,12 @@ def fit_asset(
         matrix = _mirror_matrix(scale, rotation, pivot_src, pivot_dst, asset.width)
     else:
         matrix = _plain_matrix(scale, rotation, pivot_src, pivot_dst)
+    if anchors.squash_x != 1.0:
+        q = anchors.squash_x
+        matrix = matrix.copy()
+        matrix[0, 0] *= q
+        matrix[0, 1] *= q
+        matrix[0, 2] = q * matrix[0, 2] + (1.0 - q) * pivot_dst.x
     bbox = transformed_bbox(matrix, asset.width, asset.height, image_w, image_h)
     return Placement(
         region=anchors.region,

@@ -9,6 +9,7 @@ import {
   debounce,
   type LookItem,
   type TryOnMode,
+  type TryOnQuality,
   type TryOnResult,
 } from "./session";
 
@@ -30,10 +31,19 @@ export function useTryOnSession(mode: TryOnMode) {
   );
 
   const run = useMutation({
-    mutationFn: async ({ file, items }: { file: File; items: LookItem[] }) => {
+    mutationFn: async ({
+      file,
+      items,
+      quality = "standard",
+    }: {
+      file: File;
+      items: LookItem[];
+      quality?: TryOnQuality;
+    }) => {
       const form = new FormData();
       form.append("photo", file);
       form.append("mode", mode);
+      form.append("quality", quality);
       form.append("items", JSON.stringify(buildItemsPayload(items)));
       form.append("device", JSON.stringify({ ua: navigator.userAgent.slice(0, 200) }));
       return api.upload<TryOnResult>("/tryon/photo", form);
@@ -48,11 +58,27 @@ export function useTryOnSession(mode: TryOnMode) {
   });
 
   const rerun = useMutation({
-    mutationFn: async ({ photoId, items }: { photoId: string; items: LookItem[] }) =>
+    mutationFn: async ({
+      photoId,
+      items,
+      quality = "standard",
+    }: {
+      photoId: string;
+      items: LookItem[];
+      quality?: TryOnQuality;
+    }) =>
       api.post<TryOnResult>(`/tryon/photos/${photoId}/run`, {
         items: buildItemsPayload(items),
         mode,
+        quality,
       }),
+    onSuccess: (r) => setResult(r),
+  });
+
+  /** Re-render the current look at full resolution for saving, sharing and download. */
+  const premium = useMutation({
+    mutationFn: async (resultId: string) =>
+      api.post<TryOnResult>(`/tryon/results/${resultId}/premium`, {}),
     onSuccess: (r) => setResult(r),
   });
 
@@ -92,8 +118,9 @@ export function useTryOnSession(mode: TryOnMode) {
     run,
     rerun,
     adjust,
+    premium,
     scheduleAdjust: debouncedAdjust,
     reset,
-    isBusy: run.isPending || rerun.isPending || adjust.isPending,
+    isBusy: run.isPending || rerun.isPending || adjust.isPending || premium.isPending,
   };
 }

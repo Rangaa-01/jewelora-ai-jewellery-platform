@@ -27,8 +27,18 @@ class TryOnItemsIn(APIModel):
     items: list[TryOnItemIn] = Field(min_length=1, max_length=8)
 
 
+TryOnQuality = Literal["fast", "standard", "premium"]
+
+
 class TryOnRerunIn(TryOnItemsIn):
     mode: Literal["look", "bridal"] = "look"
+    quality: TryOnQuality = "standard"
+
+
+class PhotoTipOut(APIModel):
+    code: str
+    severity: Literal["tip", "warning"]
+    message: str
 
 
 class RingSizeOut(APIModel):
@@ -69,6 +79,9 @@ class TryOnResultOut(APIModel):
     engine_version: str | None
     processing_ms: int | None
     items: list[TryOnItemIn]
+    quality: TryOnQuality = "standard"
+    refined: bool = False
+    photo_tips: list[PhotoTipOut] = Field(default_factory=list)
 
 
 class CustomerPhotoOut(APIModel):
@@ -84,6 +97,9 @@ class CustomerPhotoOut(APIModel):
 class TryOnCapabilitiesOut(APIModel):
     photo_tryon: bool
     live_tryon: bool
+    # Whether premium results get generative refinement on this server (honest flag).
+    refinement: bool = False
+    quality_levels: list[str] = Field(default_factory=lambda: ["fast", "standard", "premium"])
     supported_types: list[str]
     max_upload_mb: int
     models_url_prefix: str = "/models"

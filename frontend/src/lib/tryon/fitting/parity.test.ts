@@ -45,14 +45,17 @@ interface ExpectedCase {
       rotation_deg: number;
       confidence: number;
       mirror: boolean;
+      squash_x: number;
     };
     fits: { adjustments: Adjustments; matrix: number[][]; bbox: number[] }[];
-    strands: {
-      adjustments: Adjustments;
-      length_mm: number | null;
-      bbox: number[];
-      strips: { x0: number; x1: number; matrix: number[][] }[];
-    }[] | null;
+    strands:
+      | {
+          adjustments: Adjustments;
+          length_mm: number | null;
+          bbox: number[];
+          strips: { x0: number; x1: number; matrix: number[][] }[];
+        }[]
+      | null;
   }[];
 }
 
@@ -127,6 +130,7 @@ describe("fitting parity with the Python engine", () => {
           expect(anchors.px_per_mm).toBeCloseTo(exp.anchors.px_per_mm, 9);
           expect(anchors.rotation_deg).toBeCloseTo(exp.anchors.rotation_deg, 9);
           expect(anchors.confidence).toBeCloseTo(exp.anchors.confidence, 9);
+          expect(anchors.squash_x ?? 1).toBeCloseTo(exp.anchors.squash_x, 9);
           for (const [key, [x, y]] of Object.entries(exp.anchors.points)) {
             expect(Math.abs(anchors.points[key]!.x - x)).toBeLessThan(1e-6);
             expect(Math.abs(anchors.points[key]!.y - y)).toBeLessThan(1e-6);
@@ -165,7 +169,9 @@ describe("fitting parity with the Python engine", () => {
               expect(strip.x1).toBe(want.x1);
               for (let r = 0; r < 2; r += 1) {
                 for (let col = 0; col < 3; col += 1) {
-                  expect(Math.abs(strip.matrix[r]![col]! - want.matrix[r]![col]!)).toBeLessThan(1e-7);
+                  expect(Math.abs(strip.matrix[r]![col]! - want.matrix[r]![col]!)).toBeLessThan(
+                    1e-7,
+                  );
                 }
               }
             });

@@ -18,6 +18,7 @@ import { isAdmin } from "@/lib/admin/nav";
 import { formatPrice } from "@/lib/format";
 import { JEWELLERY_TYPE_LABELS, METAL_LABELS } from "@/lib/labels";
 import { ConfirmDialog, DataTable, PageHeader, Pagination, QueryState, SearchInput, type Column } from "./primitives";
+import { AssetQualityCard } from "./asset-quality";
 import { ImagesPanel, ModelsPanel, TryOnAssetsPanel } from "./product-assets";
 import { ProductForm } from "./product-form";
 
@@ -129,7 +130,12 @@ export function ProductEditor({ id }: { id: string }) {
               <Tab value="tryon">Try-on assets</Tab>
               <Tab value="models">3D models</Tab>
             </TabList>
-            <TabPanel value="details"><ProductForm product={query.data} /></TabPanel>
+            <TabPanel value="details">
+              <div className="grid gap-6 xl:grid-cols-[1fr_22rem]">
+                <ProductForm product={query.data} />
+                <div><AssetQualityCard productId={query.data.id} /></div>
+              </div>
+            </TabPanel>
             <TabPanel value="assets"><ImagesPanel product={query.data} /></TabPanel>
             <TabPanel value="tryon"><TryOnAssetsPanel product={query.data} /></TabPanel>
             <TabPanel value="models"><ModelsPanel product={query.data} /></TabPanel>
